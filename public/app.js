@@ -95,9 +95,14 @@ let currentSponsorConfig = {
 // ==========================================
 // THEME CONTROLLER (Light-First Adaptive Theme)
 // ==========================================
+let themeInitialized = false;
+
 function initTheme() {
   const savedTheme = localStorage.getItem('vybrant_theme') || 'light';
   applyTheme(savedTheme);
+
+  if (themeInitialized) return;
+  themeInitialized = true;
 
   const toggleBtn = document.getElementById('themeToggleBtn');
   if (toggleBtn) {
@@ -126,8 +131,8 @@ function applyTheme(theme) {
   }
 }
 
-// Immediate Theme Check
-initTheme();
+// Immediate Theme Apply on load
+applyTheme(localStorage.getItem('vybrant_theme') || 'light');
 
 // ==========================================
 // TOAST NOTIFICATIONS (De-duplicated & Anti-Spam)
@@ -180,13 +185,61 @@ function showToast(message, type = 'info', duration = 3500) {
 function initAgeGate() {
   const ageGateModal = document.getElementById('ageGateModal');
   const enterAgeGateBtn = document.getElementById('enterAgeGateBtn');
+  const exitAgeGateBtn = document.getElementById('exitAgeGateBtn');
   const ageConfirmCheckbox = document.getElementById('ageConfirmCheckbox');
   const ageCheckContainer = document.getElementById('ageCheckContainer');
   const ageWarningText = document.getElementById('ageWarningText');
+  const maleBtn = document.getElementById('ageGenderMaleBtn');
+  const femaleBtn = document.getElementById('ageGenderFemaleBtn');
 
   if (!ageGateModal || !enterAgeGateBtn) {
     console.warn('[AgeGate] Age Gate elements not found.');
     return;
+  }
+
+  // Restore stored gender preference or default to male
+  const savedGender = localStorage.getItem('vybrant_my_gender') || userPreferences.myGender || 'male';
+  let chosenGender = savedGender;
+
+  function updateAgeGenderUI(gender) {
+    chosenGender = gender;
+    userPreferences.myGender = gender;
+    localStorage.setItem('vybrant_my_gender', gender);
+
+    if (maleBtn && femaleBtn) {
+      if (gender === 'male') {
+        maleBtn.className = 'age-gate-gender-btn py-3 px-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer bg-purple-50 dark:bg-purple-950/40 border-purple-600 text-purple-700 dark:text-purple-300 ring-2 ring-purple-500/20 active:scale-95 shadow-sm';
+        femaleBtn.className = 'age-gate-gender-btn py-3 px-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer bg-zinc-50 dark:bg-black/30 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-slate-300 hover:border-pink-500 hover:text-pink-500 active:scale-95';
+      } else {
+        femaleBtn.className = 'age-gate-gender-btn py-3 px-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer bg-pink-50 dark:bg-pink-950/40 border-pink-500 text-pink-700 dark:text-pink-300 ring-2 ring-pink-500/20 active:scale-95 shadow-sm';
+        maleBtn.className = 'age-gate-gender-btn py-3 px-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer bg-zinc-50 dark:bg-black/30 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-slate-300 hover:border-purple-500 hover:text-purple-500 active:scale-95';
+      }
+    }
+
+    // Sync with the in-app gender buttons
+    const myM = document.getElementById('myGenderMale');
+    const myF = document.getElementById('myGenderFemale');
+    if (myM && myF) {
+      if (gender === 'male') {
+        myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-600 text-white transition-all shadow-xs';
+        myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition-all';
+      } else {
+        myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-pink-500 text-white transition-all shadow-xs';
+        myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition-all';
+      }
+    }
+  }
+
+  if (maleBtn) maleBtn.addEventListener('click', () => updateAgeGenderUI('male'));
+  if (femaleBtn) femaleBtn.addEventListener('click', () => updateAgeGenderUI('female'));
+  updateAgeGenderUI(chosenGender);
+
+  // Browser-aware exit handler
+  if (exitAgeGateBtn) {
+    exitAgeGateBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleExitSite();
+    });
   }
 
   // Check if previously verified in sessionStorage
@@ -227,9 +280,41 @@ function initAgeGate() {
     }
 
     sessionStorage.setItem('vybrant_age_verified', 'true');
+    localStorage.setItem('vybrant_my_gender', chosenGender);
     ageGateModal.style.display = 'none';
+    if (socket) {
+      socket.emit('update-preferences', userPreferences);
+    }
     initLocalMedia();
   });
+}
+
+// Exit site to current browser's homepage/start page instead of just Google
+function handleExitSite() {
+  if (window.history.length > 1 && document.referrer && !document.referrer.includes(window.location.host)) {
+    window.history.back();
+    return;
+  }
+  const ua = navigator.userAgent.toLowerCase();
+  let exitUrl = 'https://www.google.com';
+  if (ua.includes('edg/') || ua.includes('edge/')) {
+    exitUrl = 'https://www.msn.com';
+  } else if (ua.includes('firefox')) {
+    exitUrl = 'https://start.mozilla.org';
+  } else if (ua.includes('brave')) {
+    exitUrl = 'https://search.brave.com';
+  } else if (ua.includes('safari') && !ua.includes('chrome')) {
+    exitUrl = 'https://www.apple.com';
+  } else if (ua.includes('opera') || ua.includes('opr/')) {
+    exitUrl = 'https://www.opera.com';
+  } else {
+    exitUrl = 'https://www.google.com';
+  }
+  try {
+    window.location.replace(exitUrl);
+  } catch {
+    window.location.href = exitUrl;
+  }
 }
 
 // Show Banned IP Screen (24-Hour ban)
@@ -258,9 +343,9 @@ async function initLocalMedia() {
   const cameraNoticeTitle = document.getElementById('cameraNoticeTitle');
   const cameraNoticeDesc = document.getElementById('cameraNoticeDesc');
   const audioOnlyPlaceholder = document.getElementById('audioOnlyPlaceholder');
+  const localVideoPlaceholder = document.getElementById('localVideoPlaceholder');
   const localBadgeText = document.getElementById('localBadgeText');
   const localCamBtn = document.getElementById('localCamBtn');
-  const headerCamToggle = document.getElementById('headerCamToggle');
 
   if (grantPermissionBtn) {
     grantPermissionBtn.disabled = true;
@@ -334,6 +419,10 @@ async function initLocalMedia() {
 
     if (isAudioOnly) {
       // Audio-only fallback UI presentation
+      if (localVideoPlaceholder) {
+        localVideoPlaceholder.classList.add('hidden');
+        localVideoPlaceholder.style.display = 'none';
+      }
       if (audioOnlyPlaceholder) {
         audioOnlyPlaceholder.classList.remove('hidden');
         audioOnlyPlaceholder.style.display = 'flex';
@@ -345,10 +434,6 @@ async function initLocalMedia() {
         localCamBtn.title = 'No Webcam Detected (Audio Only Mode)';
         localCamBtn.classList.add('opacity-60');
       }
-      if (headerCamToggle) {
-        headerCamToggle.title = 'No Webcam Detected (Audio Only Mode)';
-        headerCamToggle.classList.add('opacity-60');
-      }
       showToast('🎙️ Webcam not found. Audio-Only voice chat active!', 'info', 3500);
     } else {
       // Full video + audio mode UI
@@ -356,16 +441,16 @@ async function initLocalMedia() {
         audioOnlyPlaceholder.classList.add('hidden');
         audioOnlyPlaceholder.style.display = 'none';
       }
+      if (localVideoPlaceholder) {
+        localVideoPlaceholder.classList.add('hidden');
+        localVideoPlaceholder.style.display = 'none';
+      }
       if (localBadgeText) {
         localBadgeText.textContent = 'You (Local)';
       }
       if (localCamBtn) {
         localCamBtn.title = 'Turn Camera On/Off';
         localCamBtn.classList.remove('opacity-60');
-      }
-      if (headerCamToggle) {
-        headerCamToggle.title = 'Toggle Camera';
-        headerCamToggle.classList.remove('opacity-60');
       }
       showToast('Camera and microphone connected! 📹', 'success', 2500);
       initNsfwShield();
@@ -420,10 +505,8 @@ async function initLocalMedia() {
 function toggleAudio() {
   if (!localStream) return;
   const audioTrack = localStream.getAudioTracks()[0];
-  const headerMicIcon = document.getElementById('headerMicIcon');
   const localMicIcon = document.getElementById('localMicIcon');
   const localMicBtn = document.getElementById('localMicBtn');
-  const headerMicToggle = document.getElementById('headerMicToggle');
 
   if (audioTrack) {
     isAudioMuted = !isAudioMuted;
@@ -433,16 +516,11 @@ function toggleAudio() {
     const micSvgMuted = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>`;
 
     const iconContent = isAudioMuted ? micSvgMuted : micSvgActive;
-    if (headerMicIcon) headerMicIcon.innerHTML = iconContent;
     if (localMicIcon) localMicIcon.innerHTML = iconContent;
 
     if (localMicBtn) {
       localMicBtn.classList.toggle('bg-rose-600/80', isAudioMuted);
       localMicBtn.classList.toggle('hover:bg-rose-500', isAudioMuted);
-    }
-    if (headerMicToggle) {
-      headerMicToggle.classList.toggle('bg-rose-600/80', isAudioMuted);
-      headerMicToggle.classList.toggle('text-white', isAudioMuted);
     }
 
     showToast(isAudioMuted ? 'Microphone Muted 🔇' : 'Microphone Active 🎙️', isAudioMuted ? 'warning' : 'info', 2000);
@@ -454,10 +532,8 @@ function toggleAudio() {
 function toggleVideo() {
   if (!localStream) return;
   const videoTrack = localStream.getVideoTracks()[0];
-  const headerCamIcon = document.getElementById('headerCamIcon');
   const localCamIcon = document.getElementById('localCamIcon');
   const localCamBtn = document.getElementById('localCamBtn');
-  const headerCamToggle = document.getElementById('headerCamToggle');
 
   if (!videoTrack) {
     showToast('⚠️ No webcam detected (Audio-Only mode active)', 'warning', 2500);
@@ -471,16 +547,11 @@ function toggleVideo() {
   const camSvgDisabled = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>`;
 
   const iconContent = isVideoDisabled ? camSvgDisabled : camSvgActive;
-  if (headerCamIcon) headerCamIcon.innerHTML = iconContent;
   if (localCamIcon) localCamIcon.innerHTML = iconContent;
 
   if (localCamBtn) {
     localCamBtn.classList.toggle('bg-rose-600/80', isVideoDisabled);
     localCamBtn.classList.toggle('hover:bg-rose-500', isVideoDisabled);
-  }
-  if (headerCamToggle) {
-    headerCamToggle.classList.toggle('bg-rose-600/80', isVideoDisabled);
-    headerCamToggle.classList.toggle('text-white', isVideoDisabled);
   }
 
   showToast(isVideoDisabled ? 'Camera Disabled 🚫' : 'Camera Enabled 📹', isVideoDisabled ? 'warning' : 'info', 2000);
@@ -505,11 +576,9 @@ async function flipCamera() {
   const targetFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
 
   const flipBtn = document.getElementById('flipCamBtn');
-  const headerFlipBtn = document.getElementById('headerFlipCamToggle');
   const flipIcon = document.getElementById('flipCamIcon');
 
   if (flipBtn) flipBtn.classList.add('bg-purple-600/40');
-  if (headerFlipBtn) headerFlipBtn.classList.add('bg-purple-600/40');
   if (flipIcon) flipIcon.classList.add('rotate-180');
 
   try {
@@ -592,7 +661,6 @@ async function flipCamera() {
       setTimeout(() => flipIcon.classList.remove('rotate-180'), 350);
     }
     if (flipBtn) flipBtn.classList.remove('bg-purple-600/40');
-    if (headerFlipBtn) headerFlipBtn.classList.remove('bg-purple-600/40');
     isFlippingCamera = false;
   }
 }
@@ -912,11 +980,11 @@ function initSocketConnection() {
     setSearchingUI(false);
     teardownPeerConnection();
     stopNsfwScanner();
-    addSystemChatMessage('Search paused. Click Start to resume.');
+    addSystemChatMessage('Search stopped. Click Start to resume.');
     const matchText = document.getElementById('toggleMatchText');
     const matchIcon = document.getElementById('toggleMatchIcon');
-    if (matchText) matchText.textContent = 'Start Finding';
-    if (matchIcon) matchIcon.textContent = '▶️';
+    if (matchText) matchText.textContent = 'Start';
+    if (matchIcon) matchIcon.textContent = '▶';
     isSearching = false;
   });
 
@@ -1138,8 +1206,8 @@ function startSearching() {
   isSearching = true;
   const matchText = document.getElementById('toggleMatchText');
   const matchIcon = document.getElementById('toggleMatchIcon');
-  if (matchText) matchText.textContent = 'Pause Finding';
-  if (matchIcon) matchIcon.textContent = '⏸️';
+  if (matchText) matchText.textContent = 'Stop';
+  if (matchIcon) matchIcon.textContent = '⏹';
 
   socket.emit('start-search', { preferences: userPreferences });
   setSearchingUI(true);
@@ -1148,6 +1216,10 @@ function startSearching() {
 function stopSearching() {
   if (!socket) return;
   isSearching = false;
+  const matchText = document.getElementById('toggleMatchText');
+  const matchIcon = document.getElementById('toggleMatchIcon');
+  if (matchText) matchText.textContent = 'Start';
+  if (matchIcon) matchIcon.textContent = '▶';
   socket.emit('stop-search');
 }
 
@@ -1274,18 +1346,21 @@ function appendChatMessage(sender, text) {
   if (sender === 'self') {
     msgWrapper.className += ' items-end';
     msgWrapper.innerHTML = `
-      <div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3.5 py-2 shadow-md">
+      <div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-purple-600 text-white px-4 py-2.5 shadow-sm">
         <p class="leading-relaxed break-words text-xs sm:text-sm">${escapeHtml(text)}</p>
       </div>
-      <span class="text-[10px] text-zinc-400 dark:text-slate-500 mt-1 mr-1">${timeString}</span>
+      <div class="flex items-center space-x-1 text-[11px] text-zinc-400 dark:text-slate-500 mt-1 mr-1">
+        <span>${timeString}</span>
+        <span class="text-blue-500 font-bold ml-1 text-xs select-none">✔✔</span>
+      </div>
     `;
   } else {
     msgWrapper.className += ' items-start';
     msgWrapper.innerHTML = `
-      <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-[#161926] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-slate-100 px-3.5 py-2 shadow-md">
+      <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white px-4 py-2.5 shadow-xs">
         <p class="leading-relaxed break-words text-xs sm:text-sm">${escapeHtml(text)}</p>
       </div>
-      <span class="text-[10px] text-zinc-500 dark:text-slate-500 mt-1 ml-1 text-purple-600 dark:text-purple-300 font-medium">Stranger &bull; ${timeString}</span>
+      <span class="text-[11px] text-zinc-400 dark:text-slate-500 mt-1 ml-1">${timeString}</span>
     `;
   }
 
@@ -1411,6 +1486,7 @@ function startVipCountdownTimer(expiryTimestamp) {
   const openVipBtn = document.getElementById('openVipModalBtn');
   const vipBadge = document.getElementById('vipActiveBadge');
   const countdownEl = document.getElementById('vipCountdownText');
+  const mobileVipText = document.getElementById('mobileVipBtnText');
 
   if (vipTimerInterval) clearInterval(vipTimerInterval);
 
@@ -1433,6 +1509,9 @@ function startVipCountdownTimer(expiryTimestamp) {
         vipBadge.classList.add('hidden');
         vipBadge.classList.remove('flex');
       }
+      if (mobileVipText) {
+        mobileVipText.textContent = 'Get VIP Pass';
+      }
       updateVipFilterUi(false);
       showToast('Your VIP Pass has expired. Re-lock filters to standard.', 'warning', 3500);
       return;
@@ -1443,8 +1522,12 @@ function startVipCountdownTimer(expiryTimestamp) {
     const mins = Math.floor((totalSecs % 3600) / 60);
     const secs = totalSecs % 60;
 
+    const formattedTime = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
     if (countdownEl) {
-      countdownEl.textContent = hrs > 0 ? `${hrs}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
+      countdownEl.textContent = formattedTime;
+    }
+    if (mobileVipText) {
+      mobileVipText.textContent = `VIP: ${formattedTime}`;
     }
   };
 
@@ -1453,22 +1536,20 @@ function startVipCountdownTimer(expiryTimestamp) {
 }
 
 function updateVipFilterUi(vipUnlocked) {
-  document.querySelectorAll('.vip-lock-badge').forEach(badge => {
-    badge.textContent = vipUnlocked ? '✨' : '🔒';
-    badge.classList.toggle('text-amber-300', vipUnlocked);
-  });
+  // Update gender dropdown lock indicators
+  const genderSelect = document.getElementById('filterGenderSelect');
+  if (genderSelect) {
+    const femaleOpt = genderSelect.querySelector('option[value="female"]');
+    const maleOpt = genderSelect.querySelector('option[value="male"]');
+    if (femaleOpt) femaleOpt.textContent = vipUnlocked ? '♀️ Gender: Female ✨' : '♀️ Gender: Female 🔒';
+    if (maleOpt) maleOpt.textContent = vipUnlocked ? '♂️ Gender: Male ✨' : '♂️ Gender: Male 🔒';
+  }
 
   if (!vipUnlocked) {
     userPreferences.genderFilter = 'any';
     userPreferences.countryFilter = 'any';
-    const anyBtn = document.getElementById('filterGenderAny');
-    const femBtn = document.getElementById('filterGenderFemale');
-    const maleBtn = document.getElementById('filterGenderMale');
+    if (genderSelect) genderSelect.value = 'any';
     const countrySel = document.getElementById('filterCountrySelect');
-
-    if (anyBtn) anyBtn.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white';
-    if (femBtn) femBtn.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
-    if (maleBtn) maleBtn.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
     if (countrySel) countrySel.value = 'any';
   }
 }
@@ -1477,20 +1558,14 @@ function updateVipFilterUi(vipUnlocked) {
 // DOM BINDINGS & EVENT LISTENERS
 // ==========================================
 function bindUiEventListeners() {
-  const headerMic = document.getElementById('headerMicToggle');
-  const headerCam = document.getElementById('headerCamToggle');
   const localMic = document.getElementById('localMicBtn');
   const localCam = document.getElementById('localCamBtn');
   const flipBtn = document.getElementById('flipCamBtn');
-  const headerFlipBtn = document.getElementById('headerFlipCamToggle');
   const grantBtn = document.getElementById('grantPermissionBtn');
 
-  if (headerMic) headerMic.addEventListener('click', toggleAudio);
   if (localMic) localMic.addEventListener('click', toggleAudio);
-  if (headerCam) headerCam.addEventListener('click', toggleVideo);
   if (localCam) localCam.addEventListener('click', toggleVideo);
   if (flipBtn) flipBtn.addEventListener('click', flipCamera);
-  if (headerFlipBtn) headerFlipBtn.addEventListener('click', flipCamera);
   if (grantBtn) grantBtn.addEventListener('click', initLocalMedia);
 
   const guideBtn = document.getElementById('safetyGuideBtn');
@@ -1503,17 +1578,27 @@ function bindUiEventListeners() {
   if (ackGuide && guideModal) ackGuide.addEventListener('click', () => guideModal.classList.add('hidden'));
 
   const openVip = document.getElementById('openVipModalBtn');
+  const mobileOpenVip = document.getElementById('mobileOpenVipModalBtn');
   const closeMicro = document.getElementById('closeMicroPassBtn');
   const openRedeem = document.getElementById('openRedeemModalBtn');
+  const mobileOpenRedeem = document.getElementById('mobileOpenRedeemModalBtn');
   const closeRedeem = document.getElementById('closeRedeemModalBtn');
   const redeemModal = document.getElementById('redeemModal');
   const redeemInput = document.getElementById('redeemCodeInput');
   const redeemErr = document.getElementById('redeemErrorMsg');
 
   if (openVip) openVip.addEventListener('click', openMicroPassModal);
+  if (mobileOpenVip) mobileOpenVip.addEventListener('click', openMicroPassModal);
   if (closeMicro) closeMicro.addEventListener('click', closeMicroPassModal);
   if (openRedeem && redeemModal) {
     openRedeem.addEventListener('click', () => {
+      if (redeemErr) redeemErr.classList.add('hidden');
+      redeemModal.classList.remove('hidden');
+      if (redeemInput) redeemInput.focus();
+    });
+  }
+  if (mobileOpenRedeem && redeemModal) {
+    mobileOpenRedeem.addEventListener('click', () => {
       if (redeemErr) redeemErr.classList.add('hidden');
       redeemModal.classList.remove('hidden');
       if (redeemInput) redeemInput.focus();
@@ -1528,7 +1613,7 @@ function bindUiEventListeners() {
     simPayBtn.addEventListener('click', async () => {
       const selectedPlan = document.querySelector('input[name="vipPlan"]:checked')?.value || '1-hour';
       const origBtnHtml = simPayBtn.innerHTML;
-      simPayBtn.innerHTML = `<span>⏳ Initiating Razorpay Secure Checkout...</span>`;
+      simPayBtn.innerHTML = `<span>⏳ Processing Payment...</span>`;
       simPayBtn.disabled = true;
 
       try {
@@ -1706,52 +1791,28 @@ function bindUiEventListeners() {
     });
   }
 
-  const fAny = document.getElementById('filterGenderAny');
-  const fFem = document.getElementById('filterGenderFemale');
-  const fMale = document.getElementById('filterGenderMale');
+  const fGenderSelect = document.getElementById('filterGenderSelect');
   const fCountry = document.getElementById('filterCountrySelect');
   const myM = document.getElementById('myGenderMale');
   const myF = document.getElementById('myGenderFemale');
 
-  if (fAny) {
-    fAny.addEventListener('click', () => {
-      userPreferences.genderFilter = 'any';
-      fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-xs';
-      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
-      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
-      if (socket) socket.emit('update-preferences', userPreferences);
-    });
-  }
-
-  if (fFem) {
-    fFem.addEventListener('click', () => {
-      if (!isVip) {
+  if (fGenderSelect) {
+    fGenderSelect.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected !== 'any' && !isVip) {
+        e.target.value = 'any';
+        userPreferences.genderFilter = 'any';
         openMicroPassModal();
-        showToast('👑 1-Hour or 12-Hour VIP Pass required to use Female Filter!', 'warning', 3000);
+        showToast('👑 VIP Pass required to use Gender Filter!', 'warning', 3000);
         return;
       }
-      userPreferences.genderFilter = 'female';
-      fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-gradient-to-r from-amber-500 to-purple-600 text-white flex items-center space-x-1 group shadow-md shadow-amber-500/20';
-      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white';
-      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
+      userPreferences.genderFilter = selected;
       if (socket) socket.emit('update-preferences', userPreferences);
-      showToast('Priority Female Matchmaking Filter active ♀️', 'info', 2000);
-    });
-  }
-
-  if (fMale) {
-    fMale.addEventListener('click', () => {
-      if (!isVip) {
-        openMicroPassModal();
-        showToast('👑 1-Hour or 12-Hour VIP Pass required to use Male Filter!', 'warning', 3000);
-        return;
+      if (selected === 'female') {
+        showToast('Priority Female Matchmaking Filter active ♀️', 'info', 2000);
+      } else if (selected === 'male') {
+        showToast('Priority Male Matchmaking Filter active ♂️', 'info', 2000);
       }
-      userPreferences.genderFilter = 'male';
-      fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-gradient-to-r from-amber-500 to-purple-600 text-white flex items-center space-x-1 group shadow-md shadow-amber-500/20';
-      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white';
-      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
-      if (socket) socket.emit('update-preferences', userPreferences);
-      showToast('Priority Male Matchmaking Filter active ♂️', 'info', 2000);
     });
   }
 
@@ -1849,6 +1910,7 @@ function bindUiEventListeners() {
     clearC.addEventListener('click', () => {
       clearChatMessages();
       addSystemChatMessage('Chat cleared.');
+      showToast('Chat cleared 🗑️', 'info', 2000);
     });
   }
 
