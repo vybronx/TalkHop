@@ -156,18 +156,54 @@
 }
 
 /* ========================================== */
-/* PRODUCTION MOBILE MEDIA QUERIES (Milestone 5) */
+/* PRODUCTION RESPONSIVE & MOBILE MEDIA QUERIES (Milestone 5) */
 /* ========================================== */
 
+/* Responsive Text Wrapping Safeguards */
+#radarTitle, #radarSubtitle, #antiFlashOverlay h4, #antiFlashOverlay p, #cameraPermissionNotice p, #audioOnlyPlaceholder p {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Laptop & Tablet Screens (<= 1280px) - Prevents 3-column squishing */
+@media (max-width: 1280px) {
+  main {
+    overflow-y: auto !important;
+    height: auto !important;
+  }
+
+  #chatAside {
+    width: 100% !important;
+    min-width: 290px;
+    height: 400px !important;
+    max-height: 450px !important;
+    min-height: 320px !important;
+    flex: 1 1 100% !important;
+    order: 2;
+  }
+
+  #chatMessages {
+    max-height: 300px !important;
+  }
+
+  #strangerVideoWrapper, #localVideoWrapper {
+    min-width: 280px;
+    min-height: 230px;
+  }
+}
+
+/* Medium Screens (<= 1024px) */
 @media (max-width: 1024px) {
   #chatAside {
-    height: 420px !important;
-    max-height: 440px !important;
-    min-height: 320px !important;
+    height: 380px !important;
+    max-height: 420px !important;
+    min-height: 300px !important;
     width: 100% !important;
   }
   #chatMessages {
-    max-height: 320px !important;
+    max-height: 280px !important;
   }
 }
 
@@ -181,14 +217,15 @@
 
   /* Stacked Video Grid */
   #remoteVideoWrapper, #localVideoWrapper {
-    min-height: 220px;
+    min-height: 200px;
     aspect-ratio: 16 / 9;
     width: 100%;
+    min-width: 100%;
     border-radius: 1rem;
   }
 
   #remoteVideo, #localVideo {
-    min-height: 220px;
+    min-height: 200px;
     object-fit: cover;
   }
 
@@ -205,20 +242,20 @@
   /* Mobile Action Bar */
   #skipBtn {
     font-size: 0.95rem !important;
-    padding: 0.75rem 1.5rem !important;
+    padding: 0.75rem 1.25rem !important;
   }
 
   /* Pinned Mobile Ephemeral Chat Box */
   #chatAside {
-    height: 360px !important;
+    height: 350px !important;
     max-height: 380px !important;
-    min-height: 280px !important;
+    min-height: 270px !important;
     border-radius: 1rem;
     margin-bottom: 0.5rem;
   }
 
   #chatMessages {
-    max-height: 270px !important;
+    max-height: 260px !important;
     padding: 0.75rem !important;
   }
 }
@@ -226,7 +263,7 @@
 /* Compact Mobile Screens (<= 480px) */
 @media (max-width: 480px) {
   #remoteVideoWrapper, #localVideoWrapper {
-    min-height: 190px;
+    min-height: 180px;
   }
 
   #chatAside {

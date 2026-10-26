@@ -344,19 +344,19 @@
 
   </nav>
 
-  <!-- Main Viewport -->
+  <!-- Main Viewport (Mobile-First with Flex-Wrap to prevent squishing on laptop screens) -->
   <main
-    class="relative z-10 flex-1 flex flex-col lg:flex-row overflow-hidden p-3 lg:p-5 gap-4 max-w-[1720px] w-full mx-auto">
+    class="relative z-10 flex-1 flex flex-col xl:flex-row flex-wrap overflow-y-auto xl:overflow-hidden p-3 sm:p-4 lg:p-5 gap-4 max-w-[1720px] w-full mx-auto">
 
     <!-- LEFT COLUMN: VIDEO GRID & ACTION CONTROLS -->
-    <section class="flex-1 flex flex-col gap-4 min-h-0">
+    <section class="flex-1 min-w-[300px] sm:min-w-[340px] flex flex-col gap-4 min-h-0 w-full xl:w-auto">
 
-      <!-- Video Grid Container -->
-      <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[360px] lg:min-h-0">
+      <!-- Video Grid Container (Flex-wrap prevents horizontal squishing) -->
+      <div class="flex-1 flex flex-col md:flex-row flex-wrap gap-3.5 min-h-[340px]">
 
         <!-- STRANGER VIDEO BOX -->
         <div id="strangerVideoWrapper"
-          class="relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto">
+          class="flex-1 min-w-[280px] sm:min-w-[320px] relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto min-h-[240px]">
 
           <!-- Remote Video Feed -->
           <video id="remoteVideo" autoplay playsinline
@@ -396,10 +396,10 @@
               </div>
             </div>
 
-            <h3 id="radarTitle" class="font-display font-bold text-lg sm:text-xl text-white mb-1.5">
+            <h3 id="radarTitle" class="font-display font-bold text-base sm:text-lg lg:text-xl text-white mb-1.5 px-3 max-w-full break-words">
               Looking for someone awesome...
             </h3>
-            <p id="radarSubtitle" class="text-xs sm:text-sm text-slate-400 max-w-xs">
+            <p id="radarSubtitle" class="text-xs sm:text-sm text-slate-400 max-w-sm px-3 break-words leading-relaxed">
               Matching you randomly with someone from around the world. Press <span
                 class="text-purple-300 font-semibold">Start</span> or hit <kbd
                 class="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">Esc</kbd> anytime.
@@ -460,7 +460,7 @@
 
         <!-- LOCAL USER VIDEO BOX -->
         <div id="localVideoWrapper"
-          class="relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto">
+          class="flex-1 min-w-[280px] sm:min-w-[320px] relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto min-h-[240px]">
 
           <!-- Local Mirrored Video Stream -->
           <video id="localVideo" autoplay playsinline muted
@@ -549,21 +549,21 @@
 
       <!-- ACTION CONTROLS BAR -->
       <div
-        class="bg-[#0e111d]/90 backdrop-blur-xl rounded-2xl border border-white/10 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+        class="bg-[#0e111d]/90 backdrop-blur-xl rounded-2xl border border-white/10 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-xl w-full">
 
         <!-- Left: Start/Stop Matching Toggle -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center flex-shrink-0">
           <button id="toggleMatchBtn"
-            class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold flex items-center space-x-2 border border-white/10 transition-all active:scale-95 shadow-md">
+            class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs sm:text-sm font-bold flex items-center space-x-1.5 sm:space-x-2 border border-white/10 transition-all active:scale-95 shadow-md">
             <span id="toggleMatchIcon">▶️</span>
             <span id="toggleMatchText">Start Finding</span>
           </button>
         </div>
 
         <!-- Center: Prominent SKIP Button -->
-        <div class="flex-1 flex items-center justify-center min-w-[200px]">
+        <div class="flex-1 flex items-center justify-center min-w-[170px] sm:min-w-[220px]">
           <button id="skipBtn"
-            class="w-full sm:w-auto px-8 sm:px-12 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-extrabold text-base sm:text-lg flex items-center justify-center space-x-3 shadow-lg shadow-purple-600/30 hover:shadow-cyan-500/40 active:scale-95 transition-all group">
+            class="w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-extrabold text-sm sm:text-base lg:text-lg flex items-center justify-center space-x-2 sm:space-x-3 shadow-lg shadow-purple-600/30 hover:shadow-cyan-500/40 active:scale-95 transition-all group">
             <span class="group-hover:translate-x-0.5 transition-transform">⏭️</span>
             <span class="tracking-wide">SKIP STRANGER</span>
             <kbd
@@ -574,9 +574,9 @@
         </div>
 
         <!-- Right: Report & Skip Button (Milestone 3 wired to 'report-peer') -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center flex-shrink-0">
           <button id="reportBtn"
-            class="px-3.5 py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 text-xs sm:text-sm font-semibold flex items-center space-x-1.5 border border-rose-500/20 hover:border-rose-500/40 transition-all active:scale-95"
+            class="px-3 sm:px-3.5 py-2.5 sm:py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 text-xs sm:text-sm font-semibold flex items-center space-x-1.5 border border-rose-500/20 hover:border-rose-500/40 transition-all active:scale-95"
             title="Report inappropriate behavior and find someone else">
             <span>🚩</span>
             <span class="hidden sm:inline">Report & Skip</span>
@@ -588,10 +588,10 @@
 
     </section>
 
-    <!-- RIGHT COLUMN: EPHEMERAL TEXT CHAT -->
+    <!-- RIGHT COLUMN: EPHEMERAL TEXT CHAT (Never squishes below min-width) -->
     <aside
       id="chatAside"
-      class="w-full lg:w-[380px] xl:w-[420px] bg-[#0d0f17]/95 backdrop-blur-2xl rounded-2xl border border-white/10 flex flex-col shadow-2xl overflow-hidden min-h-0">
+      class="w-full xl:w-[380px] 2xl:w-[420px] flex-1 xl:flex-initial min-w-[290px] sm:min-w-[320px] bg-[#0d0f17]/95 backdrop-blur-2xl rounded-2xl border border-white/10 flex flex-col shadow-2xl overflow-hidden min-h-[380px] xl:min-h-0">
 
       <!-- Chat Header -->
       <div class="px-4 py-3.5 border-b border-white/10 bg-[#090b12]/60 flex items-center justify-between flex-shrink-0">
