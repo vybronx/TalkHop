@@ -1,7 +1,7 @@
 {
-  "name": "blip",
+  "name": "vybrant",
   "version": "1.0.0",
-  "description": "Blip - Instant P2P Random Video Chat (Hosted at blip.vybronx.online)",
+  "description": "Vybrant - Instant P2P Random Video Chat (Hosted at vybrant.vybronx.online)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

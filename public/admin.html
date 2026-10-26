@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blip ⚡ | Secret Admin Command Center</title>
-  <meta name="description" content="Blip Secret Admin Command Center & Live Traffic Radar">
+  <title>Vybrant ⚡ | Secret Admin Command Center</title>
+  <meta name="description" content="Vybrant Secret Admin Command Center & Live Traffic Radar">
   <meta name="theme-color" content="#07080d">
 
   <!-- Favicon SVG -->
@@ -141,7 +141,7 @@
           </svg>
         </div>
         <h1 class="font-display font-extrabold text-2xl text-white tracking-tight">
-          Blip<span class="text-purple-400">⚡</span> Admin Center
+          Vybrant<span class="text-purple-400">⚡</span> Admin Center
         </h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">
           Secret Command Console & Live Traffic Radar
@@ -202,12 +202,12 @@
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="font-display font-extrabold text-lg sm:text-xl text-white">Blip<span class="text-purple-400">⚡</span> Admin</span>
+            <span class="font-display font-extrabold text-lg sm:text-xl text-white">Vybrant<span class="text-purple-400">⚡</span> Admin</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30">
               Command Center
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">blip.vybronx.online &bull; Live Telemetry & VIP Controller</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block">vybrant.vybronx.online &bull; Live Telemetry & VIP Controller</p>
         </div>
       </div>
 
@@ -239,7 +239,7 @@
         <a href="/" target="_blank"
           class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 transition-all font-semibold">
           <span>🌐</span>
-          <span class="hidden sm:inline">Open Blip</span>
+          <span class="hidden sm:inline">Open Vybrant</span>
         </a>
 
         <!-- Logout Button -->
@@ -681,7 +681,7 @@
   <!-- ======================================================= -->
   <script>
     // State Variables
-    let adminToken = sessionStorage.getItem('blip_admin_token') || null;
+    let adminToken = sessionStorage.getItem('vybrant_admin_token') || sessionStorage.getItem('blip_admin_token') || null;
     let pollInterval = null;
     let countdownSeconds = 3;
     let isPolling = true;
@@ -727,6 +727,7 @@
       if (response.status === 401) {
         // Token invalid or expired
         adminToken = null;
+        sessionStorage.removeItem('vybrant_admin_token');
         sessionStorage.removeItem('blip_admin_token');
         showLoginScreen('Session expired. Please log in again.');
         throw new Error('Unauthorized');
@@ -1084,7 +1085,7 @@
 
             if (res.ok && data.success) {
               adminToken = data.token;
-              sessionStorage.setItem('blip_admin_token', adminToken);
+              sessionStorage.setItem('vybrant_admin_token', adminToken);
               document.getElementById('adminUserPill').textContent = data.user || username;
               showAdminToast(`Welcome, ${username}! Admin session active. ⚡`, 'success');
               showDashboard();
@@ -1108,6 +1109,7 @@
             await adminFetch('/api/admin/logout', { method: 'POST' });
           } catch (e) {}
           adminToken = null;
+          sessionStorage.removeItem('vybrant_admin_token');
           sessionStorage.removeItem('blip_admin_token');
           showLoginScreen();
           showAdminToast('Admin logged out safely.', 'info');

@@ -1,8 +1,7 @@
 /**
- * Blip ⚡ - Instant P2P Random Video Chat Engine
- * Milestone 3: Fixed Age Gate, Anti-Toast Spam System, Smooth Camera Initialization,
- * Browser-Side NSFW Shield (TensorFlow.js + NSFWJS), and 24-Hour IP Auto-Ban Integration.
- * Hosted at blip.vybronx.online
+ * Vybrant ⚡ - Instant P2P Random Video Chat Engine
+ * High-performance peer-to-peer random video matchmaking with AI Safety Shield
+ * Hosted at vybrant.vybronx.online
  */
 
 // ==========================================
@@ -64,7 +63,7 @@ let remoteAudioMonitor = null;
 let consecutiveSkips = 0;
 let matchCount = 0;
 let isVip = false;
-let vipCode = localStorage.getItem('blip_vip_code') || null;
+let vipCode = localStorage.getItem('vybrant_vip_code') || localStorage.getItem('blip_vip_code') || null;
 let vipExpiresAt = 0;
 let vipTimerInterval = null;
 let latestGeneratedCode = null;
@@ -101,7 +100,7 @@ function showToast(message, type = 'info', duration = 3500) {
   if (!container) return;
 
   // 1. Prevent duplicate toasts with identical content
-  const existingToasts = container.querySelectorAll('.blip-toast');
+  const existingToasts = container.querySelectorAll('.vybrant-toast');
   for (const t of existingToasts) {
     if (t.dataset.message === message) {
       // Re-trigger entrance animation without creating a duplicate DOM node
@@ -124,7 +123,7 @@ function showToast(message, type = 'info', duration = 3500) {
     danger: 'bg-slate-900/95 border-rose-500/30 text-rose-200'
   };
 
-  toast.className = `blip-toast pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-semibold ${bgColors[type] || bgColors.info} transform transition-all duration-300 translate-y-3 opacity-0`;
+  toast.className = `vybrant-toast pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-semibold ${bgColors[type] || bgColors.info} transform transition-all duration-300 translate-y-3 opacity-0`;
   toast.innerHTML = `<span>${message}</span>`;
   
   container.appendChild(toast);
@@ -154,7 +153,7 @@ function initAgeGate() {
   }
 
   // Check if previously verified in sessionStorage
-  const isVerified = sessionStorage.getItem('blip_age_verified');
+  const isVerified = sessionStorage.getItem('vybrant_age_verified') || sessionStorage.getItem('blip_age_verified');
   if (isVerified === 'true') {
     ageGateModal.style.display = 'none';
     initLocalMedia();
@@ -186,11 +185,11 @@ function initAgeGate() {
         void ageCheckContainer.offsetWidth; // Restart CSS animation
         ageCheckContainer.classList.add('shake-warning');
       }
-      showToast('⚠️ Please check "I am 18+" to enter Blip.', 'warning', 3000);
+      showToast('⚠️ Please check "I am 18+" to enter Vybrant.', 'warning', 3000);
       return;
     }
 
-    sessionStorage.setItem('blip_age_verified', 'true');
+    sessionStorage.setItem('vybrant_age_verified', 'true');
     ageGateModal.style.display = 'none';
     initLocalMedia();
   });
@@ -367,7 +366,7 @@ async function initLocalMedia() {
       if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Please plug in a microphone or headset to start chatting.';
     } else {
       if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'Audio Access Required';
-      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Blip needs microphone access to connect you to voice and text chats.';
+      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Vybrant needs microphone access to connect you to voice and text chats.';
     }
 
     // Single user-friendly notification toast (never duplicate or stack)
@@ -970,7 +969,7 @@ async function createAndSendOffer() {
 
 function setupDataChannelAsInitiator() {
   try {
-    dataChannel = peerConnection.createDataChannel('blip_chat', { ordered: true });
+    dataChannel = peerConnection.createDataChannel('vybrant_chat', { ordered: true });
     bindDataChannelEvents(dataChannel);
   } catch (err) {
     console.error('[WebRTC] Error creating DataChannel:', err);
@@ -1343,7 +1342,7 @@ async function activateVipCode(code, isImmediateActivation = false) {
       isVip = true;
       vipCode = result.code;
       vipExpiresAt = result.expiresAt;
-      localStorage.setItem('blip_vip_code', vipCode);
+      localStorage.setItem('vybrant_vip_code', vipCode);
 
       if (redeemModal) redeemModal.classList.add('hidden');
       if (redeemCodeInput) redeemCodeInput.value = '';
@@ -1390,6 +1389,7 @@ function startVipCountdownTimer(expiryTimestamp) {
       clearInterval(vipTimerInterval);
       vipTimerInterval = null;
       isVip = false;
+      localStorage.removeItem('vybrant_vip_code');
       localStorage.removeItem('blip_vip_code');
       if (openVipBtn) openVipBtn.classList.remove('hidden');
       if (vipBadge) {
@@ -1531,7 +1531,7 @@ function bindUiEventListeners() {
             key: orderData.key_id,
             amount: orderData.amount,
             currency: orderData.currency || 'INR',
-            name: 'Blip ⚡ Video Engine',
+            name: 'Vybrant ⚡ Video Engine',
             description: `${selectedPlan === '12-hour' ? '12-Hour' : '1-Hour'} VIP Micro-Pass`,
             order_id: orderData.order_id,
             image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238b5cf6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
@@ -1563,8 +1563,8 @@ function bindUiEventListeners() {
               }
             },
             prefill: {
-              name: 'Blip User',
-              email: 'guest@blip.vybronx.online',
+              name: 'Vybrant User',
+              email: 'guest@vybrant.vybronx.online',
               contact: '9999999999'
             },
             theme: {

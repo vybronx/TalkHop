@@ -51,7 +51,7 @@ const io = new Server(server, {
 // SECRET ADMIN DASHBOARD CONFIG (Milestone 4)
 // ==========================================
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'blip777x';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'vybrant777x';
 
 // In-memory active admin sessions: token -> { user, createdAt, expiresAt }
 const adminSessions = new Map();
@@ -587,10 +587,10 @@ app.post('/api/payment/create-order', async (req, res) => {
       const options = {
         amount: amountInPaise,
         currency: 'INR',
-        receipt: `blip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        receipt: `vybrant_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         notes: {
           plan,
-          service: 'Blip VIP Micro-Pass'
+          service: 'Vybrant VIP Micro-Pass'
         }
       };
       const order = await razorpayClient.orders.create(options);
@@ -1064,8 +1064,8 @@ app.get('/ping', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Blip WebRTC Engine (Milestone 5 - Production Polish)',
-    host: 'blip.vybronx.online',
+    service: 'Vybrant WebRTC Engine',
+    host: 'vybrant.vybronx.online',
     online: io.engine.clientsCount || 0,
     waitingQueueLength: waitingQueue.length,
     activeMatches: activePairs.size / 2,
@@ -1383,9 +1383,9 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`===============================================`);
-  console.log(`⚡ Blip P2P Video Chat Engine - Milestone 3`);
+  console.log(`⚡ Vybrant ⚡ P2P Video Chat Engine (by VybronX Studios)`);
   console.log(`⚡ AI Safety Shield & IP Auto-Ban Active`);
-  console.log(`⚡ Hosted at: https://blip.vybronx.online`);
+  console.log(`⚡ Hosted at: https://vybrant.vybronx.online`);
   console.log(`⚡ Local Server running at: http://localhost:${PORT}`);
   console.log(`===============================================`);
 });
