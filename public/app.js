@@ -10,39 +10,29 @@
 // ==========================================
 const RTC_CONFIG = {
   iceServers: [
-    // 1. Google Public Global Anycast STUNs (Default Primary)
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun3.l.google.com:19302' },
-    { urls: 'stun:stun4.l.google.com:19302' },
-
-    // 2. High-Availability Global Edge STUNs (Cloudflare, Twilio, Mozilla)
-    { urls: 'stun:stun.cloudflare.com:3478' },
-    { urls: 'stun:global.stun.twilio.com:3478' },
-    { urls: 'stun:stun.services.mozilla.com:3478' },
-    { urls: 'stun:stun.sipgate.net:3478' },
-    { urls: 'stun:stun.ekiga.net' },
-
-    // 3. Structured TURN Relay Placeholders (e.g. Metered.ca / Coturn / OpenRelay)
-    // Structured so credentials can be injected via backend variables or /api/config/ice
     {
-      urls: [
-        'turn:openrelay.metered.ca:80',
-        'turn:openrelay.metered.ca:443',
-        'turn:openrelay.metered.ca:443?transport=tcp'
-      ],
-      username: window.BLIP_TURN_USERNAME || 'openrelayproject',
-      credential: window.BLIP_TURN_CREDENTIAL || 'openrelayproject'
+      urls: "stun:stun.relay.metered.ca:80",
     },
     {
-      // Custom Metered.ca / Coturn Dedicated TURN Provider Placeholder
-      urls: [
-        'turns:standard.metered.ca:443?transport=tcp'
-      ],
-      username: window.BLIP_METERED_TURN_USER || 'metered_turn_username_placeholder',
-      credential: window.BLIP_METERED_TURN_CRED || 'metered_turn_credential_placeholder'
-    }
+      urls: "turn:global.relay.metered.ca:80",
+      username: "1654f590900e48e1a4ae720e",
+      credential: "uc4KT1+bOvxoS9js",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80?transport=tcp",
+      username: "1654f590900e48e1a4ae720e",
+      credential: "uc4KT1+bOvxoS9js",
+    },
+    {
+      urls: "turn:global.relay.metered.ca:443",
+      username: "1654f590900e48e1a4ae720e",
+      credential: "uc4KT1+bOvxoS9js",
+    },
+    {
+      urls: "turns:global.relay.metered.ca:443?transport=tcp",
+      username: "1654f590900e48e1a4ae720e",
+      credential: "uc4KT1+bOvxoS9js",
+    },
   ],
   iceCandidatePoolSize: 10,
   bundlePolicy: 'max-bundle',
