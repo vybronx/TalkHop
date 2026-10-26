@@ -50,7 +50,10 @@ let isInitiator = false;
 let isSearching = false;
 let isAudioMuted = false;
 let isVideoDisabled = false;
+let isAudioOnly = false;
 let currentFacingMode = 'user'; // 'user' (front selfie) or 'environment' (back camera)
+let isCameraMirrored = true; // true = selfie mirrored view, false = natural view
+let currentVideoDeviceId = null; // Track active hardware camera deviceId
 let isFlippingCamera = false;
 let isMediaRequesting = false;
 let pendingIceCandidates = [];
@@ -90,6 +93,115 @@ let currentSponsorConfig = {
   highlight: 'Vybronx Gaming Gear & Cloud Servers',
   urlText: 'Visit vybronx.online/store',
   url: 'https://vybronx.online'
+};
+
+// ==========================================
+// VOICE CLARITY & AUDIO PROCESSING CONFIGURATION
+// ==========================================
+const PREFERRED_AUDIO_CONSTRAINTS = {
+  echoCancellation: true,
+  noiseSuppression: true,
+  autoGainControl: true,
+  channelCount: { ideal: 1 }
+};
+
+/**
+ * Inspect actual audio track settings without logging device IDs or private data
+ */
+function logAudioTrackSettings(stream) {
+  if (!stream || typeof stream.getAudioTracks !== 'function') return null;
+  const audioTrack = stream.getAudioTracks()[0];
+  const settings = audioTrack?.getSettings();
+
+  console.debug('Vybrant audio settings', {
+    echoCancellation: settings?.echoCancellation,
+    noiseSuppression: settings?.noiseSuppression,
+    autoGainControl: settings?.autoGainControl,
+    channelCount: settings?.channelCount,
+    sampleRate: settings?.sampleRate
+  });
+
+  return settings;
+}
+
+/**
+ * Improves WebRTC voice transmission quality by inspecting existing audio senders
+ * and setting an optimal Opus voice bitrate ceiling (32-40 kbps, default 40000 bps)
+ * while preserving browser-managed congestion handling, dynamic adaptation, and latency.
+ */
+async function applyVoiceSenderBitrate(pc) {
+  if (!pc || typeof pc.getSenders !== 'function') return;
+
+  try {
+    const senders = pc.getSenders();
+    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+    if (!audioSender || typeof audioSender.getParameters !== 'function' || typeof audioSender.setParameters !== 'function') {
+      return;
+    }
+
+    const params = audioSender.getParameters();
+    if (!params || !Array.isArray(params.encodings) || params.encodings.length === 0) {
+      return;
+    }
+
+    const TARGET_VOICE_BITRATE_BPS = 40000; // 40 kbps optimal speech clarity
+    if (params.encodings[0].maxBitrate === TARGET_VOICE_BITRATE_BPS) {
+      return; // Already configured, avoid redundant setParameters calls
+    }
+
+    params.encodings[0].maxBitrate = TARGET_VOICE_BITRATE_BPS;
+    await audioSender.setParameters(params);
+    console.debug('[Vybrant Audio] WebRTC audio sender voice bitrate optimized (maxBitrate: 40 kbps)');
+  } catch (err) {
+    // Graceful degradation if browser does not support sender parameter adjustments
+    console.debug('[Vybrant Audio] Audio sender bitrate adjustment skipped (using browser defaults):', err.name || err.message);
+  }
+}
+
+// Window diagnostic helper for QA & audio inspection
+window.getVybrantAudioDiagnostics = async function() {
+  const localAudioTrack = localStream?.getAudioTracks()?.[0];
+  const localSettings = localAudioTrack?.getSettings();
+  let rtcStats = null;
+
+  if (peerConnection && typeof peerConnection.getStats === 'function') {
+    try {
+      const stats = await peerConnection.getStats();
+      rtcStats = {};
+      stats.forEach(report => {
+        if (report.type === 'outbound-rtp' && report.kind === 'audio') {
+          rtcStats.outbound = {
+            packetsSent: report.packetsSent,
+            bytesSent: report.bytesSent,
+            targetBitrate: report.targetBitrate
+          };
+        } else if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+          rtcStats.inbound = {
+            packetsReceived: report.packetsReceived,
+            packetsLost: report.packetsLost,
+            jitter: report.jitter,
+            bytesReceived: report.bytesReceived
+          };
+        }
+      });
+    } catch (e) {
+      rtcStats = { error: e.message };
+    }
+  }
+
+  return {
+    audioTrackSettings: {
+      echoCancellation: localSettings?.echoCancellation,
+      noiseSuppression: localSettings?.noiseSuppression,
+      autoGainControl: localSettings?.autoGainControl,
+      channelCount: localSettings?.channelCount,
+      sampleRate: localSettings?.sampleRate
+    },
+    isAudioMuted,
+    isAudioOnly,
+    peerConnectionState: peerConnection?.connectionState || 'none',
+    rtcStats
+  };
 };
 
 // ==========================================
@@ -352,7 +464,7 @@ async function initLocalMedia() {
     grantPermissionBtn.innerHTML = `<span>⏳ Requesting Access...</span>`;
   }
 
-  let isAudioOnly = false;
+  isAudioOnly = false;
 
   try {
     // 1. Primary Attempt: Request Video + Audio
@@ -362,15 +474,17 @@ async function initLocalMedia() {
         height: { ideal: 720, min: 480 },
         facingMode: 'user'
       },
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      }
+      audio: PREFERRED_AUDIO_CONSTRAINTS
     };
 
     try {
       localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      logAudioTrackSettings(localStream);
+      const vidTrack = localStream.getVideoTracks()[0];
+      if (vidTrack && typeof vidTrack.getSettings === 'function') {
+        const vidSettings = vidTrack.getSettings();
+        if (vidSettings?.deviceId) currentVideoDeviceId = vidSettings.deviceId;
+      }
     } catch (camErr) {
       console.warn('[Media] Video + Audio failed, testing for missing camera hardware:', camErr.name, camErr.message);
 
@@ -386,14 +500,19 @@ async function initLocalMedia() {
       // Retry requesting audio-only if camera is missing or unavailable
       if (isCameraHardwareError || (camErr.name !== 'NotAllowedError' && camErr.name !== 'PermissionDeniedError')) {
         console.log('[Media] Retrying with Audio-Only fallback...');
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: false,
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: PREFERRED_AUDIO_CONSTRAINTS
+          });
+        } catch (audioConstraintErr) {
+          console.warn('[Media] Audio-only fallback with preferred constraints failed, degrading gracefully to basic audio:', audioConstraintErr);
+          localStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true
+          });
+        }
+        logAudioTrackSettings(localStream);
         isAudioOnly = true;
       } else {
         throw camErr;
@@ -434,6 +553,11 @@ async function initLocalMedia() {
         localCamBtn.title = 'No Webcam Detected (Audio Only Mode)';
         localCamBtn.classList.add('opacity-60');
       }
+      const flipCamBtn = document.getElementById('flipCamBtn');
+      if (flipCamBtn) {
+        flipCamBtn.title = 'Camera Flip Unavailable (Audio Only Mode)';
+        flipCamBtn.classList.add('opacity-40', 'cursor-not-allowed');
+      }
       showToast('🎙️ Webcam not found. Audio-Only voice chat active!', 'info', 3500);
     } else {
       // Full video + audio mode UI
@@ -451,6 +575,11 @@ async function initLocalMedia() {
       if (localCamBtn) {
         localCamBtn.title = 'Turn Camera On/Off';
         localCamBtn.classList.remove('opacity-60');
+      }
+      const flipCamBtn = document.getElementById('flipCamBtn');
+      if (flipCamBtn) {
+        flipCamBtn.title = 'Flip Camera / Mirror View';
+        flipCamBtn.classList.remove('opacity-40', 'cursor-not-allowed');
       }
       showToast('Camera and microphone connected! 📹', 'success', 2500);
       initNsfwShield();
@@ -557,7 +686,7 @@ function toggleVideo() {
   showToast(isVideoDisabled ? 'Camera Disabled 🚫' : 'Camera Enabled 📹', isVideoDisabled ? 'warning' : 'info', 2000);
 }
 
-// Flip Camera between 'user' (Front Selfie) and 'environment' (Rear Back) without dropping WebRTC call
+// Universal Camera Flip Engine: Cycles multi-camera hardware (Front/Rear/USB) or toggles horizontal mirror on single-cam devices
 async function flipCamera() {
   if (isFlippingCamera) return;
 
@@ -567,95 +696,175 @@ async function flipCamera() {
   }
 
   const currentVideoTrack = localStream.getVideoTracks()[0];
-  if (!currentVideoTrack) {
-    showToast('⚠️ No active webcam (Audio-Only mode active)', 'warning', 2500);
+  if (!currentVideoTrack || isAudioOnly) {
+    showToast('⚠️ No webcam active (Voice-Only Mode)', 'warning', 2500);
     return;
   }
 
   isFlippingCamera = true;
-  const targetFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-
   const flipBtn = document.getElementById('flipCamBtn');
   const flipIcon = document.getElementById('flipCamIcon');
+  const localVid = document.getElementById('localVideo');
 
   if (flipBtn) flipBtn.classList.add('bg-purple-600/40');
   if (flipIcon) flipIcon.classList.add('rotate-180');
 
   try {
-    let newStream = null;
-
-    // 1. Request new video track with target facingMode
-    try {
-      newStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: targetFacingMode },
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 }
-        },
-        audio: false
-      });
-    } catch (exactErr) {
-      console.warn('[Camera] Exact facingMode request failed, falling back to ideal constraint:', exactErr.name);
-      newStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: targetFacingMode,
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 }
-        },
-        audio: false
-      });
-    }
-
-    const newVideoTrack = newStream.getVideoTracks()[0];
-    if (!newVideoTrack) {
-      throw new Error('No video track available');
-    }
-
-    // 2. Seamlessly update active WebRTC connection without dropping the call
-    if (peerConnection) {
-      const senders = peerConnection.getSenders();
-      const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-      if (videoSender) {
-        await videoSender.replaceTrack(newVideoTrack);
-        console.log('[WebRTC] Seamlessly swapped video track on active peer connection.');
+    // 1. Detect connected videoinput devices
+    let videoDevices = [];
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') {
+      try {
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+      } catch (enumErr) {
+        console.warn('[Camera] Device enumeration warning:', enumErr.message);
       }
     }
 
-    // 3. Remove and release previous hardware track
-    localStream.removeTrack(currentVideoTrack);
-    currentVideoTrack.stop();
+    // SCENARIO 1: Multiple Cameras Available (Mobile Front/Back or Multiple Desktop Webcams)
+    if (videoDevices.length > 1) {
+      const activeTrackSettings = typeof currentVideoTrack.getSettings === 'function' ? currentVideoTrack.getSettings() : {};
+      const activeDeviceId = activeTrackSettings.deviceId || currentVideoDeviceId;
 
-    // 4. Add new track to existing local stream
-    localStream.addTrack(newVideoTrack);
-
-    // 5. Update local video preview and horizontal mirror transform
-    const localVid = document.getElementById('localVideo');
-    if (localVid) {
-      localVid.srcObject = localStream;
-      localVid.play().catch(() => {});
-
-      if (targetFacingMode === 'environment') {
-        // Rear camera should NOT be mirrored horizontally
-        localVid.style.transform = 'scaleX(1)';
-        localVid.style.webkitTransform = 'scaleX(1)';
-      } else {
-        // Front camera should be mirrored horizontally for natural user experience
-        localVid.style.transform = 'scaleX(-1)';
-        localVid.style.webkitTransform = 'scaleX(-1)';
+      let nextDevice = null;
+      if (activeDeviceId) {
+        const currentIndex = videoDevices.findIndex(d => d.deviceId === activeDeviceId);
+        if (currentIndex !== -1) {
+          nextDevice = videoDevices[(currentIndex + 1) % videoDevices.length];
+        }
       }
-    }
+      if (!nextDevice) {
+        nextDevice = videoDevices.find(d => d.deviceId !== activeDeviceId) || videoDevices[0];
+      }
 
-    currentFacingMode = targetFacingMode;
-    const modeLabel = currentFacingMode === 'environment' ? 'Rear (Back) Camera 📷' : 'Front (Selfie) Camera 🤳';
-    showToast(`Switched to ${modeLabel}`, 'success', 2200);
+      const targetFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+      // Crucial: Release previous track hardware lock so Android HAL / Windows USB driver doesn't throw NotReadableError
+      localStream.removeTrack(currentVideoTrack);
+      currentVideoTrack.stop();
+
+      let newStream = null;
+
+      // Method A: Switch directly by hardware deviceId (most robust for multi-cam & USB devices)
+      if (nextDevice && nextDevice.deviceId) {
+        try {
+          newStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: { exact: nextDevice.deviceId },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        } catch (devErr) {
+          console.warn('[Camera] Exact deviceId request failed, falling back to facingMode:', devErr.name);
+        }
+      }
+
+      // Method B: Switch by target facingMode (for mobile browsers where facingMode is mapped)
+      if (!newStream) {
+        try {
+          newStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: targetFacingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        } catch (facingErr) {
+          console.warn('[Camera] facingMode ideal request failed, falling back to generic video:', facingErr.name);
+          newStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
+        }
+      }
+
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (!newVideoTrack) throw new Error('No video track available');
+
+      // Preserve current video enabled / disabled mute state
+      newVideoTrack.enabled = !isVideoDisabled;
+
+      // Add new track to existing localStream
+      localStream.addTrack(newVideoTrack);
+
+      // Track active device settings
+      const newSettings = typeof newVideoTrack.getSettings === 'function' ? newVideoTrack.getSettings() : {};
+      currentVideoDeviceId = newSettings.deviceId || nextDevice?.deviceId || null;
+      currentFacingMode = targetFacingMode;
+
+      // Seamlessly update WebRTC sender track without breaking call
+      if (peerConnection) {
+        const senders = peerConnection.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          await videoSender.replaceTrack(newVideoTrack);
+          console.log('[WebRTC] Swapped video track on active peer connection.');
+        }
+      }
+
+      // Update local preview and mirror orientation
+      if (localVid) {
+        localVid.srcObject = localStream;
+        localVid.play().catch(() => {});
+
+        if (currentFacingMode === 'environment') {
+          localVid.style.transform = 'scaleX(1)';
+          isCameraMirrored = false;
+        } else {
+          localVid.style.transform = 'scaleX(-1)';
+          isCameraMirrored = true;
+        }
+      }
+
+      const friendlyName = nextDevice?.label || (currentFacingMode === 'environment' ? 'Rear Camera 📷' : 'Front Camera 🤳');
+      showToast(`Switched: ${friendlyName}`, 'success', 2200);
+
+    } else {
+      // SCENARIO 2: Single Camera Device (Single Laptop Webcam, PC Webcam, or Single Mobile Lens)
+      // Flips the horizontal perspective (Selfie Mirror vs Natural True View)
+      isCameraMirrored = !isCameraMirrored;
+      currentFacingMode = isCameraMirrored ? 'user' : 'environment';
+
+      if (localVid) {
+        localVid.style.transform = isCameraMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+      }
+
+      const mirrorToast = isCameraMirrored
+        ? 'Camera Mirrored 🤳 (Selfie View)'
+        : 'Camera Unmirrored 📷 (True View)';
+      showToast(mirrorToast, 'info', 2200);
+    }
 
   } catch (err) {
     console.warn('[Camera] Flip camera error:', err.name || err.message);
-    if (err.name === 'OverconstrainedError' || err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-      showToast('⚠️ No secondary/rear camera found on this device', 'warning', 3000);
-    } else {
-      showToast('⚠️ Could not switch camera source', 'warning', 2500);
+
+    // Self-healing recovery: If track was stopped and error occurred, re-open default camera
+    if (localStream.getVideoTracks().length === 0) {
+      try {
+        const recoverStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const recoverTrack = recoverStream.getVideoTracks()[0];
+        if (recoverTrack) {
+          recoverTrack.enabled = !isVideoDisabled;
+          localStream.addTrack(recoverTrack);
+          if (peerConnection) {
+            const senders = peerConnection.getSenders();
+            const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+            if (videoSender) await videoSender.replaceTrack(recoverTrack);
+          }
+          if (localVid) {
+            localVid.srcObject = localStream;
+            localVid.play().catch(() => {});
+          }
+        }
+      } catch (recErr) {
+        console.error('[Camera] Recovery stream failed:', recErr);
+      }
     }
+
+    showToast('⚠️ Could not switch camera source', 'warning', 2500);
   } finally {
     if (flipIcon) {
       setTimeout(() => flipIcon.classList.remove('rotate-180'), 350);
@@ -922,6 +1131,7 @@ function initSocketConnection() {
 
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
+      applyVoiceSenderBitrate(peerConnection);
 
       socket.emit('answer', { answer });
     } catch (err) {
@@ -934,6 +1144,7 @@ function initSocketConnection() {
       if (peerConnection) {
         await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         drainPendingIceCandidates();
+        applyVoiceSenderBitrate(peerConnection);
       }
     } catch (err) {
       console.error('[WebRTC] Error handling answer:', err);
@@ -1018,6 +1229,7 @@ async function setupPeerConnection() {
     localStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, localStream);
     });
+    applyVoiceSenderBitrate(peerConnection);
   }
 
   peerConnection.ontrack = (event) => {
@@ -1050,6 +1262,7 @@ async function setupPeerConnection() {
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
       if (badgeText) badgeText.textContent = 'Connected (Live)';
       if (p2pBadge) p2pBadge.textContent = 'Encrypted P2P';
+      applyVoiceSenderBitrate(peerConnection);
     } else if (state === 'disconnected' || state === 'failed') {
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
       if (badgeText) badgeText.textContent = 'Connection Lost';
@@ -1066,6 +1279,7 @@ async function createAndSendOffer() {
   try {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
+    applyVoiceSenderBitrate(peerConnection);
     socket.emit('offer', { offer });
   } catch (err) {
     console.error('[WebRTC] Error creating offer:', err);

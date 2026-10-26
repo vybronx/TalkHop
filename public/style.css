@@ -526,14 +526,16 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
 
   #localControlsBar button {
     padding: 0 !important;
-    width: 22px !important;
-    height: 22px !important;
+    width: 26px !important;
+    height: 26px !important;
     border-radius: 9999px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     background: transparent !important;
     border: none !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
   }
 
   #localControlsBar svg {
