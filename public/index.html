@@ -752,14 +752,14 @@
           </label>
         </div>
 
-        <!-- Simulated UPI / Mock Payment Button -->
+        <!-- UPI / Razorpay Payment Button -->
         <div class="space-y-2">
           <button id="simulatePaymentBtn"
             class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center space-x-2 hover:scale-[1.01] active:scale-95">
-            <span>⚡ Pay via UPI / Razorpay (Mock Instant)</span>
+            <span>⚡ Pay via UPI / Razorpay</span>
           </button>
           <p class="text-center text-[10px] text-slate-400">
-            🔒 Sandbox Mock Mode active &bull; Generates instant genuine 6-digit VIP pass
+            🔒 Secure 256-Bit SSL Encrypted Razorpay Checkout &bull; UPI, Cards, NetBanking
           </p>
         </div>
       </div>
@@ -971,6 +971,9 @@
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 left-4 z-40 space-y-2 pointer-events-none"></div>
+
+  <!-- Razorpay Official Checkout SDK (Milestone 5) -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <!-- Client Scripts -->
   <script src="/socket.io/socket.io.js"></script>

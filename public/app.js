@@ -10,21 +10,39 @@
 // ==========================================
 const RTC_CONFIG = {
   iceServers: [
-    // Google Public Global Anycast STUNs
+    // 1. Google Public Global Anycast STUNs (Default Primary)
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-    // Cloudflare Global Anycast STUN (Fastest Edge Resolvers)
+
+    // 2. High-Availability Global Edge STUNs (Cloudflare, Twilio, Mozilla)
     { urls: 'stun:stun.cloudflare.com:3478' },
-    // Twilio Free Global STUN
     { urls: 'stun:global.stun.twilio.com:3478' },
-    // Mozilla Foundation Public STUN
     { urls: 'stun:stun.services.mozilla.com:3478' },
-    // Free Public Backup STUNs for restrictive mobile NATs
     { urls: 'stun:stun.sipgate.net:3478' },
-    { urls: 'stun:stun.ekiga.net' }
+    { urls: 'stun:stun.ekiga.net' },
+
+    // 3. Structured TURN Relay Placeholders (e.g. Metered.ca / Coturn / OpenRelay)
+    // Structured so credentials can be injected via backend variables or /api/config/ice
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: window.BLIP_TURN_USERNAME || 'openrelayproject',
+      credential: window.BLIP_TURN_CREDENTIAL || 'openrelayproject'
+    },
+    {
+      // Custom Metered.ca / Coturn Dedicated TURN Provider Placeholder
+      urls: [
+        'turns:standard.metered.ca:443?transport=tcp'
+      ],
+      username: window.BLIP_METERED_TURN_USER || 'metered_turn_username_placeholder',
+      credential: window.BLIP_METERED_TURN_CRED || 'metered_turn_credential_placeholder'
+    }
   ],
   iceCandidatePoolSize: 10,
   bundlePolicy: 'max-bundle',
@@ -1482,38 +1500,133 @@ function bindUiEventListeners() {
   if (simPayBtn) {
     simPayBtn.addEventListener('click', async () => {
       const selectedPlan = document.querySelector('input[name="vipPlan"]:checked')?.value || '1-hour';
-      simPayBtn.innerHTML = `<span>⏳ Processing Mock UPI Payment...</span>`;
+      const origBtnHtml = simPayBtn.innerHTML;
+      simPayBtn.innerHTML = `<span>⏳ Initiating Razorpay Secure Checkout...</span>`;
       simPayBtn.disabled = true;
 
       try {
-        const res = await fetch('/api/vip/purchase', {
+        // 1. Create order on backend
+        const orderRes = await fetch('/api/payment/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ plan: selectedPlan })
         });
-        const data = await res.json();
-        simPayBtn.innerHTML = `<span>⚡ Pay via UPI / Razorpay (Mock Instant)</span>`;
-        simPayBtn.disabled = false;
+        const orderData = await orderRes.json();
 
-        if (data.success) {
-          latestGeneratedCode = data.code;
+        if (!orderData.success) {
+          throw new Error(orderData.message || 'Could not initiate payment order.');
+        }
+
+        // Helper function to handle completion on frontend
+        const handlePaymentComplete = (code, plan, price) => {
+          latestGeneratedCode = code;
           const codeEl = document.getElementById('generatedVipCodeText');
           const detEl = document.getElementById('generatedPassDetails');
-          if (codeEl) codeEl.textContent = data.code;
-          if (detEl) detEl.textContent = `${data.plan === '12-hour' ? '12-Hour' : '1-Hour'} Pass (₹${data.price}) • 1-Device Lock`;
+          if (codeEl) codeEl.textContent = code;
+          if (detEl) detEl.textContent = `${plan === '12-hour' ? '12-Hour' : '1-Hour'} Pass (₹${price}) • 1-Device Concurrency Lock`;
 
           const selView = document.getElementById('vipPlanSelectionView');
           const sucView = document.getElementById('vipSuccessView');
           if (selView) selView.classList.add('hidden');
           if (sucView) sucView.classList.remove('hidden');
-          showToast('Payment successful! VIP code generated.', 'success');
+
+          simPayBtn.innerHTML = origBtnHtml;
+          simPayBtn.disabled = false;
+          showToast('Payment verified! VIP Pass generated successfully 🎉', 'success', 3500);
+        };
+
+        // 2. If Razorpay Checkout SDK is loaded and not a mock order
+        if (typeof window.Razorpay === 'function' && !orderData.isMock && orderData.key_id && !orderData.key_id.includes('mock')) {
+          const options = {
+            key: orderData.key_id,
+            amount: orderData.amount,
+            currency: orderData.currency || 'INR',
+            name: 'Blip ⚡ Video Engine',
+            description: `${selectedPlan === '12-hour' ? '12-Hour' : '1-Hour'} VIP Micro-Pass`,
+            order_id: orderData.order_id,
+            image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238b5cf6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+            handler: async function (response) {
+              simPayBtn.innerHTML = `<span>⏳ Verifying Signature...</span>`;
+              try {
+                const verifyRes = await fetch('/api/payment/verify', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id || orderData.order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    plan: selectedPlan
+                  })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyData.success) {
+                  handlePaymentComplete(verifyData.code, selectedPlan, verifyData.price);
+                } else {
+                  showToast(verifyData.message || 'Payment signature verification failed.', 'danger', 4000);
+                  simPayBtn.innerHTML = origBtnHtml;
+                  simPayBtn.disabled = false;
+                }
+              } catch (verErr) {
+                showToast('Error validating payment with server.', 'danger');
+                simPayBtn.innerHTML = origBtnHtml;
+                simPayBtn.disabled = false;
+              }
+            },
+            prefill: {
+              name: 'Blip User',
+              email: 'guest@blip.vybronx.online',
+              contact: '9999999999'
+            },
+            theme: {
+              color: '#8b5cf6',
+              backdrop_color: 'rgba(7, 8, 13, 0.85)'
+            },
+            modal: {
+              ondismiss: function () {
+                simPayBtn.innerHTML = origBtnHtml;
+                simPayBtn.disabled = false;
+                showToast('Payment window closed.', 'info', 2000);
+              }
+            }
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.on('payment.failed', function (resp) {
+            console.warn('[Razorpay] Payment failed:', resp.error);
+            showToast(`Payment failed: ${resp.error.description || 'Transaction declined'}`, 'danger', 4000);
+            simPayBtn.innerHTML = origBtnHtml;
+            simPayBtn.disabled = false;
+          });
+          rzp.open();
+
         } else {
-          showToast(data.message || 'Payment simulation failed.', 'danger');
+          // Instant Mock Sandbox Verification (when running without live keys)
+          console.log('[Payment] Executing sandbox instant verification for order:', orderData.order_id);
+          const verifyRes = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: orderData.order_id,
+              razorpay_payment_id: `pay_mock_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+              razorpay_signature: 'sandbox_valid_sig',
+              plan: selectedPlan
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            handlePaymentComplete(verifyData.code, selectedPlan, verifyData.price);
+          } else {
+            showToast(verifyData.message || 'Sandbox verification failed.', 'danger');
+            simPayBtn.innerHTML = origBtnHtml;
+            simPayBtn.disabled = false;
+          }
         }
+
       } catch (err) {
-        simPayBtn.innerHTML = `<span>⚡ Pay via UPI / Razorpay (Mock Instant)</span>`;
+        console.error('[Payment] Error:', err);
+        simPayBtn.innerHTML = origBtnHtml;
         simPayBtn.disabled = false;
-        showToast('Failed to connect to payment server.', 'danger');
+        showToast(err.message || 'Failed to connect to payment server.', 'danger');
       }
     });
   }

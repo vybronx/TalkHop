@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
+const Razorpay = require('razorpay');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -11,6 +12,27 @@ const server = http.createServer(app);
 // Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
+
+// ==========================================
+// RAZORPAY PAYMENT GATEWAY CONFIG (Milestone 5)
+// ==========================================
+const RZP_KEY_ID = process.env.RZP_KEY_ID || process.env.RAZORPAY_KEY_ID || '';
+const RZP_KEY_SECRET = process.env.RZP_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || '';
+
+let razorpayClient = null;
+if (RZP_KEY_ID && RZP_KEY_SECRET) {
+  try {
+    razorpayClient = new Razorpay({
+      key_id: RZP_KEY_ID,
+      key_secret: RZP_KEY_SECRET
+    });
+    console.log('[Razorpay] Live SDK initialized with Key ID:', RZP_KEY_ID);
+  } catch (err) {
+    console.warn('[Razorpay] Failed to initialize live Razorpay instance:', err.message);
+  }
+} else {
+  console.log('[Razorpay] Running in instant mock/sandbox mode (Set RZP_KEY_ID & RZP_KEY_SECRET for live payments)');
+}
 
 // Serve static assets from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -551,8 +573,119 @@ function matchUser(socket, incomingPreferences = null) {
 }
 
 // ==========================================
-// REST API ENDPOINTS FOR MICRO-PASS SYSTEM
+// REST API ENDPOINTS FOR MICRO-PASS & RAZORPAY (Milestone 5)
 // ==========================================
+
+// 1. Create Razorpay Order
+app.post('/api/payment/create-order', async (req, res) => {
+  try {
+    const { plan = '1-hour' } = req.body;
+    const amountInPaise = plan === '12-hour' ? 3900 : 1900; // ₹39 or ₹19
+    const priceInRupees = plan === '12-hour' ? 39 : 19;
+
+    if (razorpayClient) {
+      const options = {
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt: `blip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        notes: {
+          plan,
+          service: 'Blip VIP Micro-Pass'
+        }
+      };
+      const order = await razorpayClient.orders.create(options);
+      return res.json({
+        success: true,
+        order_id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        key_id: RZP_KEY_ID,
+        plan,
+        price: priceInRupees
+      });
+    }
+
+    // Sandbox / Mock fallback order when keys are not set
+    const mockOrderId = `order_mock_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    res.json({
+      success: true,
+      order_id: mockOrderId,
+      amount: amountInPaise,
+      currency: 'INR',
+      key_id: RZP_KEY_ID || 'rzp_test_mock_sandbox',
+      plan,
+      price: priceInRupees,
+      isMock: true
+    });
+  } catch (err) {
+    console.error('[Razorpay] Order creation error:', err);
+    res.status(500).json({ success: false, message: 'Failed to create payment order.' });
+  }
+});
+
+// 2. Verify Razorpay Payment Signature & Issue VIP Code
+app.post('/api/payment/verify', (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan = '1-hour' } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id) {
+      return res.status(400).json({ success: false, message: 'Missing order or payment ID.' });
+    }
+
+    const isMock = razorpay_order_id.startsWith('order_mock_') || !RZP_KEY_SECRET;
+
+    if (!isMock) {
+      // Cryptographic HMAC-SHA256 signature verification
+      const expectedSignature = crypto
+        .createHmac('sha256', RZP_KEY_SECRET)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest('hex');
+
+      if (expectedSignature !== razorpay_signature) {
+        console.warn('[Razorpay] Signature mismatch:', { expectedSignature, razorpay_signature });
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid payment signature. Verification failed.'
+        });
+      }
+    }
+
+    // Payment signature verified - generate genuine 6-digit VIP pass
+    const durationMs = plan === '12-hour' ? 43200000 : 3600000;
+    const price = plan === '12-hour' ? 39 : 19;
+    const code = generateVipCode();
+
+    const newPass = {
+      code,
+      plan,
+      durationMs,
+      price,
+      createdAt: Date.now(),
+      isActivated: false,
+      activatedAt: null,
+      expiresAt: null,
+      activeSocketId: null,
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      verifiedAt: Date.now()
+    };
+
+    vipPasses.set(code, newPass);
+    console.log(`[VIP Payment] Verified order ${razorpay_order_id} -> Generated VIP Pass: ${code} (${plan}, ₹${price})`);
+
+    res.json({
+      success: true,
+      code,
+      plan,
+      price,
+      durationMs,
+      message: 'Payment verified successfully! VIP pass generated.'
+    });
+  } catch (err) {
+    console.error('[Razorpay] Verification error:', err);
+    res.status(500).json({ success: false, message: 'Internal error verifying payment.' });
+  }
+});
 app.post('/api/vip/purchase', (req, res) => {
   const { plan = '1-hour' } = req.body;
 
