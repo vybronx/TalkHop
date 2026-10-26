@@ -195,9 +195,21 @@
         class="flex-1 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white active:bg-zinc-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-slate-200 shadow-xs">
         <span class="text-rose-500 text-sm">🎟️</span>
         <span>Redeem Code</span>
-      </button>
     </div>
   </header>
+
+  <!-- Instagram / In-App Browser Compatibility Banner -->
+  <div id="inAppBrowserNotice"
+    class="hidden relative z-30 bg-purple-900/95 dark:bg-purple-950/95 border-b border-purple-500/30 text-purple-100 px-4 py-2 text-xs flex items-center justify-between backdrop-blur-md">
+    <div class="flex items-center space-x-2">
+      <span class="text-sm">📸</span>
+      <span><strong>Instagram browser detected:</strong> If you experience audio or video restrictions, tap <strong>⋯</strong> and choose <strong>"Open in Chrome / Safari"</strong>.</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="copyBrowserLinkBtn" type="button" class="px-2 py-0.5 rounded bg-purple-700 hover:bg-purple-600 text-[11px] font-semibold text-white">Copy Link</button>
+      <button id="dismissInAppNoticeBtn" type="button" class="text-purple-300 hover:text-white font-bold ml-1 text-sm">&times;</button>
+    </div>
+  </div>
 
   <!-- AI Shield Status Badge (hidden from header, kept in DOM for functionality) -->
   <div id="aiShieldBadge" class="hidden" title="Client-Side NSFW & Anti-Flash Shield Active">
@@ -238,6 +250,34 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span id="networkP2pBadge">WebRTC P2P</span>
+          </div>
+
+          <!-- TAP TO ENABLE AUDIO (When browser autoplay policy restricts unmuted playback, e.g. Instagram / iOS) -->
+          <button id="tapToPlayAudioBtn" type="button"
+            class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-center cursor-pointer transition-all">
+            <div class="w-14 h-14 rounded-full bg-purple-600/90 text-white flex items-center justify-center mb-2 shadow-lg shadow-purple-600/50 animate-bounce">
+              <span class="text-2xl">🔊</span>
+            </div>
+            <span class="text-sm font-bold text-white mb-0.5">Audio Blocked by Browser</span>
+            <span class="text-xs text-purple-200">Tap here to enable stranger audio</span>
+          </button>
+
+          <!-- LOW-BANDWIDTH ADAPTIVE QUALITY STATUS BANNER -->
+          <div id="adaptiveQualityBanner"
+            class="hidden absolute top-12 left-1/2 -translate-x-1/2 z-25 flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-xs font-semibold shadow-lg transition-all">
+            <span class="animate-pulse">⚠️</span>
+            <span id="adaptiveQualityText">Poor connection — video paused, audio continuing</span>
+          </div>
+
+          <!-- TRANSIENT CONNECTION RECOVERY OVERLAY -->
+          <div id="connectionRecoveryOverlay"
+            class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6 text-center transition-all">
+            <div class="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin mb-3"></div>
+            <h4 id="recoveryOverlayTitle" class="font-bold text-white text-sm mb-1">Reconnecting...</h4>
+            <p id="recoveryOverlayDesc" class="text-xs text-slate-300 max-w-xs mb-3">Temporary network interruption detected. Preserving call...</p>
+            <button id="recoverySkipBtn" type="button" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-all cursor-pointer">
+              Skip to Next Stranger
+            </button>
           </div>
 
           <!-- SEARCHING / RADAR STATE -->

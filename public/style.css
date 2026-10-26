@@ -776,3 +776,27 @@ html.dark #ageGateModal .age-modal-card {
   touch-action: manipulation;
 }
 
+/* ========================================================== */
+/* 7. RELIABILITY, ADAPTIVE QUALITY & AUDIO OVERLAYS          */
+/* ========================================================== */
+#tapToPlayAudioBtn {
+  z-index: 38 !important;
+  cursor: pointer;
+}
+
+#adaptiveQualityBanner {
+  z-index: 37 !important;
+  pointer-events: none;
+  animation: bubble-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#connectionRecoveryOverlay {
+  z-index: 39 !important;
+  animation: bubble-in 0.25s ease-out forwards;
+}
+
+#inAppBrowserNotice {
+  animation: bubble-in 0.3s ease-out forwards;
+}
+
+

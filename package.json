@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node tests/state_machine.test.js && node tests/adaptive_quality.test.js && node tests/sdp_tuning.test.js && node tests/session_recovery.test.js"
   },
   "keywords": [
     "webrtc",

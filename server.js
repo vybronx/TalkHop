@@ -37,14 +37,15 @@ if (RZP_KEY_ID && RZP_KEY_SECRET) {
 // Serve static assets from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize Socket.io with optimized transport & CORS
+// Initialize Socket.io with optimized transport, CORS & resilient ping timeouts
 const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
   },
-  pingInterval: 10000,
-  pingTimeout: 5000
+  pingInterval: 25000,
+  pingTimeout: 20000,
+  connectTimeout: 30000
 });
 
 // ==========================================
@@ -196,6 +197,15 @@ let waitingQueue = [];
 // Bidirectional lookup: socket.id -> partner.id
 const activePairs = new Map();
 
+// Active sessions: sessionId -> { sessionId, userA, userB, initiator, createdAt, state: 'active'|'interrupted', timer, interruptedUser }
+const activeSessions = new Map();
+
+// Map of socket.id -> sessionId
+const socketSessions = new Map();
+
+// Recovery grace period for transient network interruptions during active calls (15s)
+const RECOVERY_GRACE_PERIOD_MS = 15000;
+
 // Map of socket.id -> metadata { state, preferences, vipCode, isVip, joinedAt, ip }
 const userStates = new Map();
 
@@ -301,9 +311,28 @@ function removeFromQueue(socketId) {
 }
 
 /**
+ * Clear session and timers safely
+ */
+function clearSession(sessionId) {
+  if (!sessionId) return;
+  const session = activeSessions.get(sessionId);
+  if (session) {
+    if (session.timer) clearTimeout(session.timer);
+    activeSessions.delete(sessionId);
+    if (session.userA) socketSessions.delete(session.userA);
+    if (session.userB) socketSessions.delete(session.userB);
+  }
+}
+
+/**
  * Clean up active pairing for a given socket and notify their partner
  */
 function disconnectCurrentPair(socketId, reason = 'skipped') {
+  const sessionId = socketSessions.get(socketId);
+  if (sessionId) {
+    clearSession(sessionId);
+  }
+
   const partnerId = activePairs.get(socketId);
 
   // Remove both directions from activePairs
@@ -327,6 +356,8 @@ function disconnectCurrentPair(socketId, reason = 'skipped') {
         partnerMsg = 'Stranger reported the chat and moved to a new match.';
       } else if (reason === 'nsfw_ban') {
         partnerMsg = 'Stranger was disconnected and banned for community safety violations.';
+      } else if (reason === 'disconnected_timeout') {
+        partnerMsg = 'Stranger disconnected due to network timeout.';
       }
 
       partnerSocket.emit('partner-disconnected', {
@@ -377,28 +408,45 @@ function isFilterMatch(userA, userB) {
 }
 
 /**
- * Pair two active sockets together
+ * Pair two active sockets together with unique session identifier
  */
 function pairSockets(socketA, socketB, matchedWithFilters = true) {
   const idA = socketA.id;
   const idB = socketB.id;
+  const sessionId = 'sess_' + crypto.randomBytes(8).toString('hex');
 
   activePairs.set(idA, idB);
   activePairs.set(idB, idA);
 
+  const sessionObj = {
+    sessionId,
+    userA: idA,
+    userB: idB,
+    initiator: idA,
+    createdAt: Date.now(),
+    state: 'active',
+    timer: null,
+    interruptedUser: null
+  };
+  activeSessions.set(sessionId, sessionObj);
+  socketSessions.set(idA, sessionId);
+  socketSessions.set(idB, sessionId);
+
   if (userStates.has(idA)) userStates.get(idA).state = 'in_call';
   if (userStates.has(idB)) userStates.get(idB).state = 'in_call';
 
-  console.log(`[Match] Paired: ${idA} <---> ${idB} (FilterMatched: ${matchedWithFilters})`);
+  console.log(`[Match] Paired: ${idA} <---> ${idB} (Session: ${sessionId}, FilterMatched: ${matchedWithFilters})`);
 
   // Designate socketA as initiator and socketB as receiver
   socketA.emit('match-found', {
+    sessionId,
     initiator: true,
     partnerId: idB,
     filterMatched: matchedWithFilters
   });
 
   socketB.emit('match-found', {
+    sessionId,
     initiator: false,
     partnerId: idA,
     filterMatched: matchedWithFilters
@@ -1013,6 +1061,84 @@ io.on('connection', (socket) => {
     }
   });
 
+  // WebRTC Signaling: ICE Restart Request
+  socket.on('ice-restart', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    if (partnerId) {
+      io.to(partnerId).emit('ice-restart-needed', {
+        from: socket.id,
+        reason: (data && data.reason) || 'ice_failure'
+      });
+    }
+  });
+
+  // Session Recovery: Reconnect existing call after transient network/signaling drop
+  socket.on('reconnect-session', (data, callback) => {
+    const { sessionId, lastPartnerId } = data || {};
+    if (!sessionId || !activeSessions.has(sessionId)) {
+      if (callback) callback({ success: false, message: 'Session expired or not found.' });
+      return;
+    }
+
+    const session = activeSessions.get(sessionId);
+    const partnerId = (session.userA === session.interruptedUser) ? session.userB : session.userA;
+    const partnerSocket = io.sockets.sockets.get(partnerId);
+
+    if (!partnerSocket || !partnerSocket.connected) {
+      if (session.timer) clearTimeout(session.timer);
+      clearSession(sessionId);
+      if (callback) callback({ success: false, message: 'Partner is no longer connected.' });
+      return;
+    }
+
+    // Cancel expiration timer immediately
+    if (session.timer) {
+      clearTimeout(session.timer);
+      session.timer = null;
+    }
+
+    const oldId = session.interruptedUser || socket.id;
+    if (session.userA === oldId) session.userA = socket.id;
+    if (session.userB === oldId) session.userB = socket.id;
+    session.state = 'active';
+    session.interruptedUser = null;
+
+    socketSessions.delete(oldId);
+    socketSessions.set(socket.id, sessionId);
+
+    activePairs.delete(oldId);
+    activePairs.set(socket.id, partnerId);
+    activePairs.set(partnerId, socket.id);
+
+    const currentUserState = userStates.get(socket.id) || {};
+    currentUserState.state = 'in_call';
+    userStates.set(socket.id, currentUserState);
+
+    console.log(`[Session Recovery] Successfully recovered session ${sessionId}! Old socket ${oldId} -> New socket ${socket.id}`);
+
+    const isInitiator = (session.initiator === oldId || session.initiator === socket.id);
+
+    if (callback) {
+      callback({
+        success: true,
+        sessionId,
+        partnerId,
+        isInitiator
+      });
+    }
+
+    socket.emit('session-recovered', {
+      sessionId,
+      partnerId,
+      isInitiator
+    });
+
+    partnerSocket.emit('session-recovered', {
+      sessionId,
+      partnerId: socket.id
+    });
+  });
+
   // Ephemeral Chat Fallback
   socket.on('chat-message', (data) => {
     const partnerId = activePairs.get(socket.id);
@@ -1035,13 +1161,53 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Disconnection handler
+  // Disconnection handler with session recovery grace period
   socket.on('disconnect', (reason) => {
     console.log(`[Disconnect] Socket ${socket.id} disconnected (${reason})`);
     removeFromQueue(socket.id);
+
+    const sessionId = socketSessions.get(socket.id);
+    const partnerId = activePairs.get(socket.id);
+    const userState = userStates.get(socket.id);
+    const wasInCall = userState && userState.state === 'in_call' && partnerId;
+
+    if (wasInCall && sessionId && activeSessions.has(sessionId)) {
+      const session = activeSessions.get(sessionId);
+      const partnerSocket = io.sockets.sockets.get(partnerId);
+
+      if (partnerSocket && partnerSocket.connected) {
+        // Put session in interrupted state with grace period
+        session.state = 'interrupted';
+        session.interruptedUser = socket.id;
+        session.interruptedAt = Date.now();
+
+        console.log(`[Session Recovery] Call interrupted for session ${sessionId}. Granting ${RECOVERY_GRACE_PERIOD_MS}ms recovery grace period.`);
+
+        partnerSocket.emit('partner-interrupted', {
+          sessionId,
+          reason: 'network_interruption',
+          gracePeriodMs: RECOVERY_GRACE_PERIOD_MS,
+          message: 'Stranger network connection interrupted. Attempting recovery...'
+        });
+
+        if (session.timer) clearTimeout(session.timer);
+
+        session.timer = setTimeout(() => {
+          console.log(`[Session Recovery] Grace period expired for session ${sessionId}. Terminating pair.`);
+          clearSession(sessionId);
+          disconnectCurrentPair(socket.id, 'disconnected_timeout');
+        }, RECOVERY_GRACE_PERIOD_MS);
+
+        // Keep activePairs intact for grace period so reconnection can happen
+        return;
+      }
+    }
+
+    if (sessionId) {
+      clearSession(sessionId);
+    }
     disconnectCurrentPair(socket.id, 'disconnected');
 
-    const userState = userStates.get(socket.id);
     if (userState && userState.vipCode) {
       const pass = vipPasses.get(userState.vipCode);
       if (pass && pass.activeSocketId === socket.id) {
@@ -1052,6 +1218,55 @@ io.on('connection', (socket) => {
 
     userStates.delete(socket.id);
     broadcastOnlineCount();
+  });
+});
+
+// Dynamic STUN/TURN ICE Server Configuration
+app.get('/api/rtc-config', (req, res) => {
+  const iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+  ];
+
+  const customTurnUrl = process.env.TURN_URL;
+  const customTurnUser = process.env.TURN_USERNAME;
+  const customTurnCred = process.env.TURN_CREDENTIAL;
+
+  if (customTurnUrl && customTurnUser && customTurnCred) {
+    iceServers.push({
+      urls: customTurnUrl,
+      username: customTurnUser,
+      credential: customTurnCred
+    });
+  } else {
+    // Default Metered.ca TURN fallback configuration
+    const meteredUser = process.env.METERED_USER || "1654f590900e48e1a4ae720e";
+    const meteredCred = process.env.METERED_CREDENTIAL || "uc4KT1+bOvxoS9js";
+    iceServers.push(
+      { urls: "stun:stun.relay.metered.ca:80" },
+      {
+        urls: "turn:global.relay.metered.ca:80",
+        username: meteredUser,
+        credential: meteredCred
+      },
+      {
+        urls: "turn:global.relay.metered.ca:443",
+        username: meteredUser,
+        credential: meteredCred
+      },
+      {
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: meteredUser,
+        credential: meteredCred
+      }
+    );
+  }
+
+  res.json({
+    iceServers,
+    iceCandidatePoolSize: 2,
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require'
   });
 });
 

@@ -9,16 +9,11 @@
 // ==========================================
 const RTC_CONFIG = {
   iceServers: [
-    {
-      urls: "stun:stun.relay.metered.ca:80",
-    },
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun.relay.metered.ca:80" },
     {
       urls: "turn:global.relay.metered.ca:80",
-      username: "1654f590900e48e1a4ae720e",
-      credential: "uc4KT1+bOvxoS9js",
-    },
-    {
-      urls: "turn:global.relay.metered.ca:80?transport=tcp",
       username: "1654f590900e48e1a4ae720e",
       credential: "uc4KT1+bOvxoS9js",
     },
@@ -33,9 +28,23 @@ const RTC_CONFIG = {
       credential: "uc4KT1+bOvxoS9js",
     },
   ],
-  iceCandidatePoolSize: 10,
+  iceCandidatePoolSize: 2,
   bundlePolicy: 'max-bundle',
   rtcpMuxPolicy: 'require'
+};
+
+// ==========================================
+// CONNECTION STATE MACHINE
+// ==========================================
+const ConnectionState = {
+  IDLE: 'idle',
+  SEARCHING: 'searching',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  TEMPORARILY_INTERRUPTED: 'temporarily_interrupted',
+  RECOVERING: 'recovering',
+  AUDIO_ONLY_DEGRADED: 'audio_only_degraded',
+  DISCONNECTED: 'disconnected'
 };
 
 // ==========================================
@@ -46,6 +55,7 @@ let localStream = null;
 let peerConnection = null;
 let dataChannel = null;
 let currentPartnerId = null;
+let currentSessionId = null;
 let isInitiator = false;
 let isSearching = false;
 let isAudioMuted = false;
@@ -61,6 +71,21 @@ let antiFlashInterval = null;
 let typingTimeout = null;
 let lastSkipTime = 0;
 let remoteAudioMonitor = null;
+
+// Connection Resilience & Recovery State
+let currentCallState = ConnectionState.IDLE;
+let iceRestartCount = 0;
+let iceRecoveryTimer = null;
+let isAdaptiveVideoPaused = false;
+let activeVideoTier = 0; // 0: Normal, 1: Constrained, 2: 64k low-bw, 3: Audio-only degraded
+let adaptiveMonitorInterval = null;
+let consecutivePoorReadings = 0;
+let consecutiveGoodReadings = 0;
+let lastStatsSample = null;
+
+// Browser Environment & Autoplay Flags
+const isInstagramBrowser = /Instagram|FBAN|FBAV/i.test(navigator.userAgent);
+let isRemoteAudioBlocked = false;
 
 // VIP & Matchmaking State
 let consecutiveSkips = 0;
@@ -98,11 +123,13 @@ let currentSponsorConfig = {
 // ==========================================
 // VOICE CLARITY & AUDIO PROCESSING CONFIGURATION
 // ==========================================
+// Clean voice constraints that avoid aggressive desktop AGC gain pumping (which causes swirling/oscillating echo artifacts)
 const PREFERRED_AUDIO_CONSTRAINTS = {
-  echoCancellation: true,
-  noiseSuppression: true,
-  autoGainControl: true,
-  channelCount: { ideal: 1 }
+  echoCancellation: { ideal: true },
+  noiseSuppression: { ideal: true },
+  autoGainControl: { ideal: false }, // Avoids excessive gain boosting during pauses on PC headphones
+  channelCount: { ideal: 1 },
+  sampleRate: { ideal: 48000 }
 };
 
 /**
@@ -125,9 +152,37 @@ function logAudioTrackSettings(stream) {
 }
 
 /**
+ * Optimizes WebRTC SDP for Opus speech clarity and telephony reliability:
+ * Enforces mono channel to avoid phase artifacts on mobile speakers,
+ * enables inband forward error correction (FEC) for packet loss resilience,
+ * enables DTX for bandwidth efficiency, disables comfort noise (CNG) oscillation,
+ * and sets an optimal 32 kbps average bitrate ceiling.
+ */
+function tuneOpusSdp(sdp) {
+  if (!sdp || typeof sdp !== 'string') return sdp;
+
+  return sdp.replace(/a=fmtp:(\d+)\s+(.*)/g, (match, pt, params) => {
+    if (sdp.includes(`a=rtpmap:${pt} opus/48000`)) {
+      let tuned = params
+        .replace(/stereo=\d+/g, 'stereo=0')
+        .replace(/sprop-stereo=\d+/g, 'sprop-stereo=0');
+
+      const additions = [];
+      if (!tuned.includes('stereo=')) additions.push('stereo=0;sprop-stereo=0');
+      if (!tuned.includes('useinbandfec=')) additions.push('useinbandfec=1');
+      if (!tuned.includes('usedtx=')) additions.push('usedtx=1');
+      if (!tuned.includes('maxaveragebitrate=')) additions.push('maxaveragebitrate=32000');
+      if (!tuned.includes('cng=')) additions.push('cng=0');
+
+      return `a=fmtp:${pt} ${tuned}${additions.length ? ';' + additions.join(';') : ''}`;
+    }
+    return match;
+  });
+}
+
+/**
  * Improves WebRTC voice transmission quality by inspecting existing audio senders
- * and setting an optimal Opus voice bitrate ceiling (32-40 kbps, default 40000 bps)
- * while preserving browser-managed congestion handling, dynamic adaptation, and latency.
+ * and setting an optimal Opus voice bitrate ceiling (32-40 kbps, default 36000 bps)
  */
 async function applyVoiceSenderBitrate(pc) {
   if (!pc || typeof pc.getSenders !== 'function') return;
@@ -144,17 +199,312 @@ async function applyVoiceSenderBitrate(pc) {
       return;
     }
 
-    const TARGET_VOICE_BITRATE_BPS = 40000; // 40 kbps optimal speech clarity
+    const TARGET_VOICE_BITRATE_BPS = 36000; // 36 kbps optimal speech clarity
     if (params.encodings[0].maxBitrate === TARGET_VOICE_BITRATE_BPS) {
-      return; // Already configured, avoid redundant setParameters calls
+      return;
     }
 
     params.encodings[0].maxBitrate = TARGET_VOICE_BITRATE_BPS;
     await audioSender.setParameters(params);
-    console.debug('[Vybrant Audio] WebRTC audio sender voice bitrate optimized (maxBitrate: 40 kbps)');
+    console.debug('[Vybrant Audio] WebRTC audio sender voice bitrate optimized (maxBitrate: 36 kbps)');
   } catch (err) {
-    // Graceful degradation if browser does not support sender parameter adjustments
-    console.debug('[Vybrant Audio] Audio sender bitrate adjustment skipped (using browser defaults):', err.name || err.message);
+    console.debug('[Vybrant Audio] Audio sender bitrate adjustment skipped:', err.name || err.message);
+  }
+}
+
+// ==========================================
+// CONNECTION STATE MACHINE CONTROLLER
+// ==========================================
+function setCallState(newState, meta = {}) {
+  const previousState = currentCallState;
+  currentCallState = newState;
+
+  const statusDot = document.getElementById('strangerStatusDot');
+  const badgeText = document.getElementById('strangerBadgeText');
+  const p2pBadge = document.getElementById('networkP2pBadge');
+  const recoveryOverlay = document.getElementById('connectionRecoveryOverlay');
+  const recoveryTitle = document.getElementById('recoveryOverlayTitle');
+  const recoveryDesc = document.getElementById('recoveryOverlayDesc');
+
+  switch (newState) {
+    case ConnectionState.IDLE:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
+      if (badgeText) badgeText.textContent = 'Standby';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+
+    case ConnectionState.SEARCHING:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+      if (badgeText) badgeText.textContent = 'Searching...';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+
+    case ConnectionState.CONNECTING:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
+      if (badgeText) badgeText.textContent = 'Connecting...';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+
+    case ConnectionState.CONNECTED:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      if (badgeText) badgeText.textContent = isAudioOnly ? 'Connected (Voice)' : 'Connected (Live)';
+      if (p2pBadge) p2pBadge.textContent = 'Encrypted P2P';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+
+    case ConnectionState.TEMPORARILY_INTERRUPTED:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+      if (badgeText) badgeText.textContent = 'Interrupted';
+      if (recoveryOverlay) {
+        if (recoveryTitle) recoveryTitle.textContent = 'Reconnecting...';
+        if (recoveryDesc) recoveryDesc.textContent = meta.message || 'Temporary network fluctuation detected. Preserving call...';
+        recoveryOverlay.classList.remove('hidden');
+      }
+      break;
+
+    case ConnectionState.RECOVERING:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-spin';
+      if (badgeText) badgeText.textContent = 'Recovering';
+      if (recoveryOverlay) {
+        if (recoveryTitle) recoveryTitle.textContent = 'Restoring Call...';
+        if (recoveryDesc) recoveryDesc.textContent = meta.message || 'Performing ICE recovery handshake...';
+        recoveryOverlay.classList.remove('hidden');
+      }
+      break;
+
+    case ConnectionState.AUDIO_ONLY_DEGRADED:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+      if (badgeText) badgeText.textContent = 'Voice Priority (Low-BW)';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+
+    case ConnectionState.DISCONNECTED:
+      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+      if (badgeText) badgeText.textContent = 'Disconnected';
+      if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      break;
+  }
+
+  console.log(`[Connection State] Transitioned: ${previousState} -> ${newState}`);
+}
+
+// ==========================================
+// ADAPTIVE QUALITY & LOW-BANDWIDTH ENGINE
+// ==========================================
+function startAdaptiveStatsMonitoring() {
+  stopAdaptiveStatsMonitoring();
+  consecutivePoorReadings = 0;
+  consecutiveGoodReadings = 0;
+  lastStatsSample = null;
+
+  // Poll WebRTC stats every 2.5 seconds
+  adaptiveMonitorInterval = setInterval(sampleConnectionStats, 2500);
+}
+
+function stopAdaptiveStatsMonitoring() {
+  if (adaptiveMonitorInterval) {
+    clearInterval(adaptiveMonitorInterval);
+    adaptiveMonitorInterval = null;
+  }
+  lastStatsSample = null;
+}
+
+async function sampleConnectionStats() {
+  if (!peerConnection || (peerConnection.connectionState !== 'connected' && peerConnection.iceConnectionState !== 'connected')) {
+    return;
+  }
+
+  try {
+    const stats = await peerConnection.getStats();
+    const now = Date.now();
+    let outboundVideo = null;
+    let outboundAudio = null;
+    let inboundVideo = null;
+    let inboundAudio = null;
+    let candidatePair = null;
+
+    stats.forEach(report => {
+      if (report.type === 'outbound-rtp' && report.kind === 'video') {
+        outboundVideo = report;
+      } else if (report.type === 'outbound-rtp' && report.kind === 'audio') {
+        outboundAudio = report;
+      } else if (report.type === 'inbound-rtp' && report.kind === 'video') {
+        inboundVideo = report;
+      } else if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+        inboundAudio = report;
+      } else if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
+        candidatePair = report;
+      }
+    });
+
+    if (!lastStatsSample) {
+      lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio };
+      return;
+    }
+
+    const elapsedSec = (now - lastStatsSample.now) / 1000;
+    if (elapsedSec <= 0.5) return;
+
+    // Calculate outbound video bitrate in kbps
+    let outVideoBitrate = 0;
+    if (outboundVideo && lastStatsSample.outboundVideo) {
+      const bytesDiff = (outboundVideo.bytesSent || 0) - (lastStatsSample.outboundVideo.bytesSent || 0);
+      outVideoBitrate = (bytesDiff * 8) / (elapsedSec * 1000);
+    }
+
+    // Calculate inbound video loss rate
+    let inVideoLossRate = 0;
+    if (inboundVideo && lastStatsSample.inboundVideo) {
+      const packetsReceivedDiff = (inboundVideo.packetsReceived || 0) - (lastStatsSample.inboundVideo.packetsReceived || 0);
+      const packetsLostDiff = (inboundVideo.packetsLost || 0) - (lastStatsSample.inboundVideo.packetsLost || 0);
+      const total = packetsReceivedDiff + packetsLostDiff;
+      if (total > 0) inVideoLossRate = Math.max(0, packetsLostDiff / total);
+    }
+
+    const rtt = candidatePair?.currentRoundTripTime ? candidatePair.currentRoundTripTime * 1000 : 0;
+    const jitter = (inboundAudio?.jitter || 0) * 1000;
+
+    lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio };
+
+    evaluateAdaptiveQuality({
+      outVideoBitrate,
+      inVideoLossRate,
+      rtt,
+      jitter
+    });
+  } catch (err) {
+    console.debug('[Adaptive Quality] Error reading stats:', err);
+  }
+}
+
+function evaluateAdaptiveQuality({ outVideoBitrate, inVideoLossRate, rtt, jitter }) {
+  if (currentCallState === ConnectionState.IDLE || currentCallState === ConnectionState.SEARCHING || currentCallState === ConnectionState.DISCONNECTED) {
+    return;
+  }
+
+  // Severe network constraints (loss > 18%, RTT > 800ms, or outbound bandwidth dropping towards ~12-50 kbps)
+  const isExtremelyConstrained = (inVideoLossRate > 0.18 || rtt > 800 || (outVideoBitrate > 0 && outVideoBitrate < 45));
+  // Moderate constraint (low bandwidth ~64-120 kbps target or packet loss 8-18%)
+  const isModeratelyConstrained = (inVideoLossRate > 0.08 || rtt > 400 || (outVideoBitrate > 0 && outVideoBitrate < 110));
+  // Healthy recovery threshold (loss < 4%, RTT < 250ms)
+  const isHealthy = (inVideoLossRate < 0.04 && rtt < 250 && jitter < 50);
+
+  if (isExtremelyConstrained) {
+    consecutivePoorReadings++;
+    consecutiveGoodReadings = 0;
+
+    // After 2 consecutive poor intervals: Degrade to Audio-Only mode (pause video, prioritize voice)
+    if (consecutivePoorReadings >= 2 && !isAdaptiveVideoPaused) {
+      applyAudioOnlyDegradedMode(true);
+    }
+  } else if (isModeratelyConstrained) {
+    consecutivePoorReadings++;
+    consecutiveGoodReadings = 0;
+
+    if (consecutivePoorReadings >= 2 && activeVideoTier < 2 && !isAdaptiveVideoPaused) {
+      applyLowBandwidthVideoTier(2); // 64 kbps tier
+    }
+  } else if (isHealthy) {
+    consecutiveGoodReadings++;
+    consecutivePoorReadings = 0;
+
+    // Hysteresis: Requires 3 consecutive good intervals (~7.5s) to recover
+    if (consecutiveGoodReadings >= 3) {
+      if (isAdaptiveVideoPaused) {
+        applyAudioOnlyDegradedMode(false);
+      } else if (activeVideoTier > 0) {
+        applyLowBandwidthVideoTier(0); // Restore normal tier
+      }
+    }
+  }
+}
+
+async function applyAudioOnlyDegradedMode(enable) {
+  const banner = document.getElementById('adaptiveQualityBanner');
+  const bannerText = document.getElementById('adaptiveQualityText');
+
+  if (enable) {
+    isAdaptiveVideoPaused = true;
+    activeVideoTier = 3;
+    setCallState(ConnectionState.AUDIO_ONLY_DEGRADED);
+
+    if (banner) {
+      if (bannerText) bannerText.textContent = 'Poor connection — video paused, audio continuing';
+      banner.classList.remove('hidden');
+    }
+
+    // Temporarily pause outgoing video track to protect audio bandwidth
+    if (localStream) {
+      const vidTrack = localStream.getVideoTracks()[0];
+      if (vidTrack) vidTrack.enabled = false;
+    }
+
+    console.log('[Adaptive Quality] Entered Audio-Only degraded mode. Intelligible audio prioritized.');
+  } else {
+    isAdaptiveVideoPaused = false;
+    activeVideoTier = 0;
+
+    if (banner) banner.classList.add('hidden');
+
+    // ONLY restore video if user did not intentionally disable their camera
+    if (localStream && !isVideoDisabled) {
+      const vidTrack = localStream.getVideoTracks()[0];
+      if (vidTrack) vidTrack.enabled = true;
+    }
+
+    setCallState(ConnectionState.CONNECTED);
+    showToast('Connection restored — video resumed 📹', 'success', 2500);
+    console.log('[Adaptive Quality] Restored standard video quality.');
+  }
+}
+
+async function applyLowBandwidthVideoTier(tier) {
+  activeVideoTier = tier;
+  if (!peerConnection) return;
+
+  try {
+    const senders = peerConnection.getSenders();
+    const vidSender = senders.find(s => s.track && s.track.kind === 'video');
+    if (!vidSender || typeof vidSender.getParameters !== 'function') return;
+
+    const params = vidSender.getParameters();
+    if (!params.encodings || params.encodings.length === 0) return;
+
+    if (tier === 2) {
+      // 64 kbps low-bandwidth tier: reduce video bitrate, scale resolution down, clamp fps
+      params.encodings[0].maxBitrate = 64000;
+      params.encodings[0].scaleResolutionDownBy = 2.0;
+      params.encodings[0].maxFramerate = 15;
+    } else {
+      // Restore normal tier
+      delete params.encodings[0].maxBitrate;
+      params.encodings[0].scaleResolutionDownBy = 1.0;
+      params.encodings[0].maxFramerate = 30;
+    }
+
+    await vidSender.setParameters(params);
+    console.debug(`[Adaptive Quality] Applied video tier ${tier}`);
+  } catch (err) {
+    console.debug('[Adaptive Quality] Parameter adjustment skipped:', err.message);
+  }
+}
+
+// ==========================================
+// AUTOPLAY & AUDIO PLAYBACK RESTRICTIONS (Instagram / iOS Safari)
+// ==========================================
+function showTapToPlayAudioPrompt() {
+  const tapBtn = document.getElementById('tapToPlayAudioBtn');
+  if (tapBtn) {
+    tapBtn.classList.remove('hidden');
+    isRemoteAudioBlocked = true;
+  }
+}
+
+function hideTapToPlayAudioPrompt() {
+  const tapBtn = document.getElementById('tapToPlayAudioBtn');
+  if (tapBtn) {
+    tapBtn.classList.add('hidden');
+    isRemoteAudioBlocked = false;
   }
 }
 
@@ -909,6 +1259,8 @@ function startNsfwScanner() {
 
     try {
       isNsfwScanning = true;
+      // Yield to main event loop so Socket.IO ping/pong heartbeats and audio buffers are never starved
+      await new Promise(resolve => setTimeout(resolve, 0));
       const predictions = await nsfwModel.classify(localVid, 1);
 
       for (const pred of predictions) {
@@ -925,7 +1277,7 @@ function startNsfwScanner() {
     } finally {
       isNsfwScanning = false;
     }
-  }, 1500);
+  }, 3000); // 3000ms to maintain safety while keeping main thread and Socket.IO heartbeat responsive
 }
 
 function stopNsfwScanner() {
@@ -1028,7 +1380,12 @@ function initSocketConnection() {
   if (socket) return;
 
   socket = io({
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000
   });
 
   socket.on('connect', () => {
@@ -1036,7 +1393,29 @@ function initSocketConnection() {
     if (vipCode) {
       activateVipCode(vipCode, false);
     }
-    startSearching();
+
+    // If we have an active session with an alive P2P WebRTC connection, recover it!
+    if (currentSessionId && currentPartnerId && peerConnection &&
+        (peerConnection.connectionState === 'connected' || peerConnection.iceConnectionState === 'connected')) {
+      console.log(`[Socket] Attempting session recovery for session ${currentSessionId}...`);
+      socket.emit('reconnect-session', {
+        sessionId: currentSessionId,
+        lastPartnerId: currentPartnerId
+      }, (resp) => {
+        if (resp && resp.success) {
+          console.log('[Socket] Session re-attached to signaling successfully.');
+          currentPartnerId = resp.partnerId;
+          setCallState(ConnectionState.CONNECTED);
+        } else {
+          console.warn('[Socket] Session could not be recovered on server:', resp?.message);
+        }
+      });
+      return;
+    }
+
+    if (isSearching && !peerConnection) {
+      startSearching();
+    }
   });
 
   socket.on('connect_error', (err) => {
@@ -1081,6 +1460,7 @@ function initSocketConnection() {
   });
 
   socket.on('waiting', (data) => {
+    setCallState(ConnectionState.SEARCHING);
     setSearchingUI(true);
     addSystemChatMessage(data.message || 'Looking for a stranger...');
   });
@@ -1088,9 +1468,11 @@ function initSocketConnection() {
   socket.on('match-found', async (data) => {
     console.log('[Match] Paired with stranger:', data);
     currentPartnerId = data.partnerId;
+    currentSessionId = data.sessionId || `sess_${Date.now()}`;
     isInitiator = Boolean(data.initiator);
     matchCount++;
 
+    setCallState(ConnectionState.CONNECTING);
     setSearchingUI(false);
     clearChatMessages();
     addSystemChatMessage('✨ You are now paired with a stranger. Say hello!');
@@ -1130,10 +1512,14 @@ function initSocketConnection() {
       drainPendingIceCandidates();
 
       const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
+      const tunedAnswer = new RTCSessionDescription({
+        type: answer.type,
+        sdp: tuneOpusSdp(answer.sdp)
+      });
+      await peerConnection.setLocalDescription(tunedAnswer);
       applyVoiceSenderBitrate(peerConnection);
 
-      socket.emit('answer', { answer });
+      socket.emit('answer', { answer: tunedAnswer });
     } catch (err) {
       console.error('[WebRTC] Error handling offer:', err);
     }
@@ -1164,18 +1550,43 @@ function initSocketConnection() {
     }
   });
 
+  // Handle remote request for ICE restart
+  socket.on('ice-restart-needed', () => {
+    console.log('[WebRTC] Remote stranger requested ICE restart.');
+    if (isInitiator && peerConnection) {
+      createAndSendOffer(true);
+    }
+  });
+
+  // Handle partner temporary network interruption (do NOT immediately terminate!)
+  socket.on('partner-interrupted', (data) => {
+    console.warn('[Session Recovery] Partner connection interrupted:', data);
+    setCallState(ConnectionState.TEMPORARILY_INTERRUPTED, {
+      message: data.message || "Stranger's connection was interrupted. Waiting for recovery..."
+    });
+  });
+
+  // Handle successful session recovery
+  socket.on('session-recovered', (data) => {
+    console.log('[Session Recovery] Session recovered successfully:', data);
+    currentPartnerId = data.partnerId;
+    if (data.sessionId) currentSessionId = data.sessionId;
+    setCallState(ConnectionState.CONNECTED);
+    showToast('Call connection recovered! 🎉', 'success', 2500);
+    startAdaptiveStatsMonitoring();
+  });
+
   socket.on('partner-disconnected', (data) => {
     teardownPeerConnection();
     stopNsfwScanner();
+    setCallState(ConnectionState.DISCONNECTED);
     addSystemChatMessage(data.message || '👋 Stranger has disconnected.');
-    const strangerBadge = document.getElementById('strangerBadgeText');
-    const statusDot = document.getElementById('strangerStatusDot');
-    if (strangerBadge) strangerBadge.textContent = 'Disconnected';
-    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
     showToast(data.message || 'Stranger skipped.', 'info', 2500);
 
     setTimeout(() => {
-      handleSkip();
+      if (isSearching) {
+        handleSkip();
+      }
     }, 600);
   });
 
@@ -1191,6 +1602,7 @@ function initSocketConnection() {
     setSearchingUI(false);
     teardownPeerConnection();
     stopNsfwScanner();
+    setCallState(ConnectionState.IDLE);
     addSystemChatMessage('Search stopped. Click Start to resume.');
     const matchText = document.getElementById('toggleMatchText');
     const matchIcon = document.getElementById('toggleMatchIcon');
@@ -1199,10 +1611,20 @@ function initSocketConnection() {
     isSearching = false;
   });
 
-  socket.on('disconnect', () => {
-    showToast('Disconnected from server. Reconnecting...', 'warning');
-    teardownPeerConnection();
-    stopNsfwScanner();
+  socket.on('disconnect', (reason) => {
+    console.warn(`[Socket] Disconnected from signaling server (${reason})`);
+    // If WebRTC is currently streaming media P2P directly between browsers, PRESERVE IT!
+    if (peerConnection && (peerConnection.connectionState === 'connected' || peerConnection.iceConnectionState === 'connected')) {
+      console.log('[WebRTC] P2P Media connection is still alive despite signaling interruption. Preserving call.');
+      setCallState(ConnectionState.TEMPORARILY_INTERRUPTED, {
+        message: 'Signaling server reconnecting... Call continues over P2P'
+      });
+      showToast('Signaling interrupted — call continuing over P2P', 'info', 3000);
+    } else {
+      showToast('Disconnected from server. Reconnecting...', 'warning', 2500);
+      teardownPeerConnection();
+      stopNsfwScanner();
+    }
   });
 }
 
@@ -1223,7 +1645,26 @@ async function drainPendingIceCandidates() {
 async function setupPeerConnection() {
   teardownPeerConnection(false);
 
-  peerConnection = new RTCPeerConnection(RTC_CONFIG);
+  setCallState(ConnectionState.CONNECTING);
+  iceRestartCount = 0;
+  isAdaptiveVideoPaused = false;
+  activeVideoTier = 0;
+
+  // Query dynamic ICE server configuration from server or use resilient defaults
+  let config = RTC_CONFIG;
+  try {
+    const res = await fetch('/api/rtc-config');
+    if (res.ok) {
+      const dynConfig = await res.json();
+      if (dynConfig && Array.isArray(dynConfig.iceServers)) {
+        config = dynConfig;
+      }
+    }
+  } catch (e) {
+    console.debug('[WebRTC] Using static RTC_CONFIG fallback');
+  }
+
+  peerConnection = new RTCPeerConnection(config);
 
   if (localStream) {
     localStream.getTracks().forEach((track) => {
@@ -1234,15 +1675,22 @@ async function setupPeerConnection() {
 
   peerConnection.ontrack = (event) => {
     const remoteVid = document.getElementById('remoteVideo');
-    const statusDot = document.getElementById('strangerStatusDot');
-    const badgeText = document.getElementById('strangerBadgeText');
+    if (!remoteVid) return;
 
-    if (remoteVid && remoteVid.srcObject !== event.streams[0]) {
+    if (remoteVid.srcObject !== event.streams[0]) {
       remoteVid.srcObject = event.streams[0];
-      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-      if (badgeText) badgeText.textContent = 'Connected (P2P)';
-
       monitorRemoteAudio(event.streams[0]);
+
+      // Autoplay handling: Explicitly play with rejection catcher for Instagram / iOS Safari
+      const playPromise = remoteVid.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          hideTapToPlayAudioPrompt();
+        }).catch((err) => {
+          console.warn('[Audio Playback] Autoplay blocked by browser policy:', err);
+          showTapToPlayAudioPrompt();
+        });
+      }
     }
   };
 
@@ -1253,19 +1701,41 @@ async function setupPeerConnection() {
   };
 
   peerConnection.onconnectionstatechange = () => {
+    if (!peerConnection) return;
     const state = peerConnection.connectionState;
-    const statusDot = document.getElementById('strangerStatusDot');
-    const badgeText = document.getElementById('strangerBadgeText');
-    const p2pBadge = document.getElementById('networkP2pBadge');
+    console.log(`[WebRTC] connectionState changed: ${state}`);
 
     if (state === 'connected') {
-      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-      if (badgeText) badgeText.textContent = 'Connected (Live)';
-      if (p2pBadge) p2pBadge.textContent = 'Encrypted P2P';
+      if (iceRecoveryTimer) {
+        clearTimeout(iceRecoveryTimer);
+        iceRecoveryTimer = null;
+      }
+      setCallState(ConnectionState.CONNECTED);
       applyVoiceSenderBitrate(peerConnection);
-    } else if (state === 'disconnected' || state === 'failed') {
-      if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
-      if (badgeText) badgeText.textContent = 'Connection Lost';
+      startAdaptiveStatsMonitoring();
+    } else if (state === 'disconnected') {
+      handleTransientDisconnect();
+    } else if (state === 'failed') {
+      handleFatalConnectionFailure();
+    }
+  };
+
+  peerConnection.oniceconnectionstatechange = () => {
+    if (!peerConnection) return;
+    const iceState = peerConnection.iceConnectionState;
+    console.log(`[WebRTC] iceConnectionState changed: ${iceState}`);
+
+    if (iceState === 'connected' || iceState === 'completed') {
+      if (iceRecoveryTimer) {
+        clearTimeout(iceRecoveryTimer);
+        iceRecoveryTimer = null;
+      }
+      setCallState(ConnectionState.CONNECTED);
+      startAdaptiveStatsMonitoring();
+    } else if (iceState === 'disconnected') {
+      handleTransientDisconnect();
+    } else if (iceState === 'failed') {
+      handleFatalConnectionFailure();
     }
   };
 
@@ -1275,12 +1745,87 @@ async function setupPeerConnection() {
   };
 }
 
-async function createAndSendOffer() {
+function handleTransientDisconnect() {
+  if (currentCallState === ConnectionState.DISCONNECTED || currentCallState === ConnectionState.IDLE) return;
+
+  setCallState(ConnectionState.TEMPORARILY_INTERRUPTED, {
+    message: 'Temporary network fluctuation detected. Preserving call...'
+  });
+
+  // Start 8-second grace period before initiating an ICE restart
+  if (!iceRecoveryTimer) {
+    iceRecoveryTimer = setTimeout(() => {
+      iceRecoveryTimer = null;
+      if (peerConnection && (peerConnection.iceConnectionState === 'disconnected' || peerConnection.connectionState === 'disconnected')) {
+        console.log('[WebRTC] Transient disconnection persisted > 8s. Initiating ICE restart...');
+        attemptIceRestart();
+      }
+    }, 8000);
+  }
+}
+
+function handleFatalConnectionFailure() {
+  if (iceRecoveryTimer) {
+    clearTimeout(iceRecoveryTimer);
+    iceRecoveryTimer = null;
+  }
+  if (iceRestartCount < 2) {
+    attemptIceRestart();
+  } else {
+    setCallState(ConnectionState.DISCONNECTED);
+  }
+}
+
+async function attemptIceRestart() {
+  if (iceRestartCount >= 2) {
+    console.warn('[ICE Restart] Maximum restart attempts (2) reached.');
+    setCallState(ConnectionState.DISCONNECTED);
+    showToast('⚠️ Could not recover connection with stranger.', 'warning', 4000);
+    return;
+  }
+
+  iceRestartCount++;
+  setCallState(ConnectionState.RECOVERING, { message: 'Performing ICE connection restart...' });
+  console.log(`[ICE Restart] Initiating ICE restart attempt #${iceRestartCount}...`);
+
+  if (isInitiator) {
+    await createAndSendOffer(true);
+  } else {
+    if (socket) {
+      socket.emit('ice-restart', { reason: 'ice_restart_requested' });
+    }
+  }
+
+  if (iceRecoveryTimer) clearTimeout(iceRecoveryTimer);
+  iceRecoveryTimer = setTimeout(() => {
+    if (peerConnection && peerConnection.iceConnectionState !== 'connected' && peerConnection.iceConnectionState !== 'completed') {
+      if (iceRestartCount < 2) {
+        attemptIceRestart();
+      } else {
+        setCallState(ConnectionState.DISCONNECTED);
+        showToast('Connection recovery timed out.', 'info', 3500);
+      }
+    }
+  }, 8000);
+}
+
+async function createAndSendOffer(isRestart = false) {
   try {
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+    let offer;
+    if (isRestart && typeof peerConnection.restartIce === 'function') {
+      peerConnection.restartIce();
+      offer = await peerConnection.createOffer();
+    } else {
+      offer = await peerConnection.createOffer({ iceRestart: isRestart });
+    }
+
+    const tunedOffer = new RTCSessionDescription({
+      type: offer.type,
+      sdp: tuneOpusSdp(offer.sdp)
+    });
+    await peerConnection.setLocalDescription(tunedOffer);
     applyVoiceSenderBitrate(peerConnection);
-    socket.emit('offer', { offer });
+    socket.emit('offer', { offer: tunedOffer, isRestart });
   } catch (err) {
     console.error('[WebRTC] Error creating offer:', err);
   }
@@ -1328,6 +1873,25 @@ function bindDataChannelEvents(channel) {
 }
 
 function teardownPeerConnection(clearVideo = true) {
+  stopAdaptiveStatsMonitoring();
+  setCallState(ConnectionState.IDLE);
+
+  if (iceRecoveryTimer) {
+    clearTimeout(iceRecoveryTimer);
+    iceRecoveryTimer = null;
+  }
+  iceRestartCount = 0;
+  isAdaptiveVideoPaused = false;
+  activeVideoTier = 0;
+
+  const banner = document.getElementById('adaptiveQualityBanner');
+  if (banner) banner.classList.add('hidden');
+
+  const recoveryOverlay = document.getElementById('connectionRecoveryOverlay');
+  if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+
+  hideTapToPlayAudioPrompt();
+
   const remoteVid = document.getElementById('remoteVideo');
   const antiFlashOverlay = document.getElementById('antiFlashOverlay');
   const audioIndicator = document.getElementById('strangerAudioIndicator');
@@ -1342,7 +1906,13 @@ function teardownPeerConnection(clearVideo = true) {
   }
 
   if (remoteAudioMonitor) {
-    try { remoteAudioMonitor.disconnect(); } catch (e) {}
+    try {
+      if (remoteAudioMonitor.source) remoteAudioMonitor.source.disconnect();
+      if (remoteAudioMonitor.analyser) remoteAudioMonitor.analyser.disconnect();
+      if (remoteAudioMonitor.ctx && remoteAudioMonitor.ctx.state !== 'closed') {
+        remoteAudioMonitor.ctx.close();
+      }
+    } catch (e) {}
     remoteAudioMonitor = null;
   }
   if (audioIndicator) audioIndicator.classList.add('hidden');
@@ -1353,12 +1923,17 @@ function teardownPeerConnection(clearVideo = true) {
   }
 
   if (peerConnection) {
+    peerConnection.onconnectionstatechange = null;
+    peerConnection.oniceconnectionstatechange = null;
+    peerConnection.onicecandidate = null;
+    peerConnection.ontrack = null;
     try { peerConnection.close(); } catch (e) {}
     peerConnection = null;
   }
 
   pendingIceCandidates = [];
   currentPartnerId = null;
+  currentSessionId = null;
 
   if (clearVideo && remoteVid) {
     remoteVid.srcObject = null;
@@ -1374,18 +1949,31 @@ function monitorRemoteAudio(stream) {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
 
+    // Disconnect previous audio monitor to avoid multiple AudioContexts leaking
+    if (remoteAudioMonitor) {
+      try {
+        if (remoteAudioMonitor.source) remoteAudioMonitor.source.disconnect();
+        if (remoteAudioMonitor.analyser) remoteAudioMonitor.analyser.disconnect();
+        if (remoteAudioMonitor.ctx && remoteAudioMonitor.ctx.state !== 'closed') {
+          remoteAudioMonitor.ctx.close();
+        }
+      } catch (e) {}
+      remoteAudioMonitor = null;
+    }
+
     const ctx = new AudioCtx();
     const source = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     source.connect(analyser);
 
+    remoteAudioMonitor = { ctx, source, analyser };
+
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
     const checkVolume = () => {
-      if (!peerConnection || peerConnection.connectionState !== 'connected') {
-        ctx.close();
+      if (!peerConnection || (peerConnection.connectionState !== 'connected' && peerConnection.iceConnectionState !== 'connected') || !remoteAudioMonitor) {
         return;
       }
       analyser.getByteFrequencyData(dataArray);
@@ -2138,7 +2726,121 @@ function bindUiEventListeners() {
       cInput.focus();
     });
   }
+
+  // Tap-to-play Audio Unlock (Instagram in-app browser / iOS Safari autoplay restriction)
+  const tapAudioBtn = document.getElementById('tapToPlayAudioBtn');
+  if (tapAudioBtn) {
+    tapAudioBtn.addEventListener('click', () => {
+      const remoteVid = document.getElementById('remoteVideo');
+      if (remoteVid) {
+        remoteVid.play().then(() => {
+          hideTapToPlayAudioPrompt();
+          showToast('Audio playback enabled! 🔊', 'success', 2000);
+        }).catch(err => {
+          console.warn('[Audio] User tap play failed:', err);
+        });
+      }
+      if (remoteAudioMonitor && remoteAudioMonitor.ctx && remoteAudioMonitor.ctx.state === 'suspended') {
+        remoteAudioMonitor.ctx.resume();
+      }
+    });
+  }
+
+  // Recovery overlay skip button
+  const recSkipBtn = document.getElementById('recoverySkipBtn');
+  if (recSkipBtn) {
+    recSkipBtn.addEventListener('click', () => {
+      const overlay = document.getElementById('connectionRecoveryOverlay');
+      if (overlay) overlay.classList.add('hidden');
+      handleSkip(false);
+    });
+  }
+
+  // Instagram / In-App Browser Notice
+  initInAppBrowserNotice();
 }
+
+function initInAppBrowserNotice() {
+  if (isInstagramBrowser) {
+    const notice = document.getElementById('inAppBrowserNotice');
+    if (notice) notice.classList.remove('hidden');
+
+    const dismissBtn = document.getElementById('dismissInAppNoticeBtn');
+    if (dismissBtn && notice) {
+      dismissBtn.addEventListener('click', () => {
+        notice.classList.add('hidden');
+      });
+    }
+
+    const copyBtn = document.getElementById('copyBrowserLinkBtn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(window.location.href).then(() => {
+            showToast('Link copied! Open Chrome or Safari and paste 📋', 'success', 3500);
+          }).catch(() => {
+            showToast('Please copy URL from address bar.', 'info', 2500);
+          });
+        }
+      });
+    }
+  }
+}
+
+// Window diagnostic helper for QA & connection state inspection
+window.getVybrantConnectionDiagnostics = async function() {
+  let statsReport = null;
+
+  if (peerConnection && typeof peerConnection.getStats === 'function') {
+    try {
+      const stats = await peerConnection.getStats();
+      statsReport = {};
+      stats.forEach(report => {
+        if (report.type === 'outbound-rtp') {
+          statsReport['outbound_' + report.kind] = {
+            packetsSent: report.packetsSent,
+            bytesSent: report.bytesSent,
+            targetBitrate: report.targetBitrate
+          };
+        } else if (report.type === 'inbound-rtp') {
+          statsReport['inbound_' + report.kind] = {
+            packetsReceived: report.packetsReceived,
+            packetsLost: report.packetsLost,
+            jitter: report.jitter,
+            bytesReceived: report.bytesReceived
+          };
+        } else if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
+          statsReport.selectedPair = {
+            rtt: report.currentRoundTripTime,
+            bytesSent: report.bytesSent,
+            bytesReceived: report.bytesReceived
+          };
+        }
+      });
+    } catch (e) {
+      statsReport = { error: e.message };
+    }
+  }
+
+  return {
+    state: currentCallState,
+    sessionId: currentSessionId,
+    partnerId: currentPartnerId,
+    iceRestartAttempts: iceRestartCount,
+    isAdaptiveVideoPaused,
+    activeVideoTier,
+    isAudioMuted,
+    isVideoDisabled,
+    isAudioOnly,
+    isInstagramBrowser,
+    isRemoteAudioBlocked,
+    peerConnectionState: peerConnection?.connectionState || 'none',
+    iceConnectionState: peerConnection?.iceConnectionState || 'none',
+    signalingState: peerConnection?.signalingState || 'none',
+    socketConnected: Boolean(socket && socket.connected),
+    stats: statsReport
+  };
+};
 
 // ==========================================
 // BOOTSTRAP APPLICATION
