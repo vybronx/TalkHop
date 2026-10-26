@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blip ⚡ | Secret Admin Command Center</title>
+  <meta name="description" content="Blip Secret Admin Command Center & Live Traffic Radar">
+  <meta name="theme-color" content="#07080d">
+
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b5cf6'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              purple: '#8b5cf6',
+              cyan: '#06b6d4',
+              gold: '#f59e0b',
+              dark: '#07080d',
+              card: '#0d0f17'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom CSS for Admin Glow & Scrollbars -->
+  <style>
+    body {
+      background-color: #07080d;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(13, 15, 23, 0.6);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.3);
+      border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 92, 246, 0.6);
+    }
+
+    .glass-card {
+      background: rgba(13, 15, 23, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glow-border {
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.2);
+    }
+
+    .gold-glow-border {
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.2);
+    }
+
+    .cyan-glow-border {
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.2);
+    }
+
+    .emerald-glow-border {
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.2);
+    }
+
+    .rose-glow-border {
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.2);
+    }
+
+    /* Pulse animation */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.97); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-[#07080d] text-slate-100 flex flex-col selection:bg-purple-500 selection:text-white">
+
+  <!-- Ambient Glow Background -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-[25%] -left-[10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[140px]"></div>
+    <div class="absolute top-[40%] -right-[15%] w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[150px]"></div>
+    <div class="absolute -bottom-[20%] left-[25%] w-[500px] h-[500px] rounded-full bg-amber-600/10 blur-[130px]"></div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="adminToastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- ======================================================= -->
+  <!-- 1. SECURE ADMIN LOGIN SCREEN (Displayed when logged out) -->
+  <!-- ======================================================= -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#07080d]/90 backdrop-blur-2xl">
+    <div class="w-full max-w-md glass-card rounded-3xl p-8 glow-border shadow-2xl relative overflow-hidden">
+      <!-- Glow Accent Top Border -->
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-400 to-amber-400"></div>
+
+      <!-- Brand Icon & Header -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 shadow-xl shadow-purple-600/30 mb-3.5">
+          <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+        <h1 class="font-display font-extrabold text-2xl text-white tracking-tight">
+          Blip<span class="text-purple-400">⚡</span> Admin Center
+        </h1>
+        <p class="text-xs text-slate-400 mt-1 font-medium">
+          Secret Command Console & Live Traffic Radar
+        </p>
+      </div>
+
+      <!-- Error Alert Box -->
+      <div id="loginErrorBox" class="hidden mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center space-x-2">
+        <span>⚠️</span>
+        <span id="loginErrorText">Invalid username or password.</span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="adminLoginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Username</label>
+          <div class="relative">
+            <input type="text" id="adminUsernameInput" required autocomplete="username"
+              placeholder="e.g. admin"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Password</label>
+          <div class="relative">
+            <input type="password" id="adminPasswordInput" required autocomplete="current-password"
+              placeholder="••••••••••••"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all pr-10">
+            <button type="button" id="togglePasswordBtn"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors text-xs font-semibold">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="loginSubmitBtn"
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-bold text-sm shadow-lg shadow-purple-600/30 transition-all active:scale-95 flex items-center justify-center space-x-2">
+          <span>🔓</span>
+          <span>Authenticate & Access Console</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- 2. ADMIN DASHBOARD VIEWPORT (Displayed when logged in) -->
+  <!-- ======================================================= -->
+  <div id="adminDashboard" class="hidden relative z-10 flex-1 flex flex-col min-h-screen">
+
+    <!-- Top Admin Navigation Bar -->
+    <header class="border-b border-white/10 bg-[#090b12]/90 backdrop-blur-xl px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/30">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-display font-extrabold text-lg sm:text-xl text-white">Blip<span class="text-purple-400">⚡</span> Admin</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              Command Center
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">blip.vybronx.online &bull; Live Telemetry & VIP Controller</p>
+        </div>
+      </div>
+
+      <!-- Controls: Refresh Timer, Status Badge & Logout -->
+      <div class="flex items-center space-x-3 text-xs">
+        <!-- Live Polling Radar Status -->
+        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/30 text-emerald-300 font-medium">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="radarTimerText">Radar: 3s</span>
+        </div>
+
+        <!-- Manual Refresh Button -->
+        <button id="manualRefreshBtn" title="Fetch fresh statistics now"
+          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 transition-all active:scale-95">
+          <span>🔄</span>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
+
+        <!-- Admin Identity Pill -->
+        <div class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-300">
+          <span>👤</span>
+          <span id="adminUserPill" class="font-bold text-white">admin</span>
+        </div>
+
+        <!-- View Main Website Link -->
+        <a href="/" target="_blank"
+          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 transition-all font-semibold">
+          <span>🌐</span>
+          <span class="hidden sm:inline">Open Blip</span>
+        </a>
+
+        <!-- Logout Button -->
+        <button id="adminLogoutBtn"
+          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-semibold transition-all active:scale-95">
+          <span>🚪</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1720px] w-full mx-auto space-y-6">
+
+      <!-- ========================================== -->
+      <!-- SECTION 1: LIVE TRAFFIC RADAR KPI CARDS    -->
+      <!-- ========================================== -->
+      <div>
+        <div class="flex items-center justify-between mb-3.5">
+          <h2 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
+            <span>📡 Live Traffic Radar</span>
+            <span class="text-xs font-normal text-slate-400 font-sans">(Real-Time Engine Telemetry)</span>
+          </h2>
+          <span id="serverTimestampText" class="text-xs text-slate-500 font-mono">Syncing...</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+
+          <!-- Card 1: Total Online -->
+          <div class="glass-card rounded-2xl p-4 emerald-glow-border transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">Total Online</span>
+              <span class="text-emerald-400 text-lg">👥</span>
+            </div>
+            <div id="statTotalOnline" class="font-display font-extrabold text-2xl sm:text-3xl text-emerald-400">0</div>
+            <p class="text-[10px] text-slate-400 mt-1">Connected WebSockets</p>
+          </div>
+
+          <!-- Card 2: Active P2P Calls -->
+          <div class="glass-card rounded-2xl p-4 cyan-glow-border transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">In Calls (P2P)</span>
+              <span class="text-cyan-400 text-lg">📹</span>
+            </div>
+            <div id="statInCall" class="font-display font-extrabold text-2xl sm:text-3xl text-cyan-400">0</div>
+            <p class="text-[10px] text-slate-400 mt-1">Matched 1-on-1 pairs</p>
+          </div>
+
+          <!-- Card 3: Radar Queue Depth -->
+          <div class="glass-card rounded-2xl p-4 glow-border transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">Queue Depth</span>
+              <span class="text-purple-400 text-lg">⏳</span>
+            </div>
+            <div id="statInQueue" class="font-display font-extrabold text-2xl sm:text-3xl text-purple-400">0</div>
+            <p class="text-[10px] text-slate-400 mt-1">Waiting in matchmaking</p>
+          </div>
+
+          <!-- Card 4: Active VIP Passes -->
+          <div class="glass-card rounded-2xl p-4 gold-glow-border transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">Active VIPs</span>
+              <span class="text-amber-400 text-lg">👑</span>
+            </div>
+            <div id="statVipCount" class="font-display font-extrabold text-2xl sm:text-3xl text-amber-400">0</div>
+            <p class="text-[10px] text-slate-400 mt-1">Users with priority filter</p>
+          </div>
+
+          <!-- Card 5: Banned Threat IPs -->
+          <div class="glass-card rounded-2xl p-4 rose-glow-border transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">Blocked IPs</span>
+              <span class="text-rose-400 text-lg">🚫</span>
+            </div>
+            <div id="statBannedCount" class="font-display font-extrabold text-2xl sm:text-3xl text-rose-400">0</div>
+            <p class="text-[10px] text-slate-400 mt-1">Auto-Ban 24h active</p>
+          </div>
+
+          <!-- Card 6: Server Uptime -->
+          <div class="glass-card rounded-2xl p-4 border border-white/10 transition-transform hover:-translate-y-0.5">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-xs font-semibold uppercase tracking-wider">Uptime</span>
+              <span class="text-slate-300 text-lg">⚡</span>
+            </div>
+            <div id="statUptime" class="font-display font-extrabold text-xl sm:text-2xl text-slate-200">0s</div>
+            <p class="text-[10px] text-slate-400 mt-1">Node engine uptime</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SECTION 2: DEMOGRAPHICS & TRAFFIC RADAR    -->
+      <!-- ========================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Country Distribution -->
+        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">🌍</span>
+              <h3 class="font-display font-bold text-base text-white">Country Traffic Distribution</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">Top Geos</span>
+          </div>
+
+          <div id="countryStatsContainer" class="flex-1 space-y-3 overflow-y-auto max-h-[260px] pr-2">
+            <div class="text-xs text-slate-400 text-center py-6">Awaiting live connections...</div>
+          </div>
+        </div>
+
+        <!-- Gender & Preference Ratios -->
+        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-lg">👥</span>
+              <h3 class="font-display font-bold text-base text-white">Gender & Matching Preference Ratios</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">Live Ratios</span>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Male Ratio -->
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-purple-300 flex items-center space-x-1">
+                  <span>♂️ Male Users</span>
+                </span>
+                <span id="maleCountText" class="text-slate-300 font-mono">0 (0%)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div id="maleProgressBar" class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Female Ratio -->
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-pink-300 flex items-center space-x-1">
+                  <span>♀️ Female Users</span>
+                </span>
+                <span id="femaleCountText" class="text-slate-300 font-mono">0 (0%)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div id="femaleProgressBar" class="h-full bg-pink-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Matching Queue Distribution -->
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-slate-400 mb-2">Priority Matching Queue Breakdown:</p>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-2 rounded-xl bg-slate-900 border border-white/5">
+                  <span class="block text-xs font-bold text-slate-200" id="queueGlobalCount">0</span>
+                  <span class="text-[10px] text-slate-400">Global Any</span>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900 border border-amber-500/20">
+                  <span class="block text-xs font-bold text-amber-400" id="queueFemaleCount">0</span>
+                  <span class="text-[10px] text-amber-300">VIP Female</span>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-900 border border-cyan-500/20">
+                  <span class="block text-xs font-bold text-cyan-400" id="queueCountryCount">0</span>
+                  <span class="text-[10px] text-cyan-300">VIP Country</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SECTION 3: VIP PASS GENERATOR & MANAGER   -->
+      <!-- ========================================== -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-4">
+          <div>
+            <h3 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
+              <span>👑 VIP Micro-Pass Management & Generator</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Issue custom VIP vouchers, inspect redemption status, and revoke codes in real-time.</p>
+          </div>
+          <span class="text-xs px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold">
+            1-Device Concurrency Lock Protected
+          </span>
+        </div>
+
+        <!-- VIP Code Generator Form -->
+        <form id="generateVipForm" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3.5 bg-slate-900/80 p-4 rounded-2xl border border-white/5">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custom Code (Optional)</label>
+            <input type="text" id="genCustomCode" placeholder="Auto-generate if empty"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</label>
+            <select id="genDurationSelect"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+              <option value="60">1 Hour (Standard ₹19)</option>
+              <option value="720">12 Hours (Half-Day ₹39)</option>
+              <option value="1440">24 Hours (Full-Day)</option>
+              <option value="10080">7 Days (Weekly VIP)</option>
+              <option value="43200">30 Days (Monthly VIP)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Max Uses</label>
+            <input type="number" id="genMaxUses" value="1" min="1" max="1000"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Tag / Note</label>
+            <input type="text" id="genNote" placeholder="e.g. Promo Giveaway"
+              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+          </div>
+
+          <div class="flex items-end">
+            <button type="submit" id="genSubmitBtn"
+              class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+              <span>⚡</span>
+              <span>Generate VIP Pass</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Active VIP Codes Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-white/10 text-slate-400 uppercase tracking-wider font-semibold">
+                <th class="py-2.5 px-3">VIP Code</th>
+                <th class="py-2.5 px-3">Plan / Duration</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">Active Socket Device</th>
+                <th class="py-2.5 px-3">Note</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vipTableBody" class="divide-y divide-white/5">
+              <tr>
+                <td colspan="6" class="py-6 text-center text-slate-500">Loading VIP passes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SECTION 4: MODERATION & IP BAN MANAGER     -->
+      <!-- ========================================== -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Banned IPs Table (2 Cols) -->
+        <div class="lg:col-span-2 glass-card rounded-3xl p-5 border border-white/10 space-y-4">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="text-rose-400 text-lg">🛡️</span>
+              <h3 class="font-display font-extrabold text-base text-white">Active IP Bans (24h Auto-Ban & Manual)</h3>
+            </div>
+            <span id="banCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 font-bold border border-rose-500/30">
+              0 Banned
+            </span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-white/10 text-slate-400 uppercase tracking-wider font-semibold">
+                  <th class="py-2 px-3">IP Address</th>
+                  <th class="py-2 px-3">Reason</th>
+                  <th class="py-2 px-3">Remaining Time</th>
+                  <th class="py-2 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="bannedTableBody" class="divide-y divide-white/5">
+                <tr>
+                  <td colspan="4" class="py-6 text-center text-slate-500">No active IP bans.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manual IP Ban Box (1 Col) -->
+        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="text-lg">🔨</span>
+              <h3 class="font-display font-bold text-base text-white">Manual Threat Ban</h3>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Instantly ban an IP and terminate any active video calls or queue positions.</p>
+
+            <form id="manualBanForm" class="space-y-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Target IP Address</label>
+                <input type="text" id="manualBanIp" required placeholder="e.g. 192.168.1.1"
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-rose-500">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Ban Reason</label>
+                <input type="text" id="manualBanReason" placeholder="e.g. Severe harassment or abuse"
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-rose-500">
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Duration (Hours)</label>
+                <select id="manualBanHours"
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-rose-500">
+                  <option value="1">1 Hour</option>
+                  <option value="12">12 Hours</option>
+                  <option value="24" selected>24 Hours (Standard)</option>
+                  <option value="72">3 Days</option>
+                  <option value="168">7 Days</option>
+                </select>
+              </div>
+
+              <button type="submit" id="manualBanBtn"
+                class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-bold text-xs shadow-lg shadow-rose-600/30 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer mt-4">
+                <span>🚫</span>
+                <span>Ban IP & Kick Connections</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================== -->
+      <!-- SECTION 5: LIVE SPONSOR & MONETIZATION     -->
+      <!-- ========================================== -->
+      <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+          <div>
+            <h3 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
+              <span>📢 Live Sponsor & Monetization Engine</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Update the chat-box partner sponsor card in real-time. Changes are broadcast live to all connected chat users.</p>
+          </div>
+          <span class="text-xs px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-bold">
+            Real-Time Socket Broadcast
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+          <!-- Edit Sponsor Form -->
+          <form id="sponsorUpdateForm" class="space-y-3.5 bg-slate-900/60 p-4 rounded-2xl border border-white/5">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Badge Tag</label>
+                <input type="text" id="sponsorTagInput" value="🎮 Verified Partner" required
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Subtag</label>
+                <input type="text" id="sponsorSubtagInput" value="Zero-Ad Monetization" required
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold text-slate-400 mb-1">Main Message Headline</label>
+              <textarea id="sponsorMessageInput" rows="2" required
+                class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">Level up your setup with Vybronx Gaming Gear & Cloud Servers.</textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Button / Link Label</label>
+                <input type="text" id="sponsorUrlTextInput" value="Visit vybronx.online/store" required
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Destination URL</label>
+                <input type="url" id="sponsorUrlInput" value="https://vybronx.online" required
+                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+              </div>
+            </div>
+
+            <button type="submit" id="sponsorSubmitBtn"
+              class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-display font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+              <span>🚀</span>
+              <span>Broadcast Sponsor Live to All Chat Clients</span>
+            </button>
+          </form>
+
+          <!-- Live Visual Preview of Chat Card -->
+          <div class="bg-[#0b0e17] p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                  <span>📱</span>
+                  <span>In-Chat Card Visual Preview</span>
+                </span>
+                <span class="text-[10px] text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  Matches Client Chat Box
+                </span>
+              </div>
+
+              <!-- Preview Card -->
+              <div class="my-2 p-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 text-xs shadow-xl">
+                <div class="flex items-center space-x-2 mb-1.5">
+                  <span id="previewTag" class="text-[10px] font-bold text-purple-300 uppercase tracking-wider bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                    🎮 Verified Partner
+                  </span>
+                  <span id="previewSubtag" class="text-[10px] text-slate-400">&bull; Zero-Ad Monetization</span>
+                </div>
+                <p id="previewMessage" class="text-slate-300 text-xs leading-relaxed">
+                  Level up your setup with <strong class="text-white">Vybronx Gaming Gear & Cloud Servers</strong>.
+                </p>
+                <div class="mt-2">
+                  <span id="previewUrlText" class="inline-flex items-center space-x-1 text-purple-400 font-semibold text-xs underline">
+                    <span>Visit vybronx.online/store</span>
+                    <span>↗</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 mt-3 italic">
+              ℹ️ Injected into user chat streams every 5th consecutive match, or instantly broadcasted via WebSockets.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- 3. ADMIN CLIENT-SIDE JAVASCRIPT CONTROLLER             -->
+  <!-- ======================================================= -->
+  <script>
+    // State Variables
+    let adminToken = sessionStorage.getItem('blip_admin_token') || null;
+    let pollInterval = null;
+    let countdownSeconds = 3;
+    let isPolling = true;
+
+    // Toast Notification Utility
+    function showAdminToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('adminToastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'bg-slate-900/95 border-purple-500/40 text-purple-200',
+        success: 'bg-slate-900/95 border-emerald-500/40 text-emerald-200',
+        warning: 'bg-slate-900/95 border-amber-500/40 text-amber-200',
+        danger: 'bg-slate-900/95 border-rose-500/40 text-rose-200'
+      };
+
+      toast.className = `flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-2xl backdrop-blur-xl text-xs font-semibold ${colors[type] || colors.info} transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    // Helper: Authorized Fetch Wrapper
+    async function adminFetch(endpoint, options = {}) {
+      const headers = options.headers || {};
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+        headers['x-admin-token'] = adminToken;
+      }
+      headers['Content-Type'] = 'application/json';
+
+      const response = await fetch(endpoint, { ...options, headers });
+
+      if (response.status === 401) {
+        // Token invalid or expired
+        adminToken = null;
+        sessionStorage.removeItem('blip_admin_token');
+        showLoginScreen('Session expired. Please log in again.');
+        throw new Error('Unauthorized');
+      }
+
+      return response.json();
+    }
+
+    // UI State Switches
+    function showLoginScreen(errorMsg = null) {
+      const loginScreen = document.getElementById('loginScreen');
+      const adminDashboard = document.getElementById('adminDashboard');
+      const errorBox = document.getElementById('loginErrorBox');
+      const errorText = document.getElementById('loginErrorText');
+
+      if (loginScreen) loginScreen.classList.remove('hidden');
+      if (adminDashboard) adminDashboard.classList.add('hidden');
+
+      if (errorMsg && errorBox && errorText) {
+        errorText.textContent = errorMsg;
+        errorBox.classList.remove('hidden');
+      } else if (errorBox) {
+        errorBox.classList.add('hidden');
+      }
+
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+    }
+
+    function showDashboard() {
+      const loginScreen = document.getElementById('loginScreen');
+      const adminDashboard = document.getElementById('adminDashboard');
+
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (adminDashboard) adminDashboard.classList.remove('hidden');
+
+      fetchStats();
+      startPolling();
+    }
+
+    // Polling Mechanism (Every 3 seconds)
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      countdownSeconds = 3;
+
+      pollInterval = setInterval(() => {
+        countdownSeconds--;
+        const timerText = document.getElementById('radarTimerText');
+        if (timerText) timerText.textContent = `Radar: ${countdownSeconds}s`;
+
+        if (countdownSeconds <= 0) {
+          countdownSeconds = 3;
+          fetchStats();
+        }
+      }, 1000);
+    }
+
+    // Format Seconds into readable string
+    function formatUptime(seconds) {
+      if (!seconds) return '0s';
+      const d = Math.floor(seconds / (3600 * 24));
+      const h = Math.floor((seconds % (3600 * 24)) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (d > 0) return `${d}d ${h}h ${m}m`;
+      if (h > 0) return `${h}h ${m}m`;
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    }
+
+    // 1. Fetch & Render All Dashboard Statistics
+    async function fetchStats() {
+      try {
+        const data = await adminFetch('/api/admin/stats');
+        if (!data || !data.stats) return;
+
+        const stats = data.stats;
+
+        // Render Top KPI Cards
+        document.getElementById('statTotalOnline').textContent = (stats.totalOnline || 0).toLocaleString();
+        document.getElementById('statInCall').textContent = (stats.inCall || 0).toLocaleString();
+        document.getElementById('statInQueue').textContent = (stats.inQueue || 0).toLocaleString();
+        document.getElementById('statVipCount').textContent = (stats.vipUsersCount || 0).toLocaleString();
+        document.getElementById('statBannedCount').textContent = (stats.totalBannedCount || 0).toLocaleString();
+        document.getElementById('statUptime').textContent = formatUptime(stats.uptimeSeconds);
+        document.getElementById('banCountBadge').textContent = `${stats.totalBannedCount || 0} Banned`;
+
+        if (stats.serverTime) {
+          const syncTime = new Date(stats.serverTime).toLocaleTimeString();
+          document.getElementById('serverTimestampText').textContent = `Synced at ${syncTime}`;
+        }
+
+        // Render Gender & Demographic Breakdown
+        renderDemographics(stats);
+
+        // Render VIP Codes Table
+        renderVipTable(stats.activeVipCodes || []);
+
+        // Render Banned Threat IPs Table
+        renderBannedTable(stats.bannedIPs || []);
+
+        // Update Sponsor Input Fields (if not currently focused)
+        syncSponsorFields(stats.sponsorConfig);
+
+      } catch (err) {
+        console.warn('[Admin] fetchStats notice:', err);
+      }
+    }
+
+    // Render Country & Gender Demographics
+    function renderDemographics(stats) {
+      const countryContainer = document.getElementById('countryStatsContainer');
+      const countryStats = stats.countryStats || {};
+      const totalUsers = Math.max(1, stats.totalOnline || 1);
+
+      const countryEntries = Object.entries(countryStats).sort((a, b) => b[1] - a[1]);
+
+      if (countryEntries.length === 0) {
+        countryContainer.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No geo location traffic detected yet.</div>`;
+      } else {
+        countryContainer.innerHTML = countryEntries.map(([country, count]) => {
+          const pct = Math.round((count / totalUsers) * 100);
+          return `
+            <div>
+              <div class="flex justify-between text-xs font-semibold mb-1">
+                <span class="text-slate-200 flex items-center space-x-1.5">
+                  <span class="font-mono text-purple-300 font-bold">${country}</span>
+                  <span class="text-slate-400 font-normal">(${count} online)</span>
+                </span>
+                <span class="text-slate-400 font-mono">${pct}%</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Gender Breakdown
+      const genderStats = stats.genderStats || { male: 0, female: 0 };
+      const totalGender = Math.max(1, (genderStats.male || 0) + (genderStats.female || 0));
+      const malePct = Math.round(((genderStats.male || 0) / totalGender) * 100);
+      const femalePct = Math.round(((genderStats.female || 0) / totalGender) * 100);
+
+      document.getElementById('maleCountText').textContent = `${genderStats.male || 0} (${malePct}%)`;
+      document.getElementById('femaleCountText').textContent = `${genderStats.female || 0} (${femalePct}%)`;
+      document.getElementById('maleProgressBar').style.width = `${malePct}%`;
+      document.getElementById('femaleProgressBar').style.width = `${femalePct}%`;
+
+      document.getElementById('queueGlobalCount').textContent = stats.inQueue || 0;
+      document.getElementById('queueFemaleCount').textContent = stats.vipUsersCount || 0;
+      document.getElementById('queueCountryCount').textContent = stats.vipUsersCount > 0 ? 1 : 0;
+    }
+
+    // Render Active VIP Passes Table
+    function renderVipTable(codes) {
+      const tbody = document.getElementById('vipTableBody');
+      if (!tbody) return;
+
+      if (!codes || codes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">No VIP passes issued yet. Generate one above!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = codes.map((item) => {
+        let statusBadge = '';
+        if (item.isExpired) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">Expired</span>`;
+        } else if (item.isActivated) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 animate-pulse">Active (Live)</span>`;
+        } else {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">Saved</span>`;
+        }
+
+        const socketPill = item.activeSocketId 
+          ? `<span class="font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">${item.activeSocketId.slice(0, 10)}...</span>`
+          : `<span class="text-slate-500 italic">None</span>`;
+
+        return `
+          <tr class="hover:bg-white/[0.02] transition-colors">
+            <td class="py-2.5 px-3">
+              <div class="flex items-center space-x-2">
+                <span class="font-mono font-bold text-amber-300 text-xs">${item.code}</span>
+                <button onclick="copyToClipboard('${item.code}')" title="Copy code" class="text-slate-400 hover:text-white transition-colors">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td class="py-2.5 px-3 font-medium text-slate-300">${item.plan || item.durationMinutes + 'm'}</td>
+            <td class="py-2.5 px-3">${statusBadge}</td>
+            <td class="py-2.5 px-3">${socketPill}</td>
+            <td class="py-2.5 px-3 text-slate-400 truncate max-w-[120px]">${item.note || '-'}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="revokeVipCode('${item.code}')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/25 transition-all active:scale-95">
+                Revoke
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Render Banned Threat IPs Table
+    function renderBannedTable(bans) {
+      const tbody = document.getElementById('bannedTableBody');
+      if (!tbody) return;
+
+      if (!bans || bans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">🛡️ All clear! No active IP bans.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = bans.map((b) => {
+        const hours = b.remainingHours || 0;
+        const mins = b.remainingMinutes || 0;
+        const timeDisplay = hours > 0 ? `${hours} hours remaining` : `${mins} mins remaining`;
+
+        return `
+          <tr class="hover:bg-white/[0.02] transition-colors">
+            <td class="py-2.5 px-3 font-mono font-bold text-rose-300">${b.ip}</td>
+            <td class="py-2.5 px-3 text-slate-300">${b.reason || 'Community violations'}</td>
+            <td class="py-2.5 px-3 text-slate-400 font-mono">${timeDisplay}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="unbanIpAddress('${b.ip}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/25 transition-all active:scale-95">
+                Unban IP
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Synchronize Live Sponsor Fields & Visual Preview
+    function syncSponsorFields(config) {
+      if (!config) return;
+
+      const activeEl = document.activeElement;
+      const form = document.getElementById('sponsorUpdateForm');
+      if (form && form.contains(activeEl)) return; // Don't overwrite if user is currently typing!
+
+      if (config.tag) document.getElementById('sponsorTagInput').value = config.tag;
+      if (config.subTag) document.getElementById('sponsorSubtagInput').value = config.subTag;
+      if (config.message) document.getElementById('sponsorMessageInput').value = config.message;
+      if (config.urlText) document.getElementById('sponsorUrlTextInput').value = config.urlText;
+      if (config.url) document.getElementById('sponsorUrlInput').value = config.url;
+
+      updateLiveSponsorPreview();
+    }
+
+    function updateLiveSponsorPreview() {
+      const tag = document.getElementById('sponsorTagInput').value;
+      const subtag = document.getElementById('sponsorSubtagInput').value;
+      const message = document.getElementById('sponsorMessageInput').value;
+      const urlText = document.getElementById('sponsorUrlTextInput').value;
+
+      document.getElementById('previewTag').textContent = tag || '🎮 Verified Partner';
+      document.getElementById('previewSubtag').textContent = `• ${subtag || 'Zero-Ad Monetization'}`;
+      document.getElementById('previewMessage').textContent = message || '';
+      document.getElementById('previewUrlText').innerHTML = `<span>${urlText || 'Visit vybronx.online'}</span> <span>↗</span>`;
+    }
+
+    // Copy to clipboard utility
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showAdminToast(`📋 Copied: ${text}`, 'success', 2000);
+      });
+    }
+
+    // Action: Revoke VIP Pass
+    async function revokeVipCode(code) {
+      if (!confirm(`Are you sure you want to deactivate and revoke VIP code ${code}?`)) return;
+
+      try {
+        const res = await adminFetch('/api/admin/revoke-code', {
+          method: 'POST',
+          body: JSON.stringify({ code })
+        });
+
+        if (res.success) {
+          showAdminToast(`🗑️ Code ${code} revoked successfully!`, 'warning');
+          fetchStats();
+        } else {
+          showAdminToast(res.error || 'Failed to revoke code.', 'danger');
+        }
+      } catch (err) {
+        showAdminToast('Network error while revoking code.', 'danger');
+      }
+    }
+
+    // Action: Unban IP Address
+    async function unbanIpAddress(ip) {
+      if (!confirm(`Unban IP ${ip}? They will immediately be allowed to reconnect.`)) return;
+
+      try {
+        const res = await adminFetch('/api/admin/unban-ip', {
+          method: 'POST',
+          body: JSON.stringify({ ip })
+        });
+
+        if (res.success) {
+          showAdminToast(`✅ IP ${ip} unbanned successfully!`, 'success');
+          fetchStats();
+        } else {
+          showAdminToast(res.error || 'Failed to unban IP.', 'danger');
+        }
+      } catch (err) {
+        showAdminToast('Network error while unbanning IP.', 'danger');
+      }
+    }
+
+    // ==========================================
+    // DOM EVENT LISTENERS & SETUP
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+
+      // Check existing session
+      if (adminToken) {
+        showDashboard();
+      } else {
+        showLoginScreen();
+      }
+
+      // Password visibility toggle
+      const togglePassBtn = document.getElementById('togglePasswordBtn');
+      const passInput = document.getElementById('adminPasswordInput');
+      if (togglePassBtn && passInput) {
+        togglePassBtn.addEventListener('click', () => {
+          passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        });
+      }
+
+      // Login form submit
+      const loginForm = document.getElementById('adminLoginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const username = document.getElementById('adminUsernameInput').value.trim();
+          const password = document.getElementById('adminPasswordInput').value.trim();
+
+          const btn = document.getElementById('loginSubmitBtn');
+          btn.disabled = true;
+          btn.innerHTML = `<span>⏳ Verifying...</span>`;
+
+          try {
+            const res = await fetch('/api/admin/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+              adminToken = data.token;
+              sessionStorage.setItem('blip_admin_token', adminToken);
+              document.getElementById('adminUserPill').textContent = data.user || username;
+              showAdminToast(`Welcome, ${username}! Admin session active. ⚡`, 'success');
+              showDashboard();
+            } else {
+              showLoginScreen(data.error || 'Invalid credentials.');
+            }
+          } catch (err) {
+            showLoginScreen('Server connection failure. Please verify server is running.');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span>🔓</span><span>Authenticate & Access Console</span>`;
+          }
+        });
+      }
+
+      // Logout button
+      const logoutBtn = document.getElementById('adminLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            await adminFetch('/api/admin/logout', { method: 'POST' });
+          } catch (e) {}
+          adminToken = null;
+          sessionStorage.removeItem('blip_admin_token');
+          showLoginScreen();
+          showAdminToast('Admin logged out safely.', 'info');
+        });
+      }
+
+      // Manual Refresh button
+      const refreshBtn = document.getElementById('manualRefreshBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          fetchStats();
+          countdownSeconds = 3;
+          showAdminToast('Telemetry refreshed 🔄', 'info', 1500);
+        });
+      }
+
+      // VIP Pass Generator Form Submit
+      const genVipForm = document.getElementById('generateVipForm');
+      if (genVipForm) {
+        genVipForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const customCode = document.getElementById('genCustomCode').value.trim();
+          const durationMinutes = document.getElementById('genDurationSelect').value;
+          const maxUses = document.getElementById('genMaxUses').value;
+          const note = document.getElementById('genNote').value.trim();
+
+          const btn = document.getElementById('genSubmitBtn');
+          btn.disabled = true;
+
+          try {
+            const res = await adminFetch('/api/admin/generate-code', {
+              method: 'POST',
+              body: JSON.stringify({ customCode, durationMinutes, maxUses, note })
+            });
+
+            if (res.success) {
+              showAdminToast(`👑 Generated: ${res.pass.code}`, 'success');
+              document.getElementById('genCustomCode').value = '';
+              document.getElementById('genNote').value = '';
+              fetchStats();
+            } else {
+              showAdminToast(res.error || 'Failed to generate VIP pass.', 'danger');
+            }
+          } catch (err) {
+            showAdminToast('Network error while generating pass.', 'danger');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      }
+
+      // Manual Ban IP Form Submit
+      const manualBanForm = document.getElementById('manualBanForm');
+      if (manualBanForm) {
+        manualBanForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const ip = document.getElementById('manualBanIp').value.trim();
+          const reason = document.getElementById('manualBanReason').value.trim();
+          const hours = document.getElementById('manualBanHours').value;
+
+          try {
+            const res = await adminFetch('/api/admin/ban-ip', {
+              method: 'POST',
+              body: JSON.stringify({ ip, reason, hours })
+            });
+
+            if (res.success) {
+              showAdminToast(`🚫 IP ${ip} has been banned!`, 'warning');
+              document.getElementById('manualBanIp').value = '';
+              document.getElementById('manualBanReason').value = '';
+              fetchStats();
+            } else {
+              showAdminToast(res.error || 'Failed to ban IP.', 'danger');
+            }
+          } catch (err) {
+            showAdminToast('Network error while applying IP ban.', 'danger');
+          }
+        });
+      }
+
+      // Real-time Sponsor Preview Listeners
+      ['sponsorTagInput', 'sponsorSubtagInput', 'sponsorMessageInput', 'sponsorUrlTextInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateLiveSponsorPreview);
+      });
+
+      // Live Sponsor Form Submit
+      const sponsorForm = document.getElementById('sponsorUpdateForm');
+      if (sponsorForm) {
+        sponsorForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const tag = document.getElementById('sponsorTagInput').value.trim();
+          const subTag = document.getElementById('sponsorSubtagInput').value.trim();
+          const message = document.getElementById('sponsorMessageInput').value.trim();
+          const urlText = document.getElementById('sponsorUrlTextInput').value.trim();
+          const url = document.getElementById('sponsorUrlInput').value.trim();
+
+          const btn = document.getElementById('sponsorSubmitBtn');
+          btn.disabled = true;
+          btn.innerHTML = `<span>⏳ Broadcasting...</span>`;
+
+          try {
+            const res = await adminFetch('/api/admin/update-sponsor', {
+              method: 'POST',
+              body: JSON.stringify({ tag, subTag, message, urlText, url })
+            });
+
+            if (res.success) {
+              showAdminToast('🚀 Sponsor broadcasted to all active connected chat clients!', 'success', 3500);
+            } else {
+              showAdminToast(res.error || 'Failed to update sponsor.', 'danger');
+            }
+          } catch (err) {
+            showAdminToast('Network error updating sponsor.', 'danger');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span>🚀</span><span>Broadcast Sponsor Live to All Chat Clients</span>`;
+          }
+        });
+      }
+
+    });
+  </script>
+
+</body>
+
+</html>

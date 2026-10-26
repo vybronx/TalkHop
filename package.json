@@ -1,0 +1,24 @@
+{
+  "name": "blip",
+  "version": "1.0.0",
+  "description": "Blip - Instant P2P Random Video Chat (Hosted at blip.vybronx.online)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "video-chat",
+    "socketio",
+    "omegle-alternative"
+  ],
+  "author": "Vybronx",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
