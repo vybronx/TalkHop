@@ -93,6 +93,43 @@ let currentSponsorConfig = {
 };
 
 // ==========================================
+// THEME CONTROLLER (Light-First Adaptive Theme)
+// ==========================================
+function initTheme() {
+  const savedTheme = localStorage.getItem('vybrant_theme') || 'light';
+  applyTheme(savedTheme);
+
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      const newTheme = isCurrentlyDark ? 'light' : 'dark';
+      applyTheme(newTheme);
+      localStorage.setItem('vybrant_theme', newTheme);
+      showToast(`Switched to ${newTheme === 'dark' ? 'Dark 🌙' : 'Light ☀️'} mode`, 'info', 2000);
+    });
+  }
+}
+
+function applyTheme(theme) {
+  const toggleIcon = document.getElementById('themeToggleIcon');
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+    if (toggleIcon) toggleIcon.textContent = '☀️';
+    if (metaThemeColor) metaThemeColor.setAttribute('content', '#07080d');
+  } else {
+    document.documentElement.classList.remove('dark');
+    if (toggleIcon) toggleIcon.textContent = '🌙';
+    if (metaThemeColor) metaThemeColor.setAttribute('content', '#f4f4f5');
+  }
+}
+
+// Immediate Theme Check
+initTheme();
+
+// ==========================================
 // TOAST NOTIFICATIONS (De-duplicated & Anti-Spam)
 // ==========================================
 function showToast(message, type = 'info', duration = 3500) {
@@ -117,10 +154,10 @@ function showToast(message, type = 'info', duration = 3500) {
   const toast = document.createElement('div');
   toast.dataset.message = message;
   const bgColors = {
-    info: 'bg-slate-900/95 border-purple-500/30 text-purple-200',
-    success: 'bg-slate-900/95 border-emerald-500/30 text-emerald-200',
-    warning: 'bg-slate-900/95 border-amber-500/30 text-amber-200',
-    danger: 'bg-slate-900/95 border-rose-500/30 text-rose-200'
+    info: 'bg-white dark:bg-slate-900/95 border-zinc-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-200 shadow-md',
+    success: 'bg-white dark:bg-slate-900/95 border-zinc-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-200 shadow-md',
+    warning: 'bg-white dark:bg-slate-900/95 border-zinc-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-200 shadow-md',
+    danger: 'bg-white dark:bg-slate-900/95 border-zinc-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-200 shadow-md'
   };
 
   toast.className = `vybrant-toast pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-semibold ${bgColors[type] || bgColors.info} transform transition-all duration-300 translate-y-3 opacity-0`;
@@ -1194,7 +1231,7 @@ function injectSponsorMessage() {
   if (!chatMessages) return;
 
   const sponsorWrapper = document.createElement('div');
-  sponsorWrapper.className = 'my-2 p-3 rounded-2xl bg-slate-900/90 border border-purple-500/30 text-xs chat-bubble-enter';
+  sponsorWrapper.className = 'my-2 p-3 rounded-2xl bg-zinc-50 dark:bg-slate-900/90 border border-purple-500/30 text-xs chat-bubble-enter shadow-xs';
 
   const tag = escapeHtml(currentSponsorConfig.tag || '🎮 Verified Partner');
   const subTag = escapeHtml(currentSponsorConfig.subTag || 'Zero-Ad Monetization');
@@ -1205,15 +1242,15 @@ function injectSponsorMessage() {
 
   sponsorWrapper.innerHTML = `
     <div class="flex items-center space-x-2 mb-1.5">
-      <span class="text-[10px] font-bold text-purple-300 uppercase tracking-wider bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+      <span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider bg-purple-500/10 dark:bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
         ${tag}
       </span>
-      <span class="text-[10px] text-slate-400">&bull; ${subTag}</span>
+      <span class="text-[10px] text-zinc-500 dark:text-slate-400">&bull; ${subTag}</span>
     </div>
-    <p class="text-slate-300 text-xs leading-relaxed">
+    <p class="text-zinc-700 dark:text-slate-300 text-xs leading-relaxed">
       ${msg}
     </p>
-    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-purple-400 hover:text-purple-300 font-semibold text-xs mt-1.5 underline">
+    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-purple-600 dark:text-purple-400 hover:text-purple-500 font-semibold text-xs mt-1.5 underline">
       <span>${urlLabel}</span>
       <span>↗</span>
     </a>
@@ -1240,15 +1277,15 @@ function appendChatMessage(sender, text) {
       <div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3.5 py-2 shadow-md">
         <p class="leading-relaxed break-words text-xs sm:text-sm">${escapeHtml(text)}</p>
       </div>
-      <span class="text-[10px] text-slate-500 mt-1 mr-1">${timeString}</span>
+      <span class="text-[10px] text-zinc-400 dark:text-slate-500 mt-1 mr-1">${timeString}</span>
     `;
   } else {
     msgWrapper.className += ' items-start';
     msgWrapper.innerHTML = `
-      <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-[#161926] border border-white/10 text-slate-100 px-3.5 py-2 shadow-md">
+      <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-zinc-100 dark:bg-[#161926] border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-slate-100 px-3.5 py-2 shadow-md">
         <p class="leading-relaxed break-words text-xs sm:text-sm">${escapeHtml(text)}</p>
       </div>
-      <span class="text-[10px] text-slate-500 mt-1 ml-1 text-purple-300 font-medium">Stranger &bull; ${timeString}</span>
+      <span class="text-[10px] text-zinc-500 dark:text-slate-500 mt-1 ml-1 text-purple-600 dark:text-purple-300 font-medium">Stranger &bull; ${timeString}</span>
     `;
   }
 
@@ -1263,7 +1300,7 @@ function addSystemChatMessage(text) {
   const systemMsg = document.createElement('div');
   systemMsg.className = 'flex justify-center chat-bubble-enter my-1';
   systemMsg.innerHTML = `
-    <div class="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[11px] text-purple-300/90 text-center font-medium">
+    <div class="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-3 py-1 rounded-full text-[11px] text-purple-700 dark:text-purple-300 font-medium text-center shadow-xs">
       ${escapeHtml(text)}
     </div>
   `;
@@ -1679,9 +1716,9 @@ function bindUiEventListeners() {
   if (fAny) {
     fAny.addEventListener('click', () => {
       userPreferences.genderFilter = 'any';
-      fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white';
-      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
-      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
+      fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-xs';
+      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
+      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
       if (socket) socket.emit('update-preferences', userPreferences);
     });
   }
@@ -1695,8 +1732,8 @@ function bindUiEventListeners() {
       }
       userPreferences.genderFilter = 'female';
       fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-gradient-to-r from-amber-500 to-purple-600 text-white flex items-center space-x-1 group shadow-md shadow-amber-500/20';
-      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white';
-      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
+      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white';
+      if (fMale) fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
       if (socket) socket.emit('update-preferences', userPreferences);
       showToast('Priority Female Matchmaking Filter active ♀️', 'info', 2000);
     });
@@ -1711,8 +1748,8 @@ function bindUiEventListeners() {
       }
       userPreferences.genderFilter = 'male';
       fMale.className = 'px-3 py-1 rounded-lg font-medium transition-all bg-gradient-to-r from-amber-500 to-purple-600 text-white flex items-center space-x-1 group shadow-md shadow-amber-500/20';
-      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white';
-      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group';
+      if (fAny) fAny.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white';
+      if (fFem) fFem.className = 'px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group';
       if (socket) socket.emit('update-preferences', userPreferences);
       showToast('Priority Male Matchmaking Filter active ♂️', 'info', 2000);
     });
@@ -1739,8 +1776,8 @@ function bindUiEventListeners() {
   if (myM) {
     myM.addEventListener('click', () => {
       userPreferences.myGender = 'male';
-      myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-600 text-white transition-all';
-      if (myF) myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all';
+      myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-600 text-white transition-all shadow-xs';
+      if (myF) myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition-all';
       if (socket) socket.emit('update-preferences', userPreferences);
     });
   }
@@ -1748,8 +1785,8 @@ function bindUiEventListeners() {
   if (myF) {
     myF.addEventListener('click', () => {
       userPreferences.myGender = 'female';
-      myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-pink-500 text-white transition-all';
-      if (myM) myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all';
+      myF.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-pink-500 text-white transition-all shadow-xs';
+      if (myM) myM.className = 'px-2.5 py-0.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition-all';
       if (socket) socket.emit('update-preferences', userPreferences);
     });
   }
@@ -1831,6 +1868,7 @@ function bindUiEventListeners() {
 // BOOTSTRAP APPLICATION
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initAgeGate();
   bindUiEventListeners();
 });

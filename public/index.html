@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,21 @@
   <title>Vybrant ⚡ | Instant P2P Random Video Chat (AI Shield & VIP)</title>
   <meta name="description"
     content="Connect instantly with random strangers worldwide via private, encrypted peer-to-peer video chat with AI Safety Shield on Vybrant.">
-  <meta name="theme-color" content="#090a0f">
+  <meta name="theme-color" content="#f4f4f5">
+
+  <!-- Immediate Theme Initialization Script (Prevents FOUC) -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('vybrant_theme') || 'light';
+        if (t === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) { }
+    })();
+  </script>
 
   <!-- Favicon SVG -->
   <link rel="icon" type="image/svg+xml"
@@ -82,22 +96,22 @@
 </head>
 
 <body
-  class="bg-[#07080d] text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden">
+  class="bg-[#f4f4f5] dark:bg-[#07080d] text-[#18181b] dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-purple-500 selection:text-white overflow-x-hidden">
 
   <!-- Background Ambient Glow -->
-  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-purple-600/10 blur-[130px]"></div>
-    <div class="absolute top-[40%] -right-[15%] w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[150px]"></div>
-    <div class="absolute -bottom-[20%] left-[20%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[140px]"></div>
+  <div class="ambient-glow-layer fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] rounded-full bg-purple-600/15 dark:bg-purple-600/10 blur-[130px]"></div>
+    <div class="absolute top-[40%] -right-[15%] w-[600px] h-[600px] rounded-full bg-cyan-600/15 dark:bg-cyan-600/10 blur-[150px]"></div>
+    <div class="absolute -bottom-[20%] left-[20%] w-[500px] h-[500px] rounded-full bg-indigo-600/15 dark:bg-indigo-600/10 blur-[140px]"></div>
   </div>
 
   <!-- Header Navigation -->
   <header
-    class="relative z-20 border-b border-white/5 bg-[#090b12]/85 backdrop-blur-xl px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+    class="relative z-20 border-b border-zinc-200 dark:border-white/5 bg-white/90 dark:bg-[#090b12]/85 backdrop-blur-xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar flex-nowrap">
     <!-- Logo & Brand -->
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-3 flex-shrink-0">
       <div
-        class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 shadow-lg shadow-purple-500/25">
+        class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 shadow-lg shadow-purple-500/25 flex-shrink-0">
         <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
@@ -105,85 +119,91 @@
       <div>
         <div class="flex items-center space-x-2">
           <span
-            class="font-display font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-purple-300 bg-clip-text text-transparent">
-            Vybrant<span class="text-purple-400">⚡</span>
+            class="font-display font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-zinc-900 via-zinc-800 to-purple-600 dark:from-white dark:via-slate-100 dark:to-purple-300 bg-clip-text text-transparent">
+            Vybrant<span class="text-purple-600 dark:text-purple-400">⚡</span>
           </span>
           <span
-            class="hidden md:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">
+            class="hidden md:inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20">
             P2P v3.0 &bull; AI Shield
           </span>
         </div>
-        <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium hidden sm:block">
+        <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-slate-400 font-medium hidden sm:block">
           vybrant.vybronx.online &bull; Instant Encrypted Video
         </p>
       </div>
     </div>
 
-    <!-- Center/Right Controls: VIP Badge, Redeem, Online Counter & Toggles -->
-    <div class="flex items-center space-x-2 sm:space-x-3">
-
-      <!-- Live User Counter Badge -->
-      <div
-        class="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 rounded-full bg-slate-900/90 border border-emerald-500/20 shadow-inner">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-        </span>
-        <span id="onlineCountText" class="text-xs font-bold text-emerald-400 font-display">
-          1 Online
-        </span>
-      </div>
-
-      <!-- AI Shield Status Badge -->
-      <div id="aiShieldBadge"
-        class="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-purple-500/20 text-[11px] font-medium text-purple-300"
-        title="Client-Side NSFW & Anti-Flash Shield Active">
-        <span class="text-xs">🛡️</span>
-        <span id="aiShieldStatusText">AI Shield Ready</span>
-      </div>
+    <!-- Center/Right Controls: VIP Badge, Redeem, Theme Toggle, Online Counter & Media Toggles -->
+    <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
 
       <!-- VIP Pass Button / Live Countdown Badge -->
-      <div id="vipStatusContainer">
+      <div id="vipStatusContainer" class="flex-shrink-0">
         <button id="openVipModalBtn"
-          class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/20 via-purple-600/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-purple-500/30 border border-amber-500/30 text-amber-300 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-amber-500/10">
+          class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500/15 via-purple-600/15 to-cyan-500/15 hover:from-amber-500/25 hover:to-purple-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 transition-all hover:scale-105 active:scale-95 shadow-sm">
           <span class="text-sm">👑</span>
           <span class="hidden sm:inline">Get VIP Pass</span>
           <span class="sm:hidden">VIP</span>
         </button>
 
         <div id="vipActiveBadge"
-          class="hidden items-center space-x-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold shadow-lg shadow-amber-500/20">
+          class="hidden items-center space-x-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-sm">
           <span class="animate-bounce text-xs">👑</span>
-          <span id="vipCountdownText" class="font-mono text-amber-200">59m 40s</span>
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="vipCountdownText" class="font-mono text-amber-800 dark:text-amber-200">59m 40s</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
         </div>
       </div>
 
       <!-- Redeem Code Trigger -->
       <button id="openRedeemModalBtn"
-        class="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition-all">
+        class="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 text-zinc-700 hover:text-zinc-900 dark:text-slate-300 dark:hover:text-white transition-all flex-shrink-0">
         <span>🎟️</span>
         <span class="hidden sm:inline">Redeem Code</span>
       </button>
 
+      <!-- AI Shield Status Badge -->
+      <div id="aiShieldBadge"
+        class="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-slate-900/90 border border-purple-500/20 text-[11px] font-medium text-purple-700 dark:text-purple-300 flex-shrink-0"
+        title="Client-Side NSFW & Anti-Flash Shield Active">
+        <span class="text-xs">🛡️</span>
+        <span id="aiShieldStatusText">AI Shield Ready</span>
+      </div>
+
+      <!-- Global Theme Toggle (Light ☀️ / Dark 🌙) - Placed directly to the left of the Online Counter -->
+      <button id="themeToggleBtn" type="button" title="Toggle Light / Dark Theme"
+        class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-100 dark:bg-slate-900/90 hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-700 dark:text-amber-300 transition-all active:scale-95 cursor-pointer shadow-sm flex-shrink-0">
+        <span id="themeToggleIcon" class="text-sm select-none">🌙</span>
+      </button>
+
+      <!-- Live User Counter Badge -->
+      <div
+        class="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-50 dark:bg-slate-900/90 border border-emerald-500/30 dark:border-emerald-500/20 shadow-inner flex-shrink-0">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span id="onlineCountText" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-display">
+          1 Online
+        </span>
+      </div>
+
       <!-- Media Toggles (Header) -->
-      <div class="flex items-center space-x-1 bg-slate-900/80 p-0.5 rounded-xl border border-white/10">
+      <div class="flex items-center space-x-1 bg-zinc-100 dark:bg-slate-900/80 p-0.5 rounded-xl border border-zinc-200 dark:border-white/10 flex-shrink-0">
         <button id="headerMicToggle" title="Toggle Microphone"
-          class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+          class="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors">
           <svg id="headerMicIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
         </button>
         <button id="headerCamToggle" title="Toggle Camera"
-          class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+          class="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors">
           <svg id="headerCamIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
         </button>
         <button id="headerFlipCamToggle" title="Flip Camera (Front / Back)"
-          class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
+          class="p-1.5 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -194,37 +214,37 @@
     </div>
   </header>
 
-  <!-- VIP FILTER & PREFERENCES DOCK -->
+  <!-- VIP FILTER & PREFERENCES DOCK (Scroll-Friendly Utility Bar Locked Inline) -->
   <nav
-    class="relative z-15 border-b border-white/5 bg-[#0b0e17]/90 px-3 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+    class="relative z-15 border-b border-zinc-200 dark:border-white/5 bg-zinc-50/90 dark:bg-[#0b0e17]/90 backdrop-blur-xl px-3 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-3 text-xs overflow-x-auto overflow-y-hidden custom-scrollbar flex-nowrap">
 
     <!-- Left: Filter Preferences -->
-    <div class="flex items-center flex-wrap gap-2">
-      <span class="text-slate-400 font-semibold flex items-center space-x-1 hidden sm:flex">
+    <div class="flex items-center space-x-2 flex-shrink-0">
+      <span class="text-zinc-500 dark:text-slate-400 font-semibold flex items-center space-x-1 hidden sm:flex">
         <span>⚡ Matching Filter:</span>
       </span>
 
       <!-- Gender Filter Group -->
-      <div class="inline-flex rounded-xl bg-slate-900/90 p-0.5 border border-white/10 shadow-sm" role="group">
-        <button id="filterGenderAny" class="px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white">
+      <div class="inline-flex rounded-xl bg-zinc-100 dark:bg-slate-900/90 p-0.5 border border-zinc-200 dark:border-white/10 shadow-xs flex-shrink-0" role="group">
+        <button id="filterGenderAny" class="px-3 py-1 rounded-lg font-medium transition-all bg-purple-600 text-white shadow-xs">
           🌐 Random
         </button>
         <button id="filterGenderFemale"
-          class="px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group">
+          class="px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group">
           <span>♀️ Female</span>
           <span class="vip-lock-badge text-[11px]">🔒</span>
         </button>
         <button id="filterGenderMale"
-          class="px-3 py-1 rounded-lg font-medium transition-all text-slate-300 hover:text-white flex items-center space-x-1 group">
+          class="px-3 py-1 rounded-lg font-medium transition-all text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white flex items-center space-x-1 group">
           <span>♂️ Male</span>
           <span class="vip-lock-badge text-[11px]">🔒</span>
         </button>
       </div>
 
       <!-- Country Filter Selector -->
-      <div class="relative inline-flex items-center">
+      <div class="relative inline-flex items-center flex-shrink-0">
         <select id="filterCountrySelect"
-          class="bg-slate-900/90 text-slate-200 border border-white/10 rounded-xl px-3 py-1 text-xs font-medium focus:outline-none focus:border-purple-500 cursor-pointer max-w-[220px] sm:max-w-[260px] truncate">
+          class="bg-zinc-100 dark:bg-slate-900/90 text-zinc-800 dark:text-slate-200 border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-1 text-xs font-medium focus:outline-none focus:border-purple-500 cursor-pointer max-w-[200px] sm:max-w-[260px] truncate shadow-xs">
           <option value="any">🌍 Global (Any Country)</option>
           <option value="IN">🇮🇳 India 🔒 (VIP)</option>
           <option value="US">🇺🇸 United States 🔒 (VIP)</option>
@@ -328,15 +348,15 @@
     </div>
 
     <!-- Right: Self Identity Toggle -->
-    <div class="flex items-center space-x-2">
-      <span class="text-slate-400 font-medium text-[11px] hidden sm:inline">I am:</span>
-      <div class="inline-flex rounded-xl bg-slate-900/90 p-0.5 border border-white/10" role="group">
+    <div class="flex items-center space-x-2 flex-shrink-0">
+      <span class="text-zinc-500 dark:text-slate-400 font-medium text-[11px] hidden sm:inline">I am:</span>
+      <div class="inline-flex rounded-xl bg-zinc-100 dark:bg-slate-900/90 p-0.5 border border-zinc-200 dark:border-white/10 shadow-xs flex-shrink-0" role="group">
         <button id="myGenderMale"
-          class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-600 text-white transition-all">
+          class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-purple-600 text-white transition-all shadow-xs">
           ♂️ Male
         </button>
         <button id="myGenderFemale"
-          class="px-2.5 py-0.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all">
+          class="px-2.5 py-0.5 rounded-lg text-xs font-semibold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition-all">
           ♀️ Female
         </button>
       </div>
@@ -344,19 +364,20 @@
 
   </nav>
 
-  <!-- Main Viewport (Mobile-First with Flex-Wrap to prevent squishing on laptop screens) -->
-  <main
-    class="relative z-10 flex-1 flex flex-col xl:flex-row flex-wrap overflow-y-auto xl:overflow-hidden p-3 sm:p-4 lg:p-5 gap-4 max-w-[1720px] w-full mx-auto">
+  <!-- ========================================================== -->
+  <!-- MAIN VIEWPORT: PC ~30%/~70% Split & Mobile Adaptive Flow -->
+  <!-- ========================================================== -->
+  <main id="mainViewport" class="vybrant-main relative z-10 flex-1 w-full mx-auto">
 
-    <!-- LEFT COLUMN: VIDEO GRID & ACTION CONTROLS -->
-    <section class="flex-1 min-w-[300px] sm:min-w-[340px] flex flex-col gap-4 min-h-0 w-full xl:w-auto">
+    <!-- LEFT COLUMN: VIDEO FEEDS & ACTION CONTROLS (~30% Desktop Split) -->
+    <section id="videoSection" class="flex flex-col gap-3.5 min-h-0">
 
-      <!-- Video Grid Container (Flex-wrap prevents horizontal squishing) -->
-      <div class="flex-1 flex flex-col md:flex-row flex-wrap gap-3.5 min-h-[340px]">
+      <!-- Video Grid Container (Vertically split Stranger/You on PC, Mobile PIP) -->
+      <div id="videoGridContainer">
 
-        <!-- STRANGER VIDEO BOX -->
+        <!-- STRANGER VIDEO BOX (Top on PC, Primary Full Background on Mobile) -->
         <div id="strangerVideoWrapper"
-          class="flex-1 min-w-[280px] sm:min-w-[320px] relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto min-h-[240px]">
+          class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
 
           <!-- Remote Video Feed -->
           <video id="remoteVideo" autoplay playsinline
@@ -364,14 +385,14 @@
 
           <!-- Status / Peer Badge -->
           <div
-            class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium">
+            class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
             <span id="strangerStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
             <span id="strangerBadgeText" class="text-slate-200">Stranger</span>
           </div>
 
           <!-- Video Quality / STUN badge -->
           <div
-            class="absolute top-3 right-3 z-20 hidden sm:flex items-center space-x-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[11px] text-slate-300">
+            class="absolute top-3 right-3 z-20 hidden sm:flex items-center space-x-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 text-[11px] text-slate-300 shadow-sm">
             <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -380,26 +401,26 @@
 
           <!-- SEARCHING / RADAR STATE -->
           <div id="radarOverlay"
-            class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-[#0e111d] to-[#07080d] p-6 text-center">
-            <div class="relative flex items-center justify-center w-28 h-28 mb-5">
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-[#181a28] to-[#0f111a] dark:from-[#0e111d] dark:to-[#07080d] p-6 text-center">
+            <div class="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-4">
               <div class="absolute w-24 h-24 rounded-full border border-purple-500/40 animate-radar"></div>
               <div class="absolute w-20 h-20 rounded-full border border-cyan-400/30 animate-radar"
                 style="animation-delay: 0.8s;"></div>
               <div class="absolute w-16 h-16 rounded-full border border-purple-400/20 animate-radar"
                 style="animation-delay: 1.4s;"></div>
               <div
-                class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 animate-float">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 animate-float">
+                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
             </div>
 
-            <h3 id="radarTitle" class="font-display font-bold text-base sm:text-lg lg:text-xl text-white mb-1.5 px-3 max-w-full break-words">
+            <h3 id="radarTitle" class="font-display font-bold text-base sm:text-lg text-white mb-1.5 px-3 max-w-full break-words">
               Looking for someone awesome...
             </h3>
-            <p id="radarSubtitle" class="text-xs sm:text-sm text-slate-400 max-w-sm px-3 break-words leading-relaxed">
+            <p id="radarSubtitle" class="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xs px-3 break-words leading-relaxed">
               Matching you randomly with someone from around the world. Press <span
                 class="text-purple-300 font-semibold">Start</span> or hit <kbd
                 class="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">Esc</kbd> anytime.
@@ -458,9 +479,9 @@
           </div>
         </div>
 
-        <!-- LOCAL USER VIDEO BOX -->
+        <!-- LOCAL USER VIDEO BOX (Bottom on PC, Floating PIP on Mobile) -->
         <div id="localVideoWrapper"
-          class="flex-1 min-w-[280px] sm:min-w-[320px] relative group bg-[#0d0f17] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex items-center justify-center aspect-video md:aspect-auto min-h-[240px]">
+          class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
 
           <!-- Local Mirrored Video Stream -->
           <video id="localVideo" autoplay playsinline muted
@@ -468,17 +489,16 @@
 
           <!-- Local You Badge -->
           <div
-            class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-xs font-medium">
+            class="local-badge-pill absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span id="localBadgeText" class="text-slate-200">You (Local)</span>
           </div>
 
-          <!-- Floating Local Controls on Bottom of Video -->
-          <div
-            class="absolute bottom-3 right-3 z-20 flex items-center space-x-2 bg-black/70 backdrop-blur-md p-1.5 rounded-2xl border border-white/15 shadow-xl">
+          <!-- Local Controls Bar: Overlayed on Bottom-Left of Local Feed on Desktop, Floating on Mobile PIP -->
+          <div id="localControlsBar" class="local-controls-bar">
             <!-- Mute Audio -->
             <button id="localMicBtn" title="Mute/Unmute Mic"
-              class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all">
+              class="p-2 sm:p-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all">
               <svg id="localMicIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -486,7 +506,7 @@
             </button>
             <!-- Disable Video -->
             <button id="localCamBtn" title="Turn Camera On/Off"
-              class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all">
+              class="p-2 sm:p-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all">
               <svg id="localCamIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -494,7 +514,7 @@
             </button>
             <!-- Flip Camera (Front / Back switch for mobile) -->
             <button id="flipCamBtn" title="Flip Camera (Front / Back)"
-              class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all">
+              class="p-2 sm:p-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all">
               <svg id="flipCamIcon" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -504,23 +524,21 @@
 
           <!-- Audio-Only Voice Mode Placeholder Animation -->
           <div id="audioOnlyPlaceholder"
-            class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-5 text-center select-none bg-gradient-to-b from-[#111422] to-[#0a0c14]">
-            <div class="relative flex items-center justify-center w-24 h-24 mb-4">
-              <!-- Animated Pulse Rings -->
-              <div class="absolute w-24 h-24 rounded-full border border-purple-500/30 animate-ping"></div>
-              <div class="absolute w-20 h-20 rounded-full border border-cyan-400/30 animate-pulse"></div>
-              <!-- Avatar Circle -->
-              <div class="relative w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 text-3xl">
+            class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-5 text-center select-none bg-gradient-to-b from-[#181a28] to-[#0f111a] dark:from-[#111422] dark:to-[#0a0c14]">
+            <div class="relative flex items-center justify-center w-20 h-20 mb-3">
+              <div class="absolute w-20 h-20 rounded-full border border-purple-500/30 animate-ping"></div>
+              <div class="absolute w-16 h-16 rounded-full border border-cyan-400/30 animate-pulse"></div>
+              <div class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 text-2xl">
                 🎙️
               </div>
             </div>
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-2">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-1">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Audio-Only Voice Active</span>
             </div>
-            <h4 class="font-display font-bold text-sm text-white mb-1">Webcam Not Detected</h4>
-            <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
-              Connected via microphone! Voice and ephemeral text chat are fully operational.
+            <h4 class="font-display font-bold text-xs text-white mb-0.5">Webcam Not Detected</h4>
+            <p class="text-[11px] text-slate-400 max-w-xs leading-tight">
+              Microphone voice & chat operational.
             </p>
           </div>
 
@@ -547,36 +565,36 @@
 
       </div>
 
-      <!-- ACTION CONTROLS BAR -->
-      <div
-        class="bg-[#0e111d]/90 backdrop-blur-xl rounded-2xl border border-white/10 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-xl w-full">
+      <!-- ACTION CONTROLS BAR (Docked below Video Feed on PC, Sticky Deck on Mobile) -->
+      <div id="actionControlsBar"
+        class="bg-white/95 dark:bg-[#0e111d]/90 backdrop-blur-xl rounded-2xl border border-zinc-200 dark:border-white/10 p-3 shadow-md">
 
-        <!-- Left: Start/Stop Matching Toggle -->
+        <!-- Left: Start/Pause Finding -->
         <div class="flex items-center flex-shrink-0">
           <button id="toggleMatchBtn"
-            class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs sm:text-sm font-bold flex items-center space-x-1.5 sm:space-x-2 border border-white/10 transition-all active:scale-95 shadow-md">
+            class="px-3 sm:px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-zinc-900 dark:text-white text-xs sm:text-sm font-bold flex items-center space-x-1.5 border border-zinc-200 dark:border-white/10 transition-all active:scale-95 shadow-xs">
             <span id="toggleMatchIcon">▶️</span>
             <span id="toggleMatchText">Start Finding</span>
           </button>
         </div>
 
-        <!-- Center: Prominent SKIP Button -->
-        <div class="flex-1 flex items-center justify-center min-w-[170px] sm:min-w-[220px]">
+        <!-- Center: Prominent SKIP STRANGER Button -->
+        <div class="flex-1 flex items-center justify-center min-w-[140px] px-1 sm:px-2">
           <button id="skipBtn"
-            class="w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-extrabold text-sm sm:text-base lg:text-lg flex items-center justify-center space-x-2 sm:space-x-3 shadow-lg shadow-purple-600/30 hover:shadow-cyan-500/40 active:scale-95 transition-all group">
+            class="w-full px-4 sm:px-8 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-extrabold text-xs sm:text-sm lg:text-base flex items-center justify-center space-x-2 shadow-lg shadow-purple-600/25 hover:shadow-cyan-500/35 active:scale-95 transition-all group">
             <span class="group-hover:translate-x-0.5 transition-transform">⏭️</span>
             <span class="tracking-wide">SKIP STRANGER</span>
             <kbd
-              class="hidden sm:inline-block px-2 py-0.5 rounded-md bg-black/30 border border-white/20 text-xs font-mono font-medium text-purple-200">
+              class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-black/30 border border-white/20 text-[10px] font-mono font-medium text-purple-200">
               Esc
             </kbd>
           </button>
         </div>
 
-        <!-- Right: Report & Skip Button (Milestone 3 wired to 'report-peer') -->
+        <!-- Right: Report & Skip Button -->
         <div class="flex items-center flex-shrink-0">
           <button id="reportBtn"
-            class="px-3 sm:px-3.5 py-2.5 sm:py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 text-xs sm:text-sm font-semibold flex items-center space-x-1.5 border border-rose-500/20 hover:border-rose-500/40 transition-all active:scale-95"
+            class="px-3 sm:px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 hover:text-rose-700 dark:hover:text-rose-200 text-xs sm:text-sm font-semibold flex items-center space-x-1.5 border border-rose-200 dark:border-rose-500/20 transition-all active:scale-95"
             title="Report inappropriate behavior and find someone else">
             <span>🚩</span>
             <span class="hidden sm:inline">Report & Skip</span>
@@ -588,21 +606,20 @@
 
     </section>
 
-    <!-- RIGHT COLUMN: EPHEMERAL TEXT CHAT (Never squishes below min-width) -->
-    <aside
-      id="chatAside"
-      class="w-full xl:w-[380px] 2xl:w-[420px] flex-1 xl:flex-initial min-w-[290px] sm:min-w-[320px] bg-[#0d0f17]/95 backdrop-blur-2xl rounded-2xl border border-white/10 flex flex-col shadow-2xl overflow-hidden min-h-[380px] xl:min-h-0">
+    <!-- RIGHT COLUMN: EPHEMERAL TEXT CHAT AREA (~70% Visual Space on PC) -->
+    <aside id="chatAside"
+      class="bg-white dark:bg-[#0d0f17]/95 backdrop-blur-2xl rounded-2xl border border-zinc-200 dark:border-white/10 flex flex-col shadow-xl overflow-hidden min-h-[260px]">
 
       <!-- Chat Header -->
-      <div class="px-4 py-3.5 border-b border-white/10 bg-[#090b12]/60 flex items-center justify-between flex-shrink-0">
+      <div class="px-4 py-3 border-b border-zinc-200 dark:border-white/10 bg-zinc-50/80 dark:bg-[#090b12]/60 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center space-x-2.5">
           <div
-            class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
             💬
           </div>
           <div>
-            <h2 class="font-display font-bold text-sm text-white">Ephemeral Chat</h2>
-            <div class="flex items-center space-x-1.5 text-[11px] text-slate-400">
+            <h2 class="font-display font-bold text-sm text-zinc-900 dark:text-white">Ephemeral Chat</h2>
+            <div class="flex items-center space-x-1.5 text-[11px] text-zinc-500 dark:text-slate-400">
               <span id="chatChannelBadge" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               <span id="chatSecurityText">WebRTC DataChannel (E2E)</span>
             </div>
@@ -611,7 +628,7 @@
 
         <!-- Clear Chat / Options -->
         <button id="clearChatBtn" title="Clear current messages"
-          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+          class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -624,7 +641,7 @@
         <!-- System Welcome Message -->
         <div class="flex justify-center">
           <div
-            class="bg-white/5 border border-white/10 px-3 py-1.5 rounded-full text-[11px] text-slate-400 text-center">
+            class="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 px-3 py-1.5 rounded-full text-[11px] text-zinc-500 dark:text-slate-400 text-center">
             🔒 Messages disappear permanently when skipping
           </div>
         </div>
@@ -632,24 +649,24 @@
 
       <!-- Typing Indicator -->
       <div id="typingIndicator"
-        class="hidden px-4 py-1 text-[11px] text-purple-300 font-medium italic items-center space-x-1.5 flex-shrink-0">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"></span>
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
+        class="hidden px-4 py-1 text-[11px] text-purple-600 dark:text-purple-300 font-medium italic items-center space-x-1.5 flex-shrink-0">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span>
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
           style="animation-delay: 0.15s"></span>
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
           style="animation-delay: 0.3s"></span>
         <span>Stranger is typing...</span>
       </div>
 
-      <!-- Chat Input Form -->
-      <form id="chatForm" class="p-3 border-t border-white/10 bg-[#090b12]/80 flex items-center space-x-2 flex-shrink-0 mt-auto">
+      <!-- Chat Input Form (Pinned at Bottom) -->
+      <form id="chatForm" class="p-3 border-t border-zinc-200 dark:border-white/10 bg-zinc-50/90 dark:bg-[#090b12]/80 flex items-center space-x-2 flex-shrink-0 mt-auto">
         <div class="relative flex-1">
           <input type="text" id="chatInput" placeholder="Type a message... (Press Enter)" maxlength="800"
             autocomplete="off"
-            class="w-full bg-[#141724] border border-white/10 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all pr-9">
+            class="w-full bg-zinc-100 dark:bg-[#141724] border border-zinc-200 dark:border-white/10 focus:border-purple-600 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:bg-white dark:focus:bg-[#141724] transition-all pr-9">
           <!-- Quick emoji trigger -->
           <button type="button" id="quickEmojiBtn"
-            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors text-sm">
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white transition-colors text-sm">
             ✨
           </button>
         </div>
@@ -670,15 +687,15 @@
   <!-- 1. MICRO-PASS PAYMENT & VIP MODAL -->
   <!-- ========================================== -->
   <div id="microPassModal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/85 backdrop-blur-2xl">
     <div
-      class="relative w-full max-w-lg bg-[#0e111d] border border-amber-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl text-left overflow-hidden">
+      class="relative w-full max-w-lg bg-white dark:bg-[#0e111d] border border-zinc-200 dark:border-amber-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl text-left overflow-hidden">
 
-      <div class="absolute -top-16 -right-16 w-36 h-36 bg-amber-500/20 rounded-full blur-3xl"></div>
-      <div class="absolute -top-16 -left-16 w-36 h-36 bg-purple-600/20 rounded-full blur-3xl"></div>
+      <div class="absolute -top-16 -right-16 w-36 h-36 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -top-16 -left-16 w-36 h-36 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <button id="closeMicroPassBtn"
-        class="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors rounded-xl bg-white/5">
+        class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white transition-colors rounded-xl bg-zinc-100 dark:bg-white/5">
         ✕
       </button>
 
@@ -690,27 +707,27 @@
             👑
           </div>
           <div>
-            <h3 class="font-display font-extrabold text-xl text-white">Unlock VIP Micro-Pass</h3>
-            <p class="text-xs text-slate-300">Instant access to specific Gender & Country matchmaking</p>
+            <h3 class="font-display font-extrabold text-xl text-zinc-900 dark:text-white">Unlock VIP Micro-Pass</h3>
+            <p class="text-xs text-zinc-500 dark:text-slate-300">Instant access to specific Gender & Country matchmaking</p>
           </div>
         </div>
 
         <div
-          class="bg-black/30 border border-white/5 rounded-2xl p-3 mb-5 grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+          class="bg-zinc-50 dark:bg-black/30 border border-zinc-200 dark:border-white/5 rounded-2xl p-3 mb-5 grid grid-cols-2 gap-2 text-[11px] text-zinc-600 dark:text-slate-300">
           <div class="flex items-center space-x-1.5">
-            <span class="text-emerald-400">✓</span>
+            <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
             <span>100% Specific Gender Filter (Male/Female)</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-emerald-400">✓</span>
+            <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
             <span>Global Country Filters (95+ Countries)</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-emerald-400">✓</span>
+            <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
             <span>Priority Queue (Fast Pair)</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-emerald-400">✓</span>
+            <span class="text-emerald-500 dark:text-emerald-400 font-bold">✓</span>
             <span>1-Device Concurrency Lock</span>
           </div>
         </div>
@@ -723,31 +740,31 @@
               <input type="radio" name="vipPlan" value="1-hour" checked class="text-amber-500 focus:ring-amber-400">
               <div>
                 <div class="flex items-center space-x-2">
-                  <span class="font-display font-bold text-white text-sm">1-Hour VIP Pass</span>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300">Quick Match</span>
+                  <span class="font-display font-bold text-zinc-900 dark:text-white text-sm">1-Hour VIP Pass</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-700 dark:text-amber-300">Quick Match</span>
                 </div>
-                <p class="text-[11px] text-slate-400">Unlimited Gender/Country filters for 60 mins</p>
+                <p class="text-[11px] text-zinc-500 dark:text-slate-400">Unlimited Gender/Country filters for 60 mins</p>
               </div>
             </div>
             <div class="text-right">
-              <span class="font-display font-extrabold text-lg text-amber-400">₹19</span>
+              <span class="font-display font-extrabold text-lg text-amber-600 dark:text-amber-400">₹19</span>
             </div>
           </label>
 
           <label
-            class="vip-plan-card relative flex items-center justify-between p-3.5 rounded-2xl border border-white/10 bg-white/5 cursor-pointer hover:border-amber-500/30 transition-all">
+            class="vip-plan-card relative flex items-center justify-between p-3.5 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 cursor-pointer hover:border-amber-500/30 transition-all">
             <div class="flex items-center space-x-3">
               <input type="radio" name="vipPlan" value="12-hour" class="text-amber-500 focus:ring-amber-400">
               <div>
                 <div class="flex items-center space-x-2">
-                  <span class="font-display font-bold text-white text-sm">12-Hour VIP Pass</span>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">Best Value 🔥</span>
+                  <span class="font-display font-bold text-zinc-900 dark:text-white text-sm">12-Hour VIP Pass</span>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300">Best Value 🔥</span>
                 </div>
-                <p class="text-[11px] text-slate-400">Save 83% &bull; Perfect for evening chat</p>
+                <p class="text-[11px] text-zinc-500 dark:text-slate-400">Save 83% &bull; Perfect for evening chat</p>
               </div>
             </div>
             <div class="text-right">
-              <span class="font-display font-extrabold text-lg text-slate-100">₹39</span>
+              <span class="font-display font-extrabold text-lg text-zinc-900 dark:text-slate-100">₹39</span>
             </div>
           </label>
         </div>
@@ -755,10 +772,10 @@
         <!-- UPI / Razorpay Payment Button -->
         <div class="space-y-2">
           <button id="simulatePaymentBtn"
-            class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center space-x-2 hover:scale-[1.01] active:scale-95">
+            class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center space-x-2 hover:scale-[1.01] active:scale-95 cursor-pointer">
             <span>⚡ Pay via UPI / Razorpay</span>
           </button>
-          <p class="text-center text-[10px] text-slate-400">
+          <p class="text-center text-[10px] text-zinc-400 dark:text-slate-400">
             🔒 Secure 256-Bit SSL Encrypted Razorpay Checkout &bull; UPI, Cards, NetBanking
           </p>
         </div>
@@ -767,29 +784,29 @@
       <!-- View 2: Payment Success & Generated Code View -->
       <div id="vipSuccessView" class="hidden text-center py-2">
         <div
-          class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg">
+          class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg">
           🎉
         </div>
-        <h3 class="font-display font-extrabold text-xl text-white mb-1">
+        <h3 class="font-display font-extrabold text-xl text-zinc-900 dark:text-white mb-1">
           Payment Successful!
         </h3>
-        <p class="text-xs text-slate-300 mb-4">
+        <p class="text-xs text-zinc-500 dark:text-slate-300 mb-4">
           Here is your unique 6-digit VIP pass code:
         </p>
 
-        <div class="bg-black/50 border border-amber-500/40 rounded-2xl p-4 mb-5 max-w-sm mx-auto">
-          <div class="text-[11px] text-amber-400 uppercase tracking-widest font-semibold mb-1">VIP PASS CODE</div>
+        <div class="bg-zinc-50 dark:bg-black/50 border border-amber-500/40 rounded-2xl p-4 mb-5 max-w-sm mx-auto">
+          <div class="text-[11px] text-amber-600 dark:text-amber-400 uppercase tracking-widest font-semibold mb-1">VIP PASS CODE</div>
           <div class="flex items-center justify-center space-x-3">
             <span id="generatedVipCodeText"
-              class="font-display font-extrabold text-2xl sm:text-3xl tracking-widest text-white">
+              class="font-display font-extrabold text-2xl sm:text-3xl tracking-widest text-zinc-900 dark:text-white">
               VIP-XXXXX
             </span>
             <button id="copyVipCodeBtn" title="Copy Code"
-              class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-slate-200 transition-colors">
+              class="px-2.5 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 dark:bg-white/10 dark:hover:bg-white/20 text-xs font-semibold text-zinc-800 dark:text-slate-200 transition-colors">
               📋 Copy
             </button>
           </div>
-          <div id="generatedPassDetails" class="text-[11px] text-slate-400 mt-1">1-Hour Pass &bull; 1-Device Lock</div>
+          <div id="generatedPassDetails" class="text-[11px] text-zinc-500 dark:text-slate-400 mt-1">1-Hour Pass &bull; 1-Device Lock</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -798,7 +815,7 @@
             <span>⚡ Activate Now</span>
           </button>
           <button id="saveForLaterBtn"
-            class="py-3 px-4 rounded-xl font-display font-semibold text-xs sm:text-sm text-slate-200 bg-white/10 hover:bg-white/20 border border-white/15 transition-all active:scale-95 flex items-center justify-center space-x-1.5">
+            class="py-3 px-4 rounded-xl font-display font-semibold text-xs sm:text-sm text-zinc-700 dark:text-slate-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 transition-all active:scale-95 flex items-center justify-center space-x-1.5">
             <span>🕒 Save For Later</span>
           </button>
         </div>
@@ -811,42 +828,42 @@
   <!-- 2. REDEEM CODE MODAL -->
   <!-- ========================================== -->
   <div id="redeemModal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-2xl">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/85 backdrop-blur-2xl">
     <div
-      class="relative w-full max-w-md bg-[#0e111d] border border-white/15 rounded-3xl p-6 sm:p-7 shadow-2xl text-left overflow-hidden">
+      class="relative w-full max-w-md bg-white dark:bg-[#0e111d] border border-zinc-200 dark:border-white/15 rounded-3xl p-6 sm:p-7 shadow-2xl text-left overflow-hidden">
 
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-white/10 mb-4">
         <div class="flex items-center space-x-2.5">
           <div
-            class="w-9 h-9 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-lg">
+            class="w-9 h-9 rounded-xl bg-purple-600/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 flex items-center justify-center text-lg">
             🎟️
           </div>
           <div>
-            <h3 class="font-display font-bold text-base text-white">Redeem VIP Pass</h3>
-            <p class="text-[11px] text-slate-400">Resume your session on this device</p>
+            <h3 class="font-display font-bold text-base text-zinc-900 dark:text-white">Redeem VIP Pass</h3>
+            <p class="text-[11px] text-zinc-500 dark:text-slate-400">Resume your session on this device</p>
           </div>
         </div>
-        <button id="closeRedeemModalBtn" class="text-slate-400 hover:text-white text-lg">✕</button>
+        <button id="closeRedeemModalBtn" class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg">✕</button>
       </div>
 
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter 6-Digit VIP Code</label>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-slate-300 mb-1.5">Enter 6-Digit VIP Code</label>
           <input type="text" id="redeemCodeInput" placeholder="e.g. VIP-7X92K" maxlength="12"
-            class="w-full bg-[#141724] border border-white/15 focus:border-amber-400 rounded-xl px-4 py-3 text-sm font-mono tracking-wider text-white uppercase placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-400">
+            class="w-full bg-zinc-100 dark:bg-[#141724] border border-zinc-200 dark:border-white/15 focus:border-amber-400 rounded-xl px-4 py-3 text-sm font-mono tracking-wider text-zinc-900 dark:text-white uppercase placeholder-zinc-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-400">
         </div>
 
         <div id="redeemErrorMsg"
-          class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs leading-relaxed">
+          class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs leading-relaxed">
         </div>
 
-        <div class="bg-black/30 border border-white/5 rounded-xl p-3 text-[11px] text-slate-400 space-y-1">
+        <div class="bg-zinc-50 dark:bg-black/30 border border-zinc-200 dark:border-white/5 rounded-xl p-3 text-[11px] text-zinc-500 dark:text-slate-400 space-y-1">
           <p>• <strong>1-Device Concurrency Lock:</strong> Code can only be active on one device at a time.</p>
           <p>• <strong>Resumable Timer:</strong> Remaining time will sync seamlessly from the server.</p>
         </div>
 
         <button id="submitRedeemBtn"
-          class="w-full py-3 rounded-xl font-display font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/20 transition-all active:scale-95">
+          class="w-full py-3 rounded-xl font-display font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-lg shadow-amber-500/20 transition-all active:scale-95 cursor-pointer">
           Activate Pass 🚀
         </button>
       </div>
@@ -855,50 +872,50 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- 3. MANDATORY 18+ AGE GATE MODAL ON FIRST LOAD (FIXED) -->
+  <!-- 3. MANDATORY 18+ AGE GATE MODAL ON FIRST LOAD -->
   <!-- ========================================== -->
   <div id="ageGateModal"
-    class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl transition-opacity duration-300" style="pointer-events: auto;">
+    class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 dark:bg-black/90 backdrop-blur-2xl transition-opacity duration-300" style="pointer-events: auto;">
     <div
-      class="relative w-full max-w-md bg-[#0f121d] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
+      class="relative w-full max-w-md bg-white dark:bg-[#0f121d] border border-zinc-200 dark:border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
 
       <!-- Top Decorative Glow -->
-      <div class="absolute -top-16 -left-16 w-32 h-32 bg-purple-600/30 rounded-full blur-2xl"></div>
-      <div class="absolute -top-16 -right-16 w-32 h-32 bg-cyan-600/30 rounded-full blur-2xl"></div>
+      <div class="absolute -top-16 -left-16 w-32 h-32 bg-purple-600/20 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -top-16 -right-16 w-32 h-32 bg-cyan-600/20 rounded-full blur-2xl pointer-events-none"></div>
 
       <!-- Icon Badge -->
       <div
         class="relative mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-rose-500 p-0.5 mb-5 shadow-lg shadow-purple-500/25">
-        <div class="w-full h-full bg-[#0f121d] rounded-2xl flex items-center justify-center">
+        <div class="w-full h-full bg-zinc-50 dark:bg-[#0f121d] rounded-2xl flex items-center justify-center">
           <span class="text-3xl">🔞</span>
         </div>
       </div>
 
-      <h2 class="font-display font-extrabold text-2xl text-white mb-2 tracking-tight">
+      <h2 class="font-display font-extrabold text-2xl text-zinc-900 dark:text-white mb-2 tracking-tight">
         Age Verification Required
       </h2>
-      <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6">
-        Welcome to <strong class="text-white font-semibold">Vybrant ⚡</strong> (vybrant.vybronx.online). Vybrant provides
+      <p class="text-xs sm:text-sm text-zinc-600 dark:text-slate-300 leading-relaxed mb-6">
+        Welcome to <strong class="text-zinc-900 dark:text-white font-semibold">Vybrant ⚡</strong> (vybrant.vybronx.online). Vybrant provides
         instant, unmoderated peer-to-peer random video chat. You must be at least <span
-          class="text-purple-400 font-bold">18 years of age</span> to enter.
+          class="text-purple-600 dark:text-purple-400 font-bold">18 years of age</span> to enter.
       </p>
 
       <!-- Checklist & Terms -->
-      <div id="ageCheckContainer" class="bg-black/40 border border-white/10 rounded-2xl p-4 text-left mb-6 space-y-3 transition-colors">
+      <div id="ageCheckContainer" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-white/10 rounded-2xl p-4 text-left mb-6 space-y-3 transition-colors">
         <label class="flex items-start space-x-3 cursor-pointer group">
           <input type="checkbox" id="ageConfirmCheckbox"
-            class="mt-1 w-4 h-4 rounded border-slate-700 text-purple-600 focus:ring-purple-500 bg-slate-900 cursor-pointer">
-          <span class="text-xs text-slate-300 group-hover:text-white transition-colors leading-snug">
-            I certify that <strong class="text-white font-semibold">I am 18 years of age or older</strong> and agree to
+            class="mt-1 w-4 h-4 rounded border-zinc-300 dark:border-slate-700 text-purple-600 focus:ring-purple-500 bg-white dark:bg-slate-900 cursor-pointer">
+          <span class="text-xs text-zinc-600 dark:text-slate-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors leading-snug">
+            I certify that <strong class="text-zinc-900 dark:text-white font-semibold">I am 18 years of age or older</strong> and agree to
             follow Community Guidelines and Acceptable Use standards.
           </span>
         </label>
 
-        <div id="ageWarningText" class="hidden text-rose-400 text-[11px] font-semibold pt-1">
+        <div id="ageWarningText" class="hidden text-rose-600 dark:text-rose-400 text-[11px] font-semibold pt-1">
           ⚠️ Please check the box above to verify you are 18+ to enter Vybrant.
         </div>
 
-        <div class="text-[11px] text-slate-400 border-t border-white/5 pt-2 flex items-center space-x-1.5">
+        <div class="text-[11px] text-zinc-500 dark:text-slate-400 border-t border-zinc-200 dark:border-white/5 pt-2 flex items-center space-x-1.5">
           <span>🛡️</span>
           <span>Zero tolerance for illegal content, harassment, or non-consensual behavior.</span>
         </div>
@@ -911,7 +928,7 @@
           Enter Vybrant 🚀
         </button>
 
-        <a href="https://google.com" class="block text-xs text-slate-400 hover:text-slate-300 transition-colors">
+        <a href="https://google.com" class="block text-xs text-zinc-500 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors">
           I am under 18 (Exit Site)
         </a>
       </div>
@@ -920,18 +937,18 @@
   </div>
 
   <!-- 4. 24-HOUR IP BAN MODAL (Milestone 3) -->
-  <div id="bannedModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
-    <div class="relative w-full max-w-md bg-[#130d12] border border-rose-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
-      <div class="w-16 h-16 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-3xl mx-auto mb-4">
+  <div id="bannedModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 dark:bg-black/95 backdrop-blur-2xl">
+    <div class="relative w-full max-w-md bg-white dark:bg-[#130d12] border border-rose-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
+      <div class="w-16 h-16 rounded-2xl bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center text-3xl mx-auto mb-4">
         🚫
       </div>
-      <h2 class="font-display font-extrabold text-2xl text-white mb-2 tracking-tight">
+      <h2 class="font-display font-extrabold text-2xl text-zinc-900 dark:text-white mb-2 tracking-tight">
         Access Temporarily Banned
       </h2>
-      <p id="bannedReasonText" class="text-xs sm:text-sm text-rose-200/90 leading-relaxed mb-6">
+      <p id="bannedReasonText" class="text-xs sm:text-sm text-rose-600 dark:text-rose-200/90 leading-relaxed mb-6">
         Your IP address has been temporarily banned for 24 hours due to community safety violations (NSFW/Inappropriate behavior).
       </p>
-      <div class="bg-black/40 border border-rose-500/20 rounded-2xl p-4 text-xs text-slate-400 mb-6 space-y-1 text-left">
+      <div class="bg-zinc-50 dark:bg-black/40 border border-rose-500/20 rounded-2xl p-4 text-xs text-zinc-600 dark:text-slate-400 mb-6 space-y-1 text-left">
         <p>• <strong>Ban Period:</strong> 24 Hours from detection.</p>
         <p>• <strong>Reason:</strong> Violation detected by AI Shield or peer reports.</p>
         <p>• <strong>Appeals:</strong> Zero tolerance for inappropriate conduct.</p>
@@ -944,16 +961,16 @@
 
   <!-- 5. COMMUNITY GUIDELINES MODAL -->
   <div id="guidelinesModal"
-    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/80 backdrop-blur-md">
     <div
-      class="relative w-full max-w-lg bg-[#0f121d] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl text-left">
-      <div class="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-        <h3 class="font-display font-bold text-lg text-white flex items-center space-x-2">
+      class="relative w-full max-w-lg bg-white dark:bg-[#0f121d] border border-zinc-200 dark:border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl text-left">
+      <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-white/10 mb-4">
+        <h3 class="font-display font-bold text-lg text-zinc-900 dark:text-white flex items-center space-x-2">
           <span>🛡️ Community Safety & Guidelines</span>
         </h3>
-        <button id="closeGuidelinesBtn" class="text-slate-400 hover:text-white text-lg">✕</button>
+        <button id="closeGuidelinesBtn" class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg">✕</button>
       </div>
-      <div class="space-y-3 text-xs sm:text-sm text-slate-300">
+      <div class="space-y-3 text-xs sm:text-sm text-zinc-600 dark:text-slate-300">
         <p>• <strong>Strictly 18+:</strong> Vybrant is exclusively for legal adults.</p>
         <p>• <strong>Client-Side AI NSFW Shield:</strong> Real-time on-device classification automatically bans violators.</p>
         <p>• <strong>First 3-Second Anti-Flash:</strong> Incoming video is blurred for 3 seconds to protect against unwanted flashers.</p>
