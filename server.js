@@ -206,8 +206,30 @@ const socketSessions = new Map();
 // Recovery grace period for transient network interruptions during active calls (15s)
 const RECOVERY_GRACE_PERIOD_MS = 15000;
 
+// Authoritative logical visitor presence: visitorId -> { visitorId, socketId, ip, connectedAt, lastSeen, isVip, vipCode, graceTimer }
+const activeVisitors = new Map();
+
+// Reverse mapping: socket.id -> visitorId
+const socketVisitors = new Map();
+
 // Map of socket.id -> metadata { state, preferences, vipCode, isVip, joinedAt, ip }
 const userStates = new Map();
+
+/**
+ * Returns the authoritative count of unique logical online visitors.
+ * Prevents multiple transports or reconnecting sockets from inflating the count.
+ */
+function getUniqueOnlineCount() {
+  return activeVisitors.size;
+}
+
+/**
+ * Broadcast current authoritative online user count to all connected clients
+ */
+function broadcastOnlineCount() {
+  const count = getUniqueOnlineCount();
+  io.emit('online-count', { count });
+}
 
 /**
  * VIP Passes Map:
@@ -263,14 +285,6 @@ vipPasses.set(sample12Hour, {
   expiresAt: null,
   activeSocketId: null
 });
-
-/**
- * Broadcast current online user count to all connected clients
- */
-function broadcastOnlineCount() {
-  const count = io.engine.clientsCount || io.sockets.sockets.size || 0;
-  io.emit('online-count', { count });
-}
 
 /**
  * Validate and clean a VIP pass for a given socket
@@ -844,24 +858,104 @@ io.on('connection', (socket) => {
   const clientIp = getClientIp(socket);
   const detectedCountry = socket.handshake.headers['cf-ipcountry'] || 'IN';
 
-  console.log(`[Connect] Socket ${socket.id} connected from IP: ${clientIp} (Country: ${detectedCountry})`);
+  // Authoritative logical visitor tracking
+  const rawVisitorId = (socket.handshake.auth && socket.handshake.auth.visitorId) ||
+                       (socket.handshake.query && socket.handshake.query.visitorId);
+  const visitorId = (typeof rawVisitorId === 'string' && rawVisitorId.length >= 4 && rawVisitorId.length <= 64)
+    ? rawVisitorId.trim()
+    : socket.id;
 
-  userStates.set(socket.id, {
-    state: 'idle',
-    joinedAt: Date.now(),
-    ip: clientIp,
-    isVip: false,
-    vipCode: null,
-    preferences: {
-      myGender: 'male',
-      myCountry: detectedCountry,
-      genderFilter: 'any',
-      countryFilter: 'any'
+  console.log(`[Connect] Socket ${socket.id} (Visitor: ${visitorId}) connected from IP: ${clientIp} (Country: ${detectedCountry})`);
+
+  // Handle re-connecting visitor who already had an older/stale socket
+  const existingVisitor = activeVisitors.get(visitorId);
+  if (existingVisitor) {
+    const oldSocketId = existingVisitor.socketId;
+    if (oldSocketId && oldSocketId !== socket.id) {
+      console.log(`[Presence] Visitor ${visitorId} re-connected (replacing stale socket ${oldSocketId} with ${socket.id})`);
+
+      if (existingVisitor.graceTimer) {
+        clearTimeout(existingVisitor.graceTimer);
+        existingVisitor.graceTimer = null;
+      }
+
+      socketVisitors.delete(oldSocketId);
+
+      // Transfer user state preferences and VIP status to new socket
+      const oldUserState = userStates.get(oldSocketId);
+      if (oldUserState) {
+        userStates.set(socket.id, { ...oldUserState, state: oldUserState.state || 'idle' });
+        userStates.delete(oldSocketId);
+      }
+
+      // Update matchmaking queue reference
+      const queueIdx = waitingQueue.findIndex(q => q.socketId === oldSocketId);
+      if (queueIdx !== -1) {
+        waitingQueue[queueIdx].socketId = socket.id;
+      }
+
+      // Auto-rebind active session and active pairs
+      const activeSessionId = socketSessions.get(oldSocketId);
+      if (activeSessionId && activeSessions.has(activeSessionId)) {
+        const sess = activeSessions.get(activeSessionId);
+        if (sess.timer) {
+          clearTimeout(sess.timer);
+          sess.timer = null;
+        }
+        if (sess.userA === oldSocketId) sess.userA = socket.id;
+        if (sess.userB === oldSocketId) sess.userB = socket.id;
+        sess.state = 'active';
+        sess.interruptedUser = null;
+
+        socketSessions.delete(oldSocketId);
+        socketSessions.set(socket.id, activeSessionId);
+
+        const partnerId = activePairs.get(oldSocketId);
+        if (partnerId) {
+          activePairs.delete(oldSocketId);
+          activePairs.set(socket.id, partnerId);
+          activePairs.set(partnerId, socket.id);
+        }
+        console.log(`[Presence] Session ${activeSessionId} smoothly rebound to new socket ${socket.id}`);
+      }
+
+      try {
+        const oldSock = io.sockets.sockets.get(oldSocketId);
+        if (oldSock && oldSock.connected) {
+          oldSock.disconnect(true);
+        }
+      } catch (e) {}
     }
-  });
+  }
 
+  activeVisitors.set(visitorId, {
+    visitorId,
+    socketId: socket.id,
+    ip: clientIp,
+    connectedAt: existingVisitor?.connectedAt || Date.now(),
+    lastSeen: Date.now(),
+    graceTimer: null
+  });
+  socketVisitors.set(socket.id, visitorId);
+
+  if (!userStates.has(socket.id)) {
+    userStates.set(socket.id, {
+      state: 'idle',
+      joinedAt: Date.now(),
+      ip: clientIp,
+      isVip: false,
+      vipCode: null,
+      preferences: {
+        myGender: 'male',
+        myCountry: detectedCountry,
+        genderFilter: 'any',
+        countryFilter: 'any'
+      }
+    });
+  }
+
+  // Broadcast authoritative count to all clients
   broadcastOnlineCount();
-  socket.emit('online-count', { count: io.engine.clientsCount });
   socket.emit('detected-country', { country: detectedCountry });
   socket.emit('sponsor-config', liveSponsorConfig);
 
@@ -1072,6 +1166,17 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Cross-Direction Media Quality Adaptation Hint (Relieve receiver downlink congestion)
+  socket.on('media-quality-hint', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    if (partnerId) {
+      io.to(partnerId).emit('peer-media-quality-hint', {
+        targetTier: (data && typeof data.targetTier === 'number') ? data.targetTier : 1,
+        reason: (data && data.reason) || 'receiver_downlink_congestion'
+      });
+    }
+  });
+
   // Session Recovery: Reconnect existing call after transient network/signaling drop
   socket.on('reconnect-session', (data, callback) => {
     const { sessionId, lastPartnerId } = data || {};
@@ -1161,15 +1266,20 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Disconnection handler with session recovery grace period
+  // Disconnection handler with session recovery grace period & authoritative presence
   socket.on('disconnect', (reason) => {
     console.log(`[Disconnect] Socket ${socket.id} disconnected (${reason})`);
     removeFromQueue(socket.id);
+
+    const visitorId = socketVisitors.get(socket.id);
+    socketVisitors.delete(socket.id);
 
     const sessionId = socketSessions.get(socket.id);
     const partnerId = activePairs.get(socket.id);
     const userState = userStates.get(socket.id);
     const wasInCall = userState && userState.state === 'in_call' && partnerId;
+
+    const isCurrentActiveSocketForVisitor = visitorId && activeVisitors.get(visitorId)?.socketId === socket.id;
 
     if (wasInCall && sessionId && activeSessions.has(sessionId)) {
       const session = activeSessions.get(sessionId);
@@ -1196,9 +1306,20 @@ io.on('connection', (socket) => {
           console.log(`[Session Recovery] Grace period expired for session ${sessionId}. Terminating pair.`);
           clearSession(sessionId);
           disconnectCurrentPair(socket.id, 'disconnected_timeout');
+
+          // If the visitor never reconnected, remove presence now
+          if (visitorId && activeVisitors.has(visitorId)) {
+            const vRecord = activeVisitors.get(visitorId);
+            if (vRecord.socketId === socket.id) {
+              activeVisitors.delete(visitorId);
+              userStates.delete(socket.id);
+              broadcastOnlineCount();
+              console.log(`[Presence] Visitor ${visitorId} presence removed after grace period expiration. Remaining online: ${activeVisitors.size}`);
+            }
+          }
         }, RECOVERY_GRACE_PERIOD_MS);
 
-        // Keep activePairs intact for grace period so reconnection can happen
+        // Keep activeVisitors intact during recovery grace period so online count does not prematurely drop
         return;
       }
     }
@@ -1217,7 +1338,15 @@ io.on('connection', (socket) => {
     }
 
     userStates.delete(socket.id);
-    broadcastOnlineCount();
+
+    // If this socket was the authoritative socket for the visitor, remove presence
+    if (isCurrentActiveSocketForVisitor) {
+      activeVisitors.delete(visitorId);
+      console.log(`[Presence] Visitor ${visitorId} (socket ${socket.id}) disconnected. Remaining online: ${activeVisitors.size}`);
+      broadcastOnlineCount();
+    } else {
+      console.log(`[Presence] Stale socket ${socket.id} closed; active visitor ${visitorId} remains online (${activeVisitors.size})`);
+    }
   });
 });
 
@@ -1281,7 +1410,7 @@ app.get('/health', (req, res) => {
     status: 'ok',
     service: 'Vybrant WebRTC Engine',
     host: 'vybrant.vybronx.online',
-    online: io.engine.clientsCount || 0,
+    online: getUniqueOnlineCount(),
     waitingQueueLength: waitingQueue.length,
     activeMatches: activePairs.size / 2,
     bannedIPsCount: bannedIPs.size,
@@ -1335,7 +1464,7 @@ app.post('/api/admin/logout', adminAuthMiddleware, (req, res) => {
 // 3. Admin Live Stats Route
 app.get('/api/admin/stats', adminAuthMiddleware, (req, res) => {
   const now = Date.now();
-  const totalOnline = io.engine.clientsCount || io.sockets.sockets.size || 0;
+  const totalOnline = getUniqueOnlineCount();
   const inCall = Math.floor(activePairs.size / 2);
   const inQueue = waitingQueue.length;
 

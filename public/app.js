@@ -322,6 +322,7 @@ async function sampleConnectionStats() {
     let inboundVideo = null;
     let inboundAudio = null;
     let candidatePair = null;
+    let remoteInboundVideo = null;
 
     stats.forEach(report => {
       if (report.type === 'outbound-rtp' && report.kind === 'video') {
@@ -334,86 +335,151 @@ async function sampleConnectionStats() {
         inboundAudio = report;
       } else if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
         candidatePair = report;
+      } else if (report.type === 'remote-inbound-rtp' && report.kind === 'video') {
+        remoteInboundVideo = report;
       }
     });
 
     if (!lastStatsSample) {
-      lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio };
+      lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio, candidatePair };
       return;
     }
 
     const elapsedSec = (now - lastStatsSample.now) / 1000;
     if (elapsedSec <= 0.5) return;
 
-    // Calculate outbound video bitrate in kbps
+    // Calculate outbound video bitrate in kbps (for telemetry/diagnostics only, NOT for assuming low network capacity)
     let outVideoBitrate = 0;
     if (outboundVideo && lastStatsSample.outboundVideo) {
       const bytesDiff = (outboundVideo.bytesSent || 0) - (lastStatsSample.outboundVideo.bytesSent || 0);
       outVideoBitrate = (bytesDiff * 8) / (elapsedSec * 1000);
     }
 
-    // Calculate inbound video loss rate
+    // Inbound video packet loss rate calculation
     let inVideoLossRate = 0;
     if (inboundVideo && lastStatsSample.inboundVideo) {
       const packetsReceivedDiff = (inboundVideo.packetsReceived || 0) - (lastStatsSample.inboundVideo.packetsReceived || 0);
       const packetsLostDiff = (inboundVideo.packetsLost || 0) - (lastStatsSample.inboundVideo.packetsLost || 0);
       const total = packetsReceivedDiff + packetsLostDiff;
-      if (total > 0) inVideoLossRate = Math.max(0, packetsLostDiff / total);
+      if (total > 0 && packetsLostDiff >= 0) inVideoLossRate = Math.max(0, packetsLostDiff / total);
+    }
+
+    // Inbound frame drop rate
+    let inFramesDroppedRate = 0;
+    if (inboundVideo && lastStatsSample.inboundVideo) {
+      const decodedDiff = (inboundVideo.framesDecoded || 0) - (lastStatsSample.inboundVideo.framesDecoded || 0);
+      const droppedDiff = (inboundVideo.framesDropped || 0) - (lastStatsSample.inboundVideo.framesDropped || 0);
+      const totalFrames = decodedDiff + droppedDiff;
+      if (totalFrames > 0 && droppedDiff >= 0) inFramesDroppedRate = Math.max(0, droppedDiff / totalFrames);
     }
 
     const rtt = candidatePair?.currentRoundTripTime ? candidatePair.currentRoundTripTime * 1000 : 0;
-    const jitter = (inboundAudio?.jitter || 0) * 1000;
+    const jitter = (inboundAudio?.jitter || inboundVideo?.jitter || 0) * 1000;
+    const availableOutgoingBitrateKbps = candidatePair?.availableOutgoingBitrate ? (candidatePair.availableOutgoingBitrate / 1000) : 0;
+    const qualityLimitationReason = outboundVideo?.qualityLimitationReason || 'none';
 
-    lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio };
+    lastStatsSample = { now, outboundVideo, outboundAudio, inboundVideo, inboundAudio, candidatePair };
 
     evaluateAdaptiveQuality({
       outVideoBitrate,
       inVideoLossRate,
+      inFramesDroppedRate,
       rtt,
-      jitter
+      jitter,
+      availableOutgoingBitrateKbps,
+      qualityLimitationReason
     });
   } catch (err) {
     console.debug('[Adaptive Quality] Error reading stats:', err);
   }
 }
 
-function evaluateAdaptiveQuality({ outVideoBitrate, inVideoLossRate, rtt, jitter }) {
+function evaluateAdaptiveQuality({
+  outVideoBitrate,
+  inVideoLossRate,
+  inFramesDroppedRate,
+  rtt,
+  jitter,
+  availableOutgoingBitrateKbps,
+  qualityLimitationReason
+}) {
   if (currentCallState === ConnectionState.IDLE || currentCallState === ConnectionState.SEARCHING || currentCallState === ConnectionState.DISCONNECTED) {
     return;
   }
 
-  // Severe network constraints (loss > 18%, RTT > 800ms, or outbound bandwidth dropping towards ~12-50 kbps)
-  const isExtremelyConstrained = (inVideoLossRate > 0.18 || rtt > 800 || (outVideoBitrate > 0 && outVideoBitrate < 45));
-  // Moderate constraint (low bandwidth ~64-120 kbps target or packet loss 8-18%)
-  const isModeratelyConstrained = (inVideoLossRate > 0.08 || rtt > 400 || (outVideoBitrate > 0 && outVideoBitrate < 110));
-  // Healthy recovery threshold (loss < 4%, RTT < 250ms)
-  const isHealthy = (inVideoLossRate < 0.04 && rtt < 250 && jitter < 50);
+  // Severe network constraints: high packet loss (>20%), high RTT (>750ms), or confirmed BWE < 120 kbps
+  const isSevere = (
+    inVideoLossRate > 0.20 ||
+    rtt > 750 ||
+    (availableOutgoingBitrateKbps > 0 && availableOutgoingBitrateKbps < 120) ||
+    (qualityLimitationReason === 'bandwidth' && inVideoLossRate > 0.15) ||
+    inFramesDroppedRate > 0.35
+  );
 
-  if (isExtremelyConstrained) {
+  // Moderate network constraints: packet loss 8-20%, RTT 350-750ms, or BWE 120-350 kbps
+  const isModerate = (
+    inVideoLossRate > 0.08 ||
+    rtt > 350 ||
+    (availableOutgoingBitrateKbps > 0 && availableOutgoingBitrateKbps < 350) ||
+    (qualityLimitationReason === 'bandwidth' && rtt > 250) ||
+    inFramesDroppedRate > 0.18
+  );
+
+  // Healthy network: loss < 3%, RTT < 200ms, jitter < 40ms, dropped frames < 5%, and good BWE
+  const isHealthy = (
+    inVideoLossRate < 0.03 &&
+    (rtt === 0 || rtt < 200) &&
+    jitter < 40 &&
+    inFramesDroppedRate < 0.05 &&
+    (availableOutgoingBitrateKbps === 0 || availableOutgoingBitrateKbps > 400)
+  );
+
+  if (isSevere) {
     consecutivePoorReadings++;
     consecutiveGoodReadings = 0;
 
-    // After 2 consecutive poor intervals: Degrade to Audio-Only mode (pause video, prioritize voice)
-    if (consecutivePoorReadings >= 2 && !isAdaptiveVideoPaused) {
+    // SUTAINED severe stress after Tier 2 was already active -> Pause video, prioritize voice
+    if (consecutivePoorReadings >= 5 && activeVideoTier >= 2 && !isAdaptiveVideoPaused) {
       applyAudioOnlyDegradedMode(true);
+    } else if (consecutivePoorReadings >= 4 && activeVideoTier < 2 && !isAdaptiveVideoPaused) {
+      // Apply low-bandwidth Tier 2 (160 kbps, 15 fps, scale 2.0)
+      applyLowBandwidthVideoTier(2);
+      // Notify remote peer to reduce outgoing video if our downlink is congested
+      if (inVideoLossRate > 0.15 && socket) {
+        socket.emit('media-quality-hint', { targetTier: 2, reason: 'high_inbound_loss' });
+      }
+    } else if (consecutivePoorReadings >= 3 && activeVideoTier < 1 && !isAdaptiveVideoPaused) {
+      // Apply moderate Tier 1 (350 kbps, 24 fps, scale 1.5)
+      applyLowBandwidthVideoTier(1);
     }
-  } else if (isModeratelyConstrained) {
+  } else if (isModerate) {
     consecutivePoorReadings++;
     consecutiveGoodReadings = 0;
 
-    if (consecutivePoorReadings >= 2 && activeVideoTier < 2 && !isAdaptiveVideoPaused) {
-      applyLowBandwidthVideoTier(2); // 64 kbps tier
+    if (consecutivePoorReadings >= 3 && activeVideoTier < 1 && !isAdaptiveVideoPaused) {
+      applyLowBandwidthVideoTier(1);
     }
   } else if (isHealthy) {
     consecutiveGoodReadings++;
     consecutivePoorReadings = 0;
 
-    // Hysteresis: Requires 3 consecutive good intervals (~7.5s) to recover
-    if (consecutiveGoodReadings >= 3) {
+    // Hysteresis & Progressive Restoration: Requires 4 consecutive healthy samples (10s) per tier step
+    if (consecutiveGoodReadings >= 4) {
+      consecutiveGoodReadings = 0; // Reset for next progressive step
+
       if (isAdaptiveVideoPaused) {
+        // Step 1: Recover from Audio-Only degraded mode to low-bandwidth Tier 2
         applyAudioOnlyDegradedMode(false);
-      } else if (activeVideoTier > 0) {
-        applyLowBandwidthVideoTier(0); // Restore normal tier
+        applyLowBandwidthVideoTier(2);
+      } else if (activeVideoTier === 2) {
+        // Step 2: Recover from Tier 2 to Tier 1
+        applyLowBandwidthVideoTier(1);
+      } else if (activeVideoTier === 1) {
+        // Step 3: Recover from Tier 1 to full unconstrained Tier 0
+        applyLowBandwidthVideoTier(0);
+        if (socket) {
+          socket.emit('media-quality-hint', { targetTier: 0, reason: 'network_recovered' });
+        }
       }
     }
   }
@@ -442,7 +508,6 @@ async function applyAudioOnlyDegradedMode(enable) {
     console.log('[Adaptive Quality] Entered Audio-Only degraded mode. Intelligible audio prioritized.');
   } else {
     isAdaptiveVideoPaused = false;
-    activeVideoTier = 0;
 
     if (banner) banner.classList.add('hidden');
 
@@ -453,8 +518,8 @@ async function applyAudioOnlyDegradedMode(enable) {
     }
 
     setCallState(ConnectionState.CONNECTED);
-    showToast('Connection restored — video resumed 📹', 'success', 2500);
-    console.log('[Adaptive Quality] Restored standard video quality.');
+    showToast('Connection improved — video resumed 📹', 'success', 2500);
+    console.log('[Adaptive Quality] Resumed video from Audio-Only mode.');
   }
 }
 
@@ -471,19 +536,24 @@ async function applyLowBandwidthVideoTier(tier) {
     if (!params.encodings || params.encodings.length === 0) return;
 
     if (tier === 2) {
-      // 64 kbps low-bandwidth tier: reduce video bitrate, scale resolution down, clamp fps
-      params.encodings[0].maxBitrate = 64000;
+      // Tier 2: Realistic low-bandwidth video (160 kbps, 15 fps, scale 2.0)
+      params.encodings[0].maxBitrate = 160000;
       params.encodings[0].scaleResolutionDownBy = 2.0;
       params.encodings[0].maxFramerate = 15;
+    } else if (tier === 1) {
+      // Tier 1: Moderate bandwidth constraint (350 kbps, 24 fps, scale 1.5)
+      params.encodings[0].maxBitrate = 350000;
+      params.encodings[0].scaleResolutionDownBy = 1.5;
+      params.encodings[0].maxFramerate = 24;
     } else {
-      // Restore normal tier
+      // Tier 0: Restore standard/unconstrained quality
       delete params.encodings[0].maxBitrate;
       params.encodings[0].scaleResolutionDownBy = 1.0;
       params.encodings[0].maxFramerate = 30;
     }
 
     await vidSender.setParameters(params);
-    console.debug(`[Adaptive Quality] Applied video tier ${tier}`);
+    console.log(`[Adaptive Quality] Applied video tier ${tier} (maxBitrate: ${params.encodings[0].maxBitrate || 'unlimited'} bps)`);
   } catch (err) {
     console.debug('[Adaptive Quality] Parameter adjustment skipped:', err.message);
   }
@@ -1373,13 +1443,34 @@ function revealStrangerVideo() {
   }, 400);
 }
 
+// Helper: Authoritative Visitor / Session Identification (per browser tab)
+function getOrCreateVisitorId() {
+  try {
+    let vid = sessionStorage.getItem('vybrant_visitor_id');
+    if (!vid) {
+      vid = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+      sessionStorage.setItem('vybrant_visitor_id', vid);
+    }
+    return vid;
+  } catch (e) {
+    if (!window.__vybrant_visitor_id) {
+      window.__vybrant_visitor_id = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+    }
+    return window.__vybrant_visitor_id;
+  }
+}
+
 // ==========================================
 // SOCKET.IO SIGNALING & MATCHMAKING
 // ==========================================
 function initSocketConnection() {
   if (socket) return;
 
+  const visitorId = getOrCreateVisitorId();
+
   socket = io({
+    auth: { visitorId },
+    query: { visitorId },
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: Infinity,
@@ -1388,8 +1479,21 @@ function initSocketConnection() {
     timeout: 20000
   });
 
+  // Cross-direction media quality hint from remote peer
+  socket.on('peer-media-quality-hint', (data) => {
+    console.log('[Adaptive Quality] Received downlink congestion hint from peer:', data);
+    if (data && typeof data.targetTier === 'number') {
+      const requestedTier = data.targetTier;
+      if (requestedTier >= 1 && requestedTier > activeVideoTier && !isAdaptiveVideoPaused) {
+        applyLowBandwidthVideoTier(requestedTier);
+      } else if (requestedTier === 0 && activeVideoTier > 0 && !isAdaptiveVideoPaused) {
+        applyLowBandwidthVideoTier(0);
+      }
+    }
+  });
+
   socket.on('connect', () => {
-    console.log('[Socket] Connected with ID:', socket.id);
+    console.log('[Socket] Connected with ID:', socket.id, 'Visitor ID:', visitorId);
     if (vipCode) {
       activateVipCode(vipCode, false);
     }
@@ -2788,58 +2892,138 @@ function initInAppBrowserNotice() {
 }
 
 // Window diagnostic helper for QA & connection state inspection
+// Comprehensive window diagnostic helper for WebRTC QA & connection inspection
 window.getVybrantConnectionDiagnostics = async function() {
-  let statsReport = null;
+  let statsReport = {
+    selectedPair: null,
+    outboundVideo: null,
+    inboundVideo: null,
+    outboundAudio: null,
+    inboundAudio: null,
+    remoteInboundVideo: null
+  };
 
   if (peerConnection && typeof peerConnection.getStats === 'function') {
     try {
       const stats = await peerConnection.getStats();
-      statsReport = {};
+      const candidates = new Map();
+
       stats.forEach(report => {
-        if (report.type === 'outbound-rtp') {
-          statsReport['outbound_' + report.kind] = {
-            packetsSent: report.packetsSent,
+        if (report.type === 'local-candidate' || report.type === 'remote-candidate') {
+          candidates.set(report.id, report);
+        }
+      });
+
+      stats.forEach(report => {
+        if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
+          const localCand = candidates.get(report.localCandidateId);
+          const remoteCand = candidates.get(report.remoteCandidateId);
+
+          statsReport.selectedPair = {
+            state: report.state,
+            nominated: Boolean(report.nominated),
+            currentRoundTripTimeMs: report.currentRoundTripTime != null ? Math.round(report.currentRoundTripTime * 1000) : null,
+            availableOutgoingBitrateKbps: report.availableOutgoingBitrate ? Math.round(report.availableOutgoingBitrate / 1000) : null,
+            availableIncomingBitrateKbps: report.availableIncomingBitrate ? Math.round(report.availableIncomingBitrate / 1000) : null,
             bytesSent: report.bytesSent,
-            targetBitrate: report.targetBitrate
+            bytesReceived: report.bytesReceived,
+            localCandidateType: localCand?.candidateType || 'unknown',
+            localProtocol: localCand?.protocol || 'unknown',
+            remoteCandidateType: remoteCand?.candidateType || 'unknown',
+            remoteProtocol: remoteCand?.protocol || 'unknown',
+            isRelay: (localCand?.candidateType === 'relay' || remoteCand?.candidateType === 'relay')
           };
-        } else if (report.type === 'inbound-rtp') {
-          statsReport['inbound_' + report.kind] = {
+        } else if (report.type === 'outbound-rtp' && report.kind === 'video') {
+          statsReport.outboundVideo = {
+            bytesSent: report.bytesSent,
+            packetsSent: report.packetsSent,
+            framesEncoded: report.framesEncoded,
+            framesPerSecond: report.framesPerSecond,
+            targetBitrateKbps: report.targetBitrate ? Math.round(report.targetBitrate / 1000) : null,
+            qualityLimitationReason: report.qualityLimitationReason || 'none',
+            retransmittedPacketsSent: report.retransmittedPacketsSent || 0
+          };
+        } else if (report.type === 'inbound-rtp' && report.kind === 'video') {
+          statsReport.inboundVideo = {
+            bytesReceived: report.bytesReceived,
             packetsReceived: report.packetsReceived,
             packetsLost: report.packetsLost,
-            jitter: report.jitter,
-            bytesReceived: report.bytesReceived
+            framesDecoded: report.framesDecoded,
+            framesDropped: report.framesDropped,
+            jitterMs: report.jitter != null ? Math.round(report.jitter * 1000) : 0
           };
-        } else if (report.type === 'candidate-pair' && (report.state === 'succeeded' || report.nominated)) {
-          statsReport.selectedPair = {
-            rtt: report.currentRoundTripTime,
+        } else if (report.type === 'outbound-rtp' && report.kind === 'audio') {
+          statsReport.outboundAudio = {
             bytesSent: report.bytesSent,
-            bytesReceived: report.bytesReceived
+            packetsSent: report.packetsSent,
+            targetBitrateKbps: report.targetBitrate ? Math.round(report.targetBitrate / 1000) : null
+          };
+        } else if (report.type === 'inbound-rtp' && report.kind === 'audio') {
+          statsReport.inboundAudio = {
+            bytesReceived: report.bytesReceived,
+            packetsReceived: report.packetsReceived,
+            packetsLost: report.packetsLost,
+            jitterMs: report.jitter != null ? Math.round(report.jitter * 1000) : 0
+          };
+        } else if (report.type === 'remote-inbound-rtp' && report.kind === 'video') {
+          statsReport.remoteInboundVideo = {
+            packetsLost: report.packetsLost,
+            fractionLost: report.fractionLost,
+            roundTripTimeMs: report.roundTripTime != null ? Math.round(report.roundTripTime * 1000) : null
           };
         }
       });
     } catch (e) {
-      statsReport = { error: e.message };
+      statsReport.error = e.message;
     }
   }
 
   return {
-    state: currentCallState,
+    timestamp: new Date().toISOString(),
+    visitorId: getOrCreateVisitorId(),
     sessionId: currentSessionId,
     partnerId: currentPartnerId,
-    iceRestartAttempts: iceRestartCount,
-    isAdaptiveVideoPaused,
-    activeVideoTier,
-    isAudioMuted,
-    isVideoDisabled,
-    isAudioOnly,
-    isInstagramBrowser,
-    isRemoteAudioBlocked,
+    state: currentCallState,
     peerConnectionState: peerConnection?.connectionState || 'none',
     iceConnectionState: peerConnection?.iceConnectionState || 'none',
     signalingState: peerConnection?.signalingState || 'none',
     socketConnected: Boolean(socket && socket.connected),
+    socketId: socket?.id || null,
+    iceRestartAttempts: iceRestartCount,
+    quality: {
+      activeVideoTier,
+      isAdaptiveVideoPaused,
+      isVideoDisabled,
+      isAudioMuted,
+      isAudioOnly,
+      consecutivePoorReadings,
+      consecutiveGoodReadings
+    },
+    browser: {
+      isInstagramBrowser,
+      isRemoteAudioBlocked
+    },
     stats: statsReport
   };
+};
+
+window.getVybrantDiagnosticSummary = async function() {
+  const d = await window.getVybrantConnectionDiagnostics();
+  const pair = d.stats.selectedPair;
+  const outVid = d.stats.outboundVideo;
+  const inVid = d.stats.inboundVideo;
+
+  return [
+    `=== VYBRANT WEBRTC CONNECTION DIAGNOSTICS ===`,
+    `Time: ${d.timestamp} | Visitor: ${d.visitorId} | Session: ${d.sessionId || 'none'}`,
+    `Call State: ${d.state} | PC: ${d.peerConnectionState} | ICE: ${d.iceConnectionState}`,
+    `Quality Tier: ${d.quality.activeVideoTier} (Paused: ${d.quality.isAdaptiveVideoPaused}) | Camera Off: ${d.quality.isVideoDisabled}`,
+    `Transport: ${pair ? `${pair.localCandidateType} -> ${pair.remoteCandidateType} (${pair.localProtocol}, Relay: ${pair.isRelay})` : 'none'}`,
+    `RTT: ${pair?.currentRoundTripTimeMs ?? 'N/A'} ms | BWE Out: ${pair?.availableOutgoingBitrateKbps ?? 'N/A'} kbps`,
+    `Outbound Video: ${outVid ? `${outVid.framesPerSecond || 0} fps, LimReason: ${outVid.qualityLimitationReason}, Retrans: ${outVid.retransmittedPacketsSent}` : 'none'}`,
+    `Inbound Video: ${inVid ? `Lost: ${inVid.packetsLost}, Jitter: ${inVid.jitterMs} ms, Dropped Frames: ${inVid.framesDropped}` : 'none'}`,
+    `===============================================`
+  ].join('\n');
 };
 
 // ==========================================
