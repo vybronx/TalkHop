@@ -377,16 +377,19 @@ function checkVipStatus(socketId, code) {
  * Remove a socket from the waiting queue safely and clear fallback timer
  */
 function removeFromQueue(socketId) {
-  const index = waitingQueue.findIndex(item => item.socketId === socketId);
-  if (index !== -1) {
-    const item = waitingQueue[index];
-    if (item.fallbackTimeout) {
-      clearTimeout(item.fallbackTimeout);
+  const visitorId = socketVisitors.get(socketId);
+  let removed = false;
+  for (let i = waitingQueue.length - 1; i >= 0; i--) {
+    const item = waitingQueue[i];
+    if (item.socketId === socketId || (visitorId && item.visitorId === visitorId)) {
+      if (item.fallbackTimeout) {
+        clearTimeout(item.fallbackTimeout);
+      }
+      waitingQueue.splice(i, 1);
+      removed = true;
     }
-    waitingQueue.splice(index, 1);
-    return true;
   }
-  return false;
+  return removed;
 }
 
 /**
@@ -633,6 +636,7 @@ function matchUser(socket, incomingPreferences = null, mode = 'video') {
 
   const userEntry = {
     socketId,
+    visitorId: socketVisitors.get(socketId),
     preferences,
     isVip,
     mode: desiredMode,
@@ -1496,6 +1500,7 @@ io.on('connection', (socket) => {
     }
 
     userStates.delete(socket.id);
+    socketVisitors.delete(socket.id);
 
     // If this socket was the authoritative socket for the visitor, remove presence
     if (isCurrentActiveSocketForVisitor) {
@@ -1507,6 +1512,23 @@ io.on('connection', (socket) => {
     }
   });
 });
+
+// Periodic presence reconciliation (removes ghost / disconnected sockets and ensures exact visitor count)
+setInterval(() => {
+  let changed = false;
+  for (const [vid, record] of activeVisitors.entries()) {
+    const s = io.sockets.sockets.get(record.socketId);
+    if (!s || !s.connected) {
+      activeVisitors.delete(vid);
+      socketVisitors.delete(record.socketId);
+      userStates.delete(record.socketId);
+      changed = true;
+    }
+  }
+  if (changed) {
+    broadcastOnlineCount();
+  }
+}, 15000);
 
 // Dynamic STUN/TURN ICE Server Configuration
 app.get('/api/rtc-config', (req, res) => {

@@ -1681,20 +1681,25 @@ function revealStrangerVideo() {
   }, 400);
 }
 
-// Helper: Authoritative Visitor / Session Identification (per browser tab)
+// Helper: Authoritative Visitor / Session Identification (persisted per device/browser)
 function getOrCreateVisitorId() {
   try {
-    let vid = sessionStorage.getItem('vybrant_visitor_id');
+    let vid = localStorage.getItem('talkhop_visitor_id');
+    if (!vid) {
+      vid = sessionStorage.getItem('talkhop_visitor_id') || sessionStorage.getItem('vybrant_visitor_id');
+    }
     if (!vid) {
       vid = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
-      sessionStorage.setItem('vybrant_visitor_id', vid);
     }
+    localStorage.setItem('talkhop_visitor_id', vid);
+    sessionStorage.setItem('talkhop_visitor_id', vid);
+    sessionStorage.setItem('vybrant_visitor_id', vid);
     return vid;
   } catch (e) {
-    if (!window.__vybrant_visitor_id) {
-      window.__vybrant_visitor_id = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+    if (!window.__talkhop_visitor_id) {
+      window.__talkhop_visitor_id = 'vis_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
     }
-    return window.__vybrant_visitor_id;
+    return window.__talkhop_visitor_id;
   }
 }
 
@@ -1841,6 +1846,7 @@ function initSocketConnection() {
   // Handle Stranger requested Video Call switch
   socket.on('partner-requested-video-switch', (data) => {
     console.log('[Mode Switch] Stranger requested video switch:', data);
+    addVideoCallRequestInChat();
     const modal = document.getElementById('videoSwitchModal');
     if (modal) {
       modal.classList.remove('hidden');
@@ -1851,6 +1857,7 @@ function initSocketConnection() {
   // Handle Video Switch Accepted by Stranger
   socket.on('video-switch-accepted', async (data) => {
     console.log('[Mode Switch] Video switch accepted:', data);
+    addSystemChatMessage('🎉 Stranger accepted your Video Call request! Switching to video mode now...');
     selectAppMode('video');
     showToast('Stranger accepted video call! Initializing camera... 📹', 'success', 3000);
     try {
@@ -1871,6 +1878,7 @@ function initSocketConnection() {
   // Handle Video Switch Declined by Stranger
   socket.on('video-switch-declined', (data) => {
     console.log('[Mode Switch] Video switch declined:', data);
+    addSystemChatMessage('Stranger declined the video call invitation. Staying in text chat.');
     showToast(data.message || 'Stranger declined to switch to video.', 'info', 3000);
   });
 
@@ -2392,6 +2400,24 @@ function monitorRemoteAudio(stream) {
   }
 }
 
+// Dynamic Toggle Match Button Style Sync (Start / Stop)
+function updateToggleMatchButton(searching) {
+  const matchBtn = document.getElementById('toggleMatchBtn');
+  const matchText = document.getElementById('toggleMatchText');
+  const matchIcon = document.getElementById('toggleMatchIcon');
+  if (!matchBtn) return;
+
+  if (searching) {
+    if (matchText) matchText.textContent = 'Stop';
+    if (matchIcon) matchIcon.textContent = '⏹';
+    matchBtn.className = 'flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md shadow-rose-500/20 cursor-pointer min-w-0';
+  } else {
+    if (matchText) matchText.textContent = 'Start';
+    if (matchIcon) matchIcon.textContent = '▶';
+    matchBtn.className = 'flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs sm:text-sm flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md shadow-emerald-500/20 cursor-pointer min-w-0';
+  }
+}
+
 // ==========================================
 // MATCHMAKING ACTIONS (START / SKIP / REPORT)
 // ==========================================
@@ -2402,10 +2428,7 @@ function startSearching() {
     return;
   }
   isSearching = true;
-  const matchText = document.getElementById('toggleMatchText');
-  const matchIcon = document.getElementById('toggleMatchIcon');
-  if (matchText) matchText.textContent = 'Stop';
-  if (matchIcon) matchIcon.textContent = '⏹';
+  updateToggleMatchButton(true);
 
   socket.emit('start-search', { mode: currentAppMode, preferences: userPreferences });
   setSearchingUI(true);
@@ -2414,11 +2437,18 @@ function startSearching() {
 function stopSearching() {
   if (!socket) return;
   isSearching = false;
-  const matchText = document.getElementById('toggleMatchText');
-  const matchIcon = document.getElementById('toggleMatchIcon');
-  if (matchText) matchText.textContent = 'Start';
-  if (matchIcon) matchIcon.textContent = '▶';
+  updateToggleMatchButton(false);
   socket.emit('stop-search');
+  setSearchingUI(false);
+
+  const chatStatusBanner = document.getElementById('chatStatusBanner');
+  const chatStatusBannerText = document.getElementById('chatStatusBannerText');
+  const chatStatusBannerIcon = document.getElementById('chatStatusBannerIcon');
+  if (chatStatusBanner && chatStatusBannerText) {
+    chatStatusBanner.classList.remove('hidden');
+    if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '⚡';
+    chatStatusBannerText.textContent = 'Ready to chat. Click Start to find a stranger! 🚀';
+  }
 }
 
 function handleSkip(isReport = false) {
@@ -2427,6 +2457,8 @@ function handleSkip(isReport = false) {
   lastSkipTime = now;
 
   consecutiveSkips++;
+  isSearching = true;
+  updateToggleMatchButton(true);
   teardownPeerConnection();
   stopNsfwScanner();
   setSearchingUI(true);
@@ -2457,6 +2489,7 @@ function setSearchingUI(searching) {
   const subtitleTextMode = document.getElementById('strangerSubtitleTextMode');
   const chatStatusBanner = document.getElementById('chatStatusBanner');
   const chatStatusBannerText = document.getElementById('chatStatusBannerText');
+  const chatStatusBannerIcon = document.getElementById('chatStatusBannerIcon');
 
   if (searching) {
     if (radarOverlay) radarOverlay.classList.remove('hidden');
@@ -2468,16 +2501,25 @@ function setSearchingUI(searching) {
     if (subtitleTextMode) subtitleTextMode.textContent = 'Looking for someone awesome around the world...';
     if (chatStatusBanner) {
       chatStatusBanner.classList.remove('hidden');
+      if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '🔍';
       if (chatStatusBannerText) chatStatusBannerText.textContent = 'Looking for a stranger for text chat...';
     }
   } else {
     if (radarOverlay) radarOverlay.classList.add('hidden');
     if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-    if (badgeText) badgeText.textContent = 'Stranger';
+    if (badgeText) badgeText.textContent = currentPartnerId ? 'Stranger' : 'Ready';
     if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-emerald-500';
-    if (badgeTextMode) badgeTextMode.textContent = 'Stranger';
-    if (subtitleTextMode) subtitleTextMode.textContent = (currentAppMode === 'text') ? 'Connected anonymously • No media shared' : 'Connected live • WebRTC P2P';
-    if (chatStatusBanner) chatStatusBanner.classList.add('hidden');
+    if (badgeTextMode) badgeTextMode.textContent = currentPartnerId ? 'Stranger' : 'Ready';
+    if (subtitleTextMode) subtitleTextMode.textContent = currentPartnerId ? ((currentAppMode === 'text') ? 'Connected anonymously • No media shared' : 'Connected live • WebRTC P2P') : 'Click Start to connect with someone new';
+    if (currentPartnerId) {
+      if (chatStatusBanner) chatStatusBanner.classList.add('hidden');
+    } else {
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '⚡';
+        if (chatStatusBannerText) chatStatusBannerText.textContent = 'Ready to chat. Click Start to find a stranger! 🚀';
+      }
+    }
   }
 }
 
@@ -2627,6 +2669,75 @@ function addSystemChatMessage(text) {
   `;
   chatMessages.appendChild(systemMsg);
   handleIncomingChatScroll(false);
+}
+
+// Interactive Video Call Request prompt inside Chat Box
+function addVideoCallRequestInChat() {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return;
+
+  const existing = document.getElementById('inlineVideoRequestCard');
+  if (existing) existing.remove();
+
+  const card = document.createElement('div');
+  card.id = 'inlineVideoRequestCard';
+  card.className = 'w-full my-3 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-pink-500/15 via-purple-500/15 to-indigo-500/10 border-2 border-pink-500/40 dark:border-pink-500/30 text-center shadow-lg transition-all';
+  card.innerHTML = `
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <span class="text-2xl animate-pulse">📹</span>
+      <span class="font-display font-extrabold text-sm sm:text-base text-zinc-950 dark:text-white">Stranger requested a Video Call!</span>
+    </div>
+    <p class="text-xs text-zinc-600 dark:text-slate-300 mb-3 font-medium">Would you like to turn on your camera and switch to a live face-to-face video call?</p>
+    <div class="flex items-center justify-center gap-2.5">
+      <button id="inlineAcceptVideoCallBtn" type="button" class="py-2 px-4 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs shadow-md shadow-pink-500/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5">
+        <span>📹 Accept Call</span>
+      </button>
+      <button id="inlineDeclineVideoCallBtn" type="button" class="py-2 px-3.5 rounded-xl bg-zinc-200 dark:bg-white/10 hover:bg-zinc-300 dark:hover:bg-white/20 text-zinc-700 dark:text-slate-200 font-semibold text-xs active:scale-95 transition-all cursor-pointer">
+        <span>Decline ✕</span>
+      </button>
+    </div>
+  `;
+  chatMessages.appendChild(card);
+  handleIncomingChatScroll(true);
+
+  const acceptBtn = card.querySelector('#inlineAcceptVideoCallBtn');
+  const declineBtn = card.querySelector('#inlineDeclineVideoCallBtn');
+
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', async () => {
+      card.innerHTML = `
+        <div class="py-1 flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+          <span>✅</span>
+          <span>Video Call accepted! Initializing camera...</span>
+        </div>
+      `;
+      const modal = document.getElementById('videoSwitchModal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      socket.emit('accept-video-switch');
+      selectAppMode('video');
+      showToast('Video Call accepted! Initializing camera... 📹', 'success', 2500);
+      try {
+        await initLocalMedia();
+      } catch (err) {
+        console.warn('[Video Switch] Camera init error:', err);
+      }
+    });
+  }
+
+  if (declineBtn) {
+    declineBtn.addEventListener('click', () => {
+      card.innerHTML = `
+        <div class="py-1 flex items-center justify-center gap-2 text-zinc-500 dark:text-slate-400 font-medium text-xs">
+          <span>✕</span>
+          <span>You declined the video call request. Remaining in text chat.</span>
+        </div>
+      `;
+      const modal = document.getElementById('videoSwitchModal');
+      if (modal) { modal.classList.add('hidden'); modal.style.display = 'none'; }
+      socket.emit('decline-video-switch');
+      showToast('Declined video call. Remaining in text chat 💬', 'info', 2500);
+    });
+  }
 }
 
 function clearChatMessages() {
@@ -3549,14 +3660,16 @@ function bindUiEventListeners() {
 
   const handleStartChatMode = () => {
     hideModeSelectionModal();
-    selectAppMode('text', true);
-    showToast('Random Chat mode active 💬 Searching for stranger...', 'info', 2500);
+    selectAppMode('text', false);
+    updateToggleMatchButton(false);
+    showToast('Random Chat mode active 💬 Click Start to find a stranger!', 'info', 2500);
   };
 
   const handleStartVideoMode = () => {
     hideModeSelectionModal();
-    selectAppMode('video', true);
-    showToast('Video Call mode active 📹 Connecting camera...', 'info', 2500);
+    selectAppMode('video', false);
+    updateToggleMatchButton(false);
+    showToast('Video Call mode active 📹 Click Start to begin!', 'info', 2500);
   };
 
   if (startChatBtn) startChatBtn.addEventListener('click', handleStartChatMode);
@@ -3595,6 +3708,7 @@ function bindUiEventListeners() {
     if (currentAppMode === 'text') {
       if (currentPartnerId) {
         showToast('Video Call request sent to stranger... 📹', 'info', 3000);
+        addSystemChatMessage('📹 You sent a Video Call invitation to stranger... Waiting for response.');
         socket.emit('request-video-switch');
       } else {
         selectAppMode('video');
