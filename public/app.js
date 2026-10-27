@@ -3157,6 +3157,8 @@ function bindUiEventListeners() {
   }
   if (closeRedeem && redeemModal) {
     closeRedeem.addEventListener('click', () => redeemModal.classList.add('hidden'));
+  }
+
   document.querySelectorAll('input[name="vipPlan"]').forEach(radio => {
     radio.addEventListener('change', () => {
       document.querySelectorAll('.vip-plan-card').forEach(card => {
