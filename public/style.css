@@ -1,11 +1,11 @@
-/* Vybrant ⚡ High-Fidelity Light-First & Dark-Adaptive Responsive Styling */
+/* TalkHop ⚡ Modern Responsive Styling — Random Chat & Live Video Call */
 
 :root {
   /* Light Theme (Default) Tokens */
   --bg-app: #f4f4f5;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-header: rgba(255, 255, 255, 0.92);
+  --bg-header: rgba(255, 255, 255, 0.95);
   --bg-nav: rgba(250, 250, 250, 0.94);
   --bg-chat-header: rgba(244, 244, 245, 0.85);
   --bg-chat-input: #f4f4f5;
@@ -19,9 +19,11 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   --shadow-floating: 0 12px 30px -4px rgba(0, 0, 0, 0.15);
-  --video-bg: #141722;
-  --glow-ambient: 0.22;
+  --video-bg: #11131d;
+  --glow-ambient: 0.25;
   --accent-purple: #7c3aed;
+  --accent-pink: #ec4899;
+  --accent-orange: #f97316;
   --accent-cyan: #06b6d4;
   --accent-gold: #f59e0b;
 }
@@ -31,7 +33,7 @@ html.dark {
   --bg-app: #07080d;
   --bg-surface: #09090b;
   --bg-card: #0e111d;
-  --bg-header: rgba(9, 11, 18, 0.88);
+  --bg-header: rgba(9, 11, 18, 0.92);
   --bg-nav: rgba(11, 14, 23, 0.92);
   --bg-chat-header: rgba(9, 11, 18, 0.75);
   --bg-chat-input: #141724;
@@ -48,11 +50,13 @@ html.dark {
   --video-bg: #0d0f17;
   --glow-ambient: 0.85;
   --accent-purple: #8b5cf6;
+  --accent-pink: #f472b6;
+  --accent-orange: #fb923c;
   --accent-cyan: #22d3ee;
   --accent-gold: #fbbf24;
 }
 
-/* Global Transitions for Seamless Theme Switching */
+/* Global Transitions for Theme Switching */
 body, header, nav, main, aside, section, div, button, input, select {
   transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
 }
@@ -120,7 +124,7 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   box-shadow: 0 0 18px rgba(244, 63, 94, 0.45) !important;
 }
 
-/* VIP Gold & Neon Accents */
+/* VIP Gold & Accents */
 .gold-glow {
   box-shadow: 0 0 25px -4px rgba(245, 158, 11, 0.4);
 }
@@ -131,36 +135,6 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-}
-
-.vip-border-glow {
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
-}
-
-/* Glow and gradient borders */
-.glow-purple {
-  box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.35);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.35);
-}
-
-/* Subtle pulse for active connection indicator */
-@keyframes soft-pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(0.96);
-  }
-}
-
-.animate-soft-pulse {
-  animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Chat bubble entrance animation */
@@ -179,18 +153,6 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   animation: bubble-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* QR Code Pulse */
-@keyframes qr-scan {
-  0% { top: 0%; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-
-.animate-qr-scan {
-  animation: qr-scan 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
 /* Audio-Only Fallback Placeholder */
 #audioOnlyPlaceholder {
   background: radial-gradient(circle at center, rgba(30, 27, 75, 0.95) 0%, rgba(13, 15, 23, 0.98) 100%);
@@ -204,64 +166,325 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
   max-width: 100%;
 }
 
-/* Typography and Icon Clamping */
-.clamp-title {
-  font-size: clamp(1rem, 2.5vw, 1.35rem);
+/* ========================================================== */
+/* SHARED TOP TOOLBAR (Selector on Left, Filters on Right)    */
+/* ========================================================== */
+#modeSwitchBar.shared-top-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  background-color: var(--bg-nav) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  transition: all 0.2s ease-in-out;
 }
 
-.clamp-sub {
-  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+#modeSwitchBar .mode-selector-wrap {
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+#modeSwitchBar .shared-filters-wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-shrink: 1 !important;
+  min-width: 0 !important;
+}
+
+#modeSwitchBar #filterToolbar {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  width: auto !important;
+}
+
+#modeSwitchBar .filter-pill-inner {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+body[data-mode="text"] #modeSwitchSlider {
+  left: 4px;
+  background: linear-gradient(to right, #7c3aed, #4f46e5);
+}
+
+body[data-mode="video"] #modeSwitchSlider {
+  left: calc(50% + 0px);
+  background: linear-gradient(to right, #ec4899, #f97316);
 }
 
 /* ========================================================== */
-/* 2. DESKTOP / PC TWO-COLUMN LAYOUT (min-width: 1024px)       */
+/* BASE MODE EXCLUSIVITY RULES (Prevents dual rendering)      */
+/* ========================================================== */
+body[data-mode="text"] #videoModeView,
+body:not([data-mode="video"]) #videoModeView,
+#videoModeView.hidden {
+  display: none !important;
+}
+
+body[data-mode="video"] #chatModeView,
+#chatModeView.hidden {
+  display: none !important;
+}
+
+body[data-mode="text"] #chatModeView,
+body:not([data-mode="video"]) #chatModeView {
+  display: flex !important;
+}
+
+body[data-mode="video"] #videoModeView {
+  display: flex !important;
+}
+
+/* ========================================================== */
+/* GLOBAL VIEWPORT FOUNDATION (Zero wasted space, dynamic dvh)*/
+/* ========================================================== */
+html, body {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  position: relative;
+}
+
+header {
+  flex-shrink: 0 !important;
+}
+
+#modeSwitchBar {
+  flex-shrink: 0 !important;
+}
+
+#inAppBrowserNotice {
+  flex-shrink: 0 !important;
+}
+
+/* MAIN VIEWPORT: Flex child that takes 100% of remaining vertical space */
+main.vybrant-main {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+}
+
+/* ========================================================== */
+/* 2. DESKTOP / PC LAYOUT (min-width: 1024px)                  */
 /* ========================================================== */
 @media (min-width: 1024px) {
-  /* Main Container Split: Two balanced columns stretching to available viewport height */
   main.vybrant-main {
+    padding: 0.75rem 1.25rem 0.875rem 1.25rem !important;
+  }
+
+  /* ---------------------------------------------------- */
+  /* CHAT MODE (Desktop: Full Height Conversation Card)   */
+  /* ---------------------------------------------------- */
+  body[data-mode="text"] #chatModeView,
+  body:not([data-mode="video"]) #chatModeView {
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
     gap: 1.25rem !important;
-    padding: 1rem 1.5rem 1.25rem 1.5rem !important;
-    height: calc(100vh - 72px) !important;
-    height: calc(100dvh - 72px) !important;
-    max-height: calc(100vh - 72px) !important;
-    max-height: calc(100dvh - 72px) !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    max-width: 1560px !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Left Column: Stranger and You Video Feeds (~52% width) stretching full height */
-  #videoSection {
-    width: 52% !important;
-    flex: 1 1 52% !important;
-    min-width: 440px !important;
-    max-width: 800px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    height: calc(100vh - 108px) !important;
-    height: calc(100dvh - 108px) !important;
-    max-height: calc(100vh - 108px) !important;
-    max-height: calc(100dvh - 108px) !important;
-    min-height: 0 !important;
-  }
-
-  /* Video Grid: Two-row CSS Grid evenly dividing available vertical space */
-  #videoGridContainer {
-    display: grid !important;
-    grid-template-rows: 1fr 1fr !important;
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
     height: 100% !important;
     width: 100% !important;
     min-height: 0 !important;
+    min-width: 0 !important;
+    flex: 1 1 0% !important;
+    overflow: hidden !important;
   }
 
-  /* Stranger and You Panels: Taller usable height, equal halves, no clipping */
+  /* Main Conversation Card: fills 100% vertical space */
+  #chatModeView > section {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border-radius: 1.5rem !important;
+    box-shadow: var(--shadow-card) !important;
+  }
+
+  /* Secondary Aside on Desktop: scrollable sidebar */
+  #chatModeView > aside {
+    width: 340px !important;
+    max-width: 360px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #controlsSlotText {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #controlsSlotText #actionControlsBar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #controlsSlotText #actionControlsBar button {
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+
+  #controlsSlotText #toggleMatchBtn {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    padding: 0.65rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  #controlsSlotText #skipBtn {
+    flex: 1.15 1 0% !important;
+    min-width: 0 !important;
+    padding: 0.65rem 0.65rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  #controlsSlotText #reportBtn {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    padding: 0.65rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  #chatAsideSlotText {
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  #chatAsideSlotText #chatAside {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  #chatAsideSlotText #chatMessages {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  #chatAsideSlotText #chatForm {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+  }
+
+  /* ---------------------------------------------------- */
+  /* VIDEO MODE (Desktop: 2 Full-Height Viewports Side-by-Side) */
+  /* ---------------------------------------------------- */
+  body[data-mode="video"] #videoModeView {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    flex: 1 1 0% !important;
+    overflow: hidden !important;
+  }
+
+  /* Dedicated Action Row beneath both video viewports */
+  #videoActionRow {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+    padding: 0.25rem 0 0.5rem 0 !important;
+  }
+
+  #videoActionRow #controlsSlotVideo {
+    width: 100% !important;
+    max-width: 36rem !important;
+    margin: 0 auto !important;
+  }
+
+  #videoActionRow #actionControlsBar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  /* Primary Side-by-Side Grid: Left Stranger, Right You (Full Height) */
+  #videoGridContainer {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 1fr !important;
+    gap: 1.25rem !important;
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    flex: 1 1 0% !important;
+  }
+
+  /* Stranger and You Panels: Equal halves, side-by-side stretching vertically */
   #strangerVideoWrapper, #localVideoWrapper {
     height: 100% !important;
     width: 100% !important;
@@ -279,22 +502,22 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
     object-fit: cover !important;
   }
 
-  /* Local Control Buttons: Compact circular toolbar at bottom-center of You feed */
+  /* Local Control Buttons on Desktop Video Feed */
   #localControlsBar {
     position: absolute !important;
-    bottom: 0.875rem !important;
+    bottom: 1rem !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     z-index: 25 !important;
     display: flex !important;
     align-items: center !important;
     gap: 0.625rem !important;
-    background: rgba(0, 0, 0, 0.45) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
-    padding: 0.25rem 0.5rem !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    padding: 0.35rem 0.65rem !important;
     border-radius: 9999px !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
   }
 
   #localControlsBar button {
@@ -304,75 +527,6 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
 
   #localControlsBar button:hover {
     transform: scale(1.08) !important;
-  }
-
-  /* Right Column: Filter toolbar, Ephemeral Chat, Action controls */
-  #rightColumn {
-    width: 48% !important;
-    flex: 1 1 48% !important;
-    min-width: 400px !important;
-    max-width: 760px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important;
-    height: calc(100vh - 108px) !important;
-    height: calc(100dvh - 108px) !important;
-    max-height: calc(100vh - 108px) !important;
-    max-height: calc(100dvh - 108px) !important;
-    min-height: 0 !important;
-  }
-
-  /* 1. Filter Toolbar aligned with Chat card width */
-  #filterToolbar {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
-    border-radius: 1.25rem !important;
-    box-shadow: var(--shadow-sm) !important;
-    overflow: hidden !important;
-  }
-
-  /* 2. Chat Card with controlled height & internal scroll */
-  #chatAside {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    height: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border-radius: 1.5rem !important;
-    overflow: hidden !important;
-    box-shadow: var(--shadow-card) !important;
-  }
-
-  #chatMessages {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    overscroll-behavior: contain !important;
-  }
-
-  #chatForm {
-    flex-shrink: 0 !important;
-    margin-top: auto !important;
-  }
-
-  /* 3. Action Controls Row below Chat */
-  #actionControlsBar {
-    flex-shrink: 0 !important;
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0.75rem !important;
-  }
-
-  #toggleMatchBtn, #skipBtn, #reportBtn {
-    min-height: 44px !important;
-    max-height: 48px !important;
   }
 }
 
@@ -385,271 +539,380 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Main Container: Natural vertical flow */
+  /* Main Container: Full viewport height, no unwanted scrolling */
   main.vybrant-main {
+    padding: 0.375rem 0.5rem 0.5rem 0.5rem !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Shared Top Toolbar on Mobile: compact single row, zero page scroll */
+  #modeSwitchBar.shared-top-toolbar {
+    padding: 0.35rem 0.5rem !important;
+    gap: 0.35rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #modeSwitchBar .mode-selector-wrap {
+    flex-shrink: 0 !important;
+  }
+
+  #modeSwitchBar .mode-selector-wrap [role="tablist"] {
+    width: 120px !important;
+    min-width: 115px !important;
+    padding: 2px !important;
+  }
+
+  #modeSwitchBar #switchModeChatBtn,
+  #modeSwitchBar #switchModeVideoBtn {
+    padding: 0.2rem 0.25rem !important;
+    font-size: 0.6875rem !important;
+    gap: 0.15rem !important;
+  }
+
+  #modeSwitchBar .shared-filters-wrap {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  #modeSwitchBar .filter-label-wrap {
+    display: none !important;
+  }
+
+  #modeSwitchBar #filterToolbar {
+    gap: 0.2rem !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  #modeSwitchBar .custom-dropdown-trigger {
+    padding: 0.2rem 0.35rem !important;
+    font-size: 0.6875rem !important;
+    gap: 0.2rem !important;
+    max-width: 115px !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #modeSwitchBar #customGenderLabel {
+    max-width: 58px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  #modeSwitchBar #customCountryLabel {
+    max-width: 65px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  #modeSwitchBar .custom-dropdown-trigger svg {
+    width: 0.625rem !important;
+    height: 0.625rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ---------------------------------------------------- */
+  /* CHAT MODE (Mobile: Full Height Conversation Card)    */
+  /* ---------------------------------------------------- */
+  body[data-mode="text"] #chatModeView,
+  body:not([data-mode="video"]) #chatModeView {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.75rem !important;
-    padding: 0.625rem 0.75rem 1.25rem 0.75rem !important;
-    min-height: calc(100vh - 90px) !important;
-    min-height: calc(100dvh - 90px) !important;
+    gap: 0.375rem !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    flex: 1 1 0% !important;
+    overflow: hidden !important;
+  }
+
+  /* Secondary aside on mobile: compact bar placed above chat card */
+  #chatModeView > aside {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    order: -1 !important;
+    box-sizing: border-box !important;
+  }
+
+  #chatModeView #filterSlotText,
+  #chatModeView #controlsSlotText {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #controlsSlotText #actionControlsBar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+    box-sizing: border-box !important;
+  }
+
+  #controlsSlotText #actionControlsBar button {
+    padding: 0.45rem 0.35rem !important;
+    font-size: 0.75rem !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+
+  #controlsSlotText #toggleMatchBtn { flex: 1 1 0% !important; }
+  #controlsSlotText #skipBtn { flex: 1.15 1 0% !important; }
+  #controlsSlotText #reportBtn { flex: 1 1 0% !important; }
+
+  /* Compact Mode Switch Invite Card on Mobile */
+  #chatModeView #chatVideoInviteCard {
+    padding: 0.35rem 0.75rem !important;
+    border-radius: 0.875rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  #chatModeView #chatVideoInviteCard .video-invite-header {
+    margin-bottom: 0 !important;
+  }
+
+  #chatModeView #chatVideoInviteCard .video-invite-icon {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.875rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  #chatModeView #chatVideoInviteCard .video-invite-desc,
+  #chatModeView #chatVideoInviteCard .video-invite-body {
+    display: none !important;
+  }
+
+  #chatModeView #chatVideoInviteCard #requestVideoSwitchBtn {
+    width: auto !important;
+    padding: 0.3rem 0.75rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.625rem !important;
+    margin: 0 !important;
+  }
+
+  /* Compact Safety Bar on Mobile */
+  #chatModeView #chatSafetyTipsCard {
+    padding: 0.35rem 0.75rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.6875rem !important;
+    margin: 0 !important;
+  }
+
+  #chatModeView #chatSafetyTipsCard .safety-tips-header {
+    margin-bottom: 0 !important;
+    font-size: 0.6875rem !important;
+  }
+
+  #chatModeView #chatSafetyTipsCard .safety-tips-details {
+    display: none !important;
+  }
+
+  /* Conversation card on mobile: occupies all remaining vertical space */
+  #chatModeView > section {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border-radius: 1.25rem !important;
+    box-shadow: var(--shadow-card) !important;
+  }
+
+  #chatAsideSlotText {
+    flex: 1 1 0% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  #chatAsideSlotText #chatAside {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    border-radius: 1.25rem !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important;
+    position: relative !important;
+  }
+
+  /* Only message history scrolls */
+  #chatAsideSlotText #chatMessages {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    width: 100% !important;
+    overscroll-behavior: contain !important;
   }
 
-  /* rightColumn allows flex order rearrangement of children */
-  #rightColumn {
-    display: contents !important;
+  /* Input fixed at bottom */
+  #chatAsideSlotText #chatForm {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
   }
 
-  /* 1. Matching Filter row at top of main */
-  #filterToolbar {
-    order: 1 !important;
-    width: 100% !important;
-    border-radius: 1rem !important;
-    padding: 0.5rem 0.75rem !important;
-    flex-wrap: wrap !important;
-    gap: 0.5rem !important;
-  }
-
-  #filterToolbar .filter-pill-wrap {
-    flex: 1 1 auto !important;
-    min-width: 130px !important;
-  }
-
-  /* 2. Video Section: Large Stranger video */
-  #videoSection {
-    order: 2 !important;
-    width: 100% !important;
+  /* ---------------------------------------------------- */
+  /* VIDEO MODE (Mobile: Stacked Vertical Tiles, Full Height, Zero Chat) */
+  /* ---------------------------------------------------- */
+  body[data-mode="video"] #videoModeView {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0 !important;
+    gap: 0.375rem !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    flex: 1 1 0% !important;
+    overflow: hidden !important;
   }
 
-  /* Video Grid Area: prominent video container */
-  #videoGridContainer {
-    position: relative !important;
+  #videoTopToolbar {
+    display: none !important;
+  }
+
+  /* Dedicated Action Row beneath both video viewports on mobile */
+  #videoActionRow {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 100% !important;
-    height: 48vh !important;
-    height: 48dvh !important;
-    min-height: 270px !important;
-    max-height: 440px !important;
-    border-radius: 1.5rem !important;
+    flex-shrink: 0 !important;
+    padding: 0.25rem 0 !important;
+  }
+
+  #videoActionRow #controlsSlotVideo {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #videoActionRow #actionControlsBar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.375rem !important;
+    width: 100% !important;
+  }
+
+  #videoActionRow #actionControlsBar button {
+    padding: 0.5rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  /* Stacked Video Grid on Mobile: Fills 100% of available height */
+  #videoGridContainer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.375rem !important;
+    width: 100% !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  /* Stranger: Top Tile (~50% height) */
+  #strangerVideoWrapper {
+    width: 100% !important;
+    flex: 1 1 0% !important;
+    height: 50% !important;
+    min-height: 0 !important;
+    position: relative !important;
+    border-radius: 1.25rem !important;
     overflow: hidden !important;
     background-color: var(--video-bg) !important;
     box-shadow: var(--shadow-card) !important;
   }
 
-  /* Stranger Video fills the main video view */
-  #strangerVideoWrapper {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 1.5rem !important;
-    overflow: hidden !important;
-    z-index: 10 !important;
-  }
-
-  #remoteVideo {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-  }
-
-  /* User preview: Small square picture-in-picture overlay in bottom-right */
+  /* You: Bottom Tile (~50% height) */
   #localVideoWrapper {
-    position: absolute !important;
-    bottom: 0.75rem !important;
-    right: 0.75rem !important;
-    width: 100px !important;
-    height: 100px !important;
-    aspect-ratio: 1 / 1 !important;
-    border-radius: 1.15rem !important;
-    z-index: 30 !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.4) !important;
+    width: 100% !important;
+    flex: 1 1 0% !important;
+    height: 50% !important;
+    min-height: 0 !important;
+    position: relative !important;
+    border-radius: 1.25rem !important;
     overflow: hidden !important;
-    background-color: #0d0f17 !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    background-color: var(--video-bg) !important;
+    box-shadow: var(--shadow-card) !important;
   }
 
-  #localVideo {
+  #remoteVideo, #localVideo {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
   }
 
-  /* Hide nonessential text inside square PIP */
-  #localVideoWrapper #localVideoPlaceholder h4,
-  #localVideoWrapper #localVideoPlaceholder p,
-  #localVideoWrapper #localVideoPlaceholder > div,
-  #localVideoWrapper #audioOnlyPlaceholder h4,
-  #localVideoWrapper #audioOnlyPlaceholder p,
-  #localVideoWrapper #cameraPermissionNotice,
-  #localBadgeText {
-    display: none !important;
-  }
-
-  #localVideoWrapper #audioOnlyPlaceholder > div:first-child {
-    width: 3rem !important;
-    height: 3rem !important;
-    margin-bottom: 0.25rem !important;
-  }
-
-  #localVideoWrapper .local-badge-pill {
-    top: 0.35rem !important;
-    left: 0.35rem !important;
-    padding: 0.15rem 0.35rem !important;
-    font-size: 9px !important;
-  }
-
-  /* Micro-controls inside square PIP */
+  /* Local Controls Bar on Mobile */
   #localControlsBar {
     position: absolute !important;
-    bottom: 0.25rem !important;
+    bottom: 0.5rem !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     z-index: 35 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 0.2rem !important;
-    background: rgba(0, 0, 0, 0.75) !important;
+    gap: 0.5rem !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-    padding: 0.15rem 0.3rem !important;
+    padding: 0.25rem 0.55rem !important;
     border-radius: 9999px !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    width: auto !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
   }
 
   #localControlsBar button {
-    padding: 0 !important;
-    width: 26px !important;
-    height: 26px !important;
+    width: 34px !important;
+    height: 34px !important;
     border-radius: 9999px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: transparent !important;
-    border: none !important;
     cursor: pointer !important;
     touch-action: manipulation !important;
-  }
-
-  #localControlsBar svg {
-    width: 11px !important;
-    height: 11px !important;
-  }
-
-  /* 3. Action Controls Row: Placed immediately below video */
-  #actionControlsBar {
-    order: 3 !important;
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 0.5rem !important;
-    padding: 0.15rem 0 !important;
-  }
-
-  #toggleMatchBtn, #reportBtn {
-    flex: 1 !important;
-    min-height: 44px !important;
-    padding: 0.6rem 0.75rem !important;
-  }
-
-  #skipBtn {
-    flex: 1.3 !important;
-    min-height: 46px !important;
-    font-size: 0.95rem !important;
-    padding: 0.65rem 1rem !important;
-  }
-
-  /* 4. Ephemeral Chat Section below actions */
-  #chatAside {
-    order: 4 !important;
-    width: 100% !important;
-    height: 360px !important;
-    min-height: 260px !important;
-    max-height: 48vh !important;
-    max-height: 48dvh !important;
-    border-radius: 1.5rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    box-shadow: var(--shadow-card) !important;
-    margin-bottom: 0.5rem !important;
-  }
-
-  #chatMessages {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow-y: auto !important;
-    padding: 0.75rem 1rem !important;
-  }
-
-  #chatForm {
-    flex-shrink: 0 !important;
-    padding: 0.5rem 0.75rem !important;
-    margin-top: auto !important;
-  }
-}
-
-/* Small Handheld Screens (<= 480px) */
-@media (max-width: 480px) {
-  #videoGridContainer {
-    height: 45vh !important;
-    height: 45dvh !important;
-    min-height: 250px !important;
-  }
-
-  #localVideoWrapper {
-    width: 90px !important;
-    height: 90px !important;
-    bottom: 0.5rem !important;
-    right: 0.5rem !important;
-    border-radius: 1rem !important;
-  }
-
-  #chatAside {
-    height: 320px !important;
-    min-height: 230px !important;
-  }
-
-  #actionControlsBar {
-    gap: 0.375rem !important;
-  }
-
-  #skipBtn {
-    font-size: 0.875rem !important;
-  }
-}
-
-/* Ultra Narrow Screens (<= 360px) */
-@media (max-width: 360px) {
-  #localVideoWrapper {
-    width: 80px !important;
-    height: 80px !important;
-  }
-
-  #filterCountrySelect {
-    max-width: 140px !important;
-  }
-
-  #toggleMatchBtn, #skipBtn, #reportBtn {
-    font-size: 0.8rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
   }
 }
 
 /* ========================================================== */
 /* 4. DARK MODE ELEVATION & CRISP SEPARATION                  */
-/* Fixes card blending without clutter                       */
 /* ========================================================== */
 html.dark body {
   background-color: #08090f !important;
@@ -676,13 +939,6 @@ html.dark #filterToolbar {
 
 html.dark #chatAside {
   background-color: #111422 !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-}
-
-html.dark #chatAside > div:first-child {
-  background-color: rgba(18, 22, 36, 0.95) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 html.dark #chatMessages {
@@ -706,7 +962,7 @@ html.dark #chatInput:focus {
 }
 
 /* ========================================================== */
-/* 5. SLEEK FILTER PILLS (Enhanced Gender & Country Selects)  */
+/* 5. FILTER PILLS (Enhanced Gender & Country Selects)        */
 /* ========================================================== */
 .filter-pill-inner {
   background: linear-gradient(135deg, #ffffff 0%, #f6f7fb 100%);
@@ -727,34 +983,173 @@ html.dark .filter-pill-inner {
   box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.45) !important;
 }
 
-html.dark .filter-pill-inner:hover {
-  border-color: rgba(168, 85, 247, 0.6) !important;
-  box-shadow: 0 3px 14px -2px rgba(168, 85, 247, 0.28) !important;
+/* ========================================================== */
+/* 5. CUSTOM ACCESSIBLE DROPDOWNS (GENDER & COUNTRY)          */
+/* ========================================================== */
+.custom-dropdown {
+  position: relative;
 }
 
-#filterGenderSelect,
-#filterCountrySelect {
+.custom-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(228, 228, 231, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  color-scheme: dark light;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
 
-#filterGenderSelect option,
-#filterCountrySelect option {
-  background-color: #ffffff;
-  color: #0f172a;
-  padding: 8px 12px;
-  font-weight: 500;
+.custom-dropdown-trigger:hover {
+  background: #f4f4f5;
+  border-color: rgba(168, 85, 247, 0.4);
 }
 
-html.dark #filterGenderSelect option,
-html.dark #filterCountrySelect option {
-  background-color: #141828 !important;
-  color: #f1f5f9 !important;
+.custom-dropdown-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+  border-color: #a855f7;
+}
+
+.custom-dropdown.open .custom-dropdown-trigger {
+  border-color: #a855f7 !important;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.25) !important;
+  background: #ffffff;
+}
+
+.custom-dropdown.open .chevron-icon {
+  transform: rotate(180deg);
+}
+
+html.dark .custom-dropdown-trigger {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .custom-dropdown-trigger:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(168, 85, 247, 0.35) !important;
+}
+
+html.dark .custom-dropdown.open .custom-dropdown-trigger {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: #c084fc !important;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Custom Dropdown Menu Floating Panel */
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  border-radius: 1rem;
+  background: #ffffff !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(228, 228, 231, 0.9);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  transform-origin: top right;
+  animation: dropdownPop 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dropdownPop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-dropdown-menu.open-upward {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important;
+  transform-origin: bottom right;
+}
+
+html.dark .custom-dropdown-menu {
+  background: #0e111d !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Custom Dropdown Option Item */
+.custom-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.custom-dropdown-option:hover,
+.custom-dropdown-option.focused {
+  background: rgba(147, 51, 234, 0.08);
+  color: #7e22ce;
+}
+
+html.dark .custom-dropdown-option:hover,
+html.dark .custom-dropdown-option.focused {
+  background: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+}
+
+.custom-dropdown-option.selected {
+  background: rgba(147, 51, 234, 0.12);
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+html.dark .custom-dropdown-option.selected {
+  background: rgba(168, 85, 247, 0.22);
+  color: #f3e8ff;
+  font-weight: 700;
+}
+
+.custom-dropdown-option.selected .option-check {
+  display: inline-block !important;
+}
+
+/* Scrollable container */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(168, 85, 247, 0.25);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(168, 85, 247, 0.45);
 }
 
 /* ========================================================== */
-/* 6. AGE GATE MODAL CRISP TYPOGRAPHY & ANTI-BLUR             */
+/* 6. MODE SELECTION & AGE GATE MODAL STYLES                  */
 /* ========================================================== */
+#modeSelectionModal .mode-choice-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+#modeSelectionModal .mode-choice-card:hover {
+  transform: translateY(-4px);
+}
+
+#modeSelectionModal .mode-choice-card:active {
+  transform: translateY(0);
+}
+
 #ageGateModal {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -762,18 +1157,13 @@ html.dark #filterCountrySelect option {
 }
 
 #ageGateModal .age-modal-card {
-  transform: translateZ(0); /* Prevents subpixel text blur */
+  transform: translateZ(0);
   backface-visibility: hidden;
   box-shadow: 0 25px 65px -12px rgba(0, 0, 0, 0.45) !important;
 }
 
 html.dark #ageGateModal .age-modal-card {
   box-shadow: 0 25px 65px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-.age-gate-gender-btn {
-  user-select: none;
-  touch-action: manipulation;
 }
 
 /* ========================================================== */
@@ -798,5 +1188,3 @@ html.dark #ageGateModal .age-modal-card {
 #inAppBrowserNotice {
   animation: bubble-in 0.3s ease-out forwards;
 }
-
-

@@ -1,13 +1,17 @@
-# Vybrant ⚡ P2P Video Chat Engine
+# TalkHop ⚡ — Instant Random Chat & Live Video Call Engine
 
 > **Developed by [VybronX Studios](https://vybronx.online)**  
 > **Production URL:** [https://vybrant.vybronx.online](https://vybrant.vybronx.online)
 
 ---
 
-## 📖 Executive Summary & AI Context
+## 📖 Executive Summary & Context
 
-**Vybrant** is a high-performance, real-time, random peer-to-peer (P2P) video and voice matchmaking web application. Built as a state-of-the-art Omegle alternative, Vybrant prioritizes **maximum privacy**, **zero-database footprint**, and **AI-driven safety enforcement**.
+**TalkHop** is a high-performance, real-time anonymous stranger-chat platform supporting two distinct modes:
+1. **Random Chat** — Instant text-only conversations with strangers worldwide (no camera/microphone requested or transmitted).
+2. **Video Call** — Live peer-to-peer audio and video conversations with adaptive streaming and AI Safety Shield.
+
+Featuring a dedicated post-verification mode selection screen and a slide-to-switch mode controller, TalkHop prioritizes **user privacy**, **consent-driven transitions**, **zero database storage**, and **on-device safety moderation**.
 
 This document is structured to provide human developers and AI engineering agents with full architectural, security, and operational clarity.
 

@@ -4,9 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vybrant ⚡ | Secret Admin Command Center</title>
-  <meta name="description" content="Vybrant Secret Admin Command Center & Live Traffic Radar">
-  <meta name="theme-color" content="#07080d">
+  <title>TalkHop ⚡ | Secret Admin Command Center</title>
+  <meta name="description" content="TalkHop Secret Admin Command Center & Live Traffic Radar">
+  <meta name="theme-color" content="#070913">
+
+  <!-- Immediate Theme Loader (Zero Flash) -->
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('talkhop_admin_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        document.documentElement.classList.remove('dark', 'light');
+        document.documentElement.classList.add(theme);
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 
   <!-- Favicon SVG -->
   <link rel="icon" type="image/svg+xml"
@@ -33,10 +48,16 @@
           colors: {
             brand: {
               purple: '#8b5cf6',
+              indigo: '#6366f1',
               cyan: '#06b6d4',
               gold: '#f59e0b',
-              dark: '#07080d',
-              card: '#0d0f17'
+              emerald: '#10b981',
+              rose: '#f43f5e',
+              dark: '#070913',
+              cardDark: '#0d111e',
+              cardDarkSubtle: '#111628',
+              cardLight: '#ffffff',
+              cardLightSubtle: '#f8fafc'
             }
           }
         }
@@ -44,82 +65,175 @@
     };
   </script>
 
-  <!-- Custom CSS for Admin Glow & Scrollbars -->
+  <!-- Comprehensive Design Tokens & Styles -->
   <style>
-    body {
-      background-color: #07080d;
-      color: #f1f5f9;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    :root {
+      --bg-page: #f8fafc;
+      --bg-sidebar: #ffffff;
+      --bg-header: rgba(255, 255, 255, 0.92);
+      --bg-card: #ffffff;
+      --bg-card-subtle: #f1f5f9;
+      --border-subtle: rgba(15, 23, 42, 0.08);
+      --border-card: rgba(15, 23, 42, 0.08);
+      --border-glow: rgba(139, 92, 246, 0.25);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --table-header-bg: #f8fafc;
+      --table-row-hover: #f1f5f9;
+      --input-bg: #ffffff;
+      --input-border: rgba(15, 23, 42, 0.15);
+      --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+      --chart-grid: rgba(15, 23, 42, 0.06);
+      --chart-text: #64748b;
     }
 
-    /* Custom Scrollbar */
+    .dark {
+      --bg-page: #070913;
+      --bg-sidebar: #090d19;
+      --bg-header: rgba(9, 13, 25, 0.92);
+      --bg-card: #0d111e;
+      --bg-card-subtle: #111628;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(139, 92, 246, 0.35);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --table-header-bg: #090d19;
+      --table-row-hover: rgba(255, 255, 255, 0.025);
+      --input-bg: #111628;
+      --input-border: rgba(255, 255, 255, 0.12);
+      --shadow-card: 0 8px 32px -4px rgba(0, 0, 0, 0.45);
+      --chart-grid: rgba(255, 255, 255, 0.06);
+      --chart-text: #94a3b8;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Custom Scrollbars */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
 
     ::-webkit-scrollbar-track {
-      background: rgba(13, 15, 23, 0.6);
+      background: transparent;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(139, 92, 246, 0.3);
+      background: rgba(139, 92, 246, 0.28);
       border-radius: 9999px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(139, 92, 246, 0.6);
+      background: rgba(139, 92, 246, 0.55);
     }
 
-    .glass-card {
-      background: rgba(13, 15, 23, 0.85);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .theme-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
+      transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
-    .glow-border {
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.2);
+    .theme-card-subtle {
+      background-color: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
-    .gold-glow-border {
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.2);
+    .theme-input {
+      background-color: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-primary);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    .cyan-glow-border {
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.2);
+    .theme-input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
     }
 
-    .emerald-glow-border {
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.2);
+    .nav-item-active {
+      background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%) !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      box-shadow: 0 4px 15px -2px rgba(124, 58, 237, 0.4) !important;
     }
 
-    .rose-glow-border {
-      border: 1px solid rgba(244, 63, 94, 0.35);
-      box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.2);
+    .nav-item-active span {
+      color: #ffffff !important;
     }
 
-    /* Pulse animation */
+    .glow-purple {
+      box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.25);
+    }
+
     @keyframes pulse-slow {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.97); }
+      50% { opacity: 0.65; transform: scale(0.97); }
     }
+
     .animate-pulse-slow {
       animation: pulse-slow 3s ease-in-out infinite;
+    }
+
+    /* Sidebar Collapsed Rail Mode & Accordion Transitions */
+    #adminSidebar {
+      transition: width 0.25s ease, transform 0.3s ease;
+    }
+    #adminSidebar.collapsed-rail {
+      width: 5rem !important; /* 80px */
+    }
+    #adminSidebar.collapsed-rail .sidebar-hide-on-rail {
+      display: none !important;
+    }
+    #adminSidebar.collapsed-rail .nav-btn {
+      justify-content: center !important;
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
+    }
+    #adminSidebar.collapsed-rail .nav-btn .nav-btn-content {
+      justify-content: center !important;
+      margin: 0 !important;
+    }
+    #adminSidebar.collapsed-rail .nav-btn .nav-icon {
+      font-size: 1.25rem;
+    }
+    #adminSidebar.collapsed-rail .sidebar-brand-text {
+      display: none !important;
+    }
+    #adminSidebar.collapsed-rail .sidebar-brand-container {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .section-chevron {
+      transition: transform 0.2s ease;
+    }
+    .sidebar-nav-section.is-collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+    .sidebar-nav-section.is-collapsed .section-items {
+      display: none !important;
     }
   </style>
 </head>
 
-<body class="min-h-screen bg-[#07080d] text-slate-100 flex flex-col selection:bg-purple-500 selection:text-white">
+<body class="min-h-screen flex flex-col selection:bg-purple-500 selection:text-white antialiased">
 
-  <!-- Ambient Glow Background -->
-  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute -top-[25%] -left-[10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[140px]"></div>
-    <div class="absolute top-[40%] -right-[15%] w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[150px]"></div>
-    <div class="absolute -bottom-[20%] left-[25%] w-[500px] h-[500px] rounded-full bg-amber-600/10 blur-[130px]"></div>
+  <!-- Ambient Glow Effects in Dark Mode -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-100 dark:opacity-100 opacity-0 transition-opacity">
+    <div class="absolute -top-[20%] -left-[10%] w-[550px] h-[550px] rounded-full bg-purple-600/10 blur-[130px]"></div>
+    <div class="absolute top-[35%] -right-[15%] w-[600px] h-[600px] rounded-full bg-cyan-600/10 blur-[140px]"></div>
+    <div class="absolute -bottom-[20%] left-[20%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[130px]"></div>
   </div>
 
   <!-- Toast Notification Container -->
@@ -128,20 +242,20 @@
   <!-- ======================================================= -->
   <!-- 1. SECURE ADMIN LOGIN SCREEN (Displayed when logged out) -->
   <!-- ======================================================= -->
-  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#07080d]/90 backdrop-blur-2xl">
-    <div class="w-full max-w-md glass-card rounded-3xl p-8 glow-border shadow-2xl relative overflow-hidden">
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070913]/90 dark:bg-[#070913]/95 backdrop-blur-2xl">
+    <div class="w-full max-w-md theme-card rounded-3xl p-8 glow-purple shadow-2xl relative overflow-hidden border border-purple-500/20">
       <!-- Glow Accent Top Border -->
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-cyan-400 to-amber-400"></div>
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400"></div>
 
       <!-- Brand Icon & Header -->
       <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 shadow-xl shadow-purple-600/30 mb-3.5">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 shadow-xl shadow-purple-600/35 mb-3.5">
           <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
         </div>
-        <h1 class="font-display font-extrabold text-2xl text-white tracking-tight">
-          Vybrant<span class="text-purple-400">⚡</span> Admin Center
+        <h1 class="font-display font-extrabold text-2xl tracking-tight">
+          TalkHop<span class="text-purple-400">⚡</span> Admin Center
         </h1>
         <p class="text-xs text-slate-400 mt-1 font-medium">
           Secret Command Console & Live Traffic Radar
@@ -149,7 +263,7 @@
       </div>
 
       <!-- Error Alert Box -->
-      <div id="loginErrorBox" class="hidden mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center space-x-2">
+      <div id="loginErrorBox" class="hidden mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 dark:text-rose-300 text-xs font-semibold flex items-center space-x-2">
         <span>⚠️</span>
         <span id="loginErrorText">Invalid username or password.</span>
       </div>
@@ -157,29 +271,27 @@
       <!-- Login Form -->
       <form id="adminLoginForm" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Username</label>
-          <div class="relative">
-            <input type="text" id="adminUsernameInput" required autocomplete="username"
-              placeholder="e.g. admin"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all">
-          </div>
+          <label class="block text-xs font-bold text-slate-400 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Username</label>
+          <input type="text" id="adminUsernameInput" required autocomplete="username"
+            placeholder="e.g. admin"
+            class="w-full theme-input rounded-xl px-4 py-2.5 text-sm placeholder-slate-400">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Password</label>
+          <label class="block text-xs font-bold text-slate-400 dark:text-slate-300 mb-1.5 uppercase tracking-wider">Password</label>
           <div class="relative">
             <input type="password" id="adminPasswordInput" required autocomplete="current-password"
               placeholder="••••••••••••"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all pr-10">
+              class="w-full theme-input rounded-xl px-4 py-2.5 text-sm placeholder-slate-400 pr-10">
             <button type="button" id="togglePasswordBtn"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors text-xs font-semibold">
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-400 transition-colors text-xs font-semibold">
               👁️
             </button>
           </div>
         </div>
 
         <button type="submit" id="loginSubmitBtn"
-          class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-bold text-sm shadow-lg shadow-purple-600/30 transition-all active:scale-95 flex items-center justify-center space-x-2">
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-display font-bold text-sm shadow-lg shadow-purple-600/30 transition-all active:scale-95 flex items-center justify-center space-x-2 cursor-pointer">
           <span>🔓</span>
           <span>Authenticate & Access Console</span>
         </button>
@@ -188,491 +300,1384 @@
   </div>
 
   <!-- ======================================================= -->
-  <!-- 2. ADMIN DASHBOARD VIEWPORT (Displayed when logged in) -->
+  <!-- 2. REDESIGNED ADMIN COMMAND CENTER (Logged in)           -->
   <!-- ======================================================= -->
-  <div id="adminDashboard" class="hidden relative z-10 flex-1 flex flex-col min-h-screen">
+  <div id="adminDashboard" class="hidden relative z-10 flex-1 flex min-h-screen">
 
-    <!-- Top Admin Navigation Bar -->
-    <header class="border-b border-white/10 bg-[#090b12]/90 backdrop-blur-xl px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/30">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-        </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-display font-extrabold text-lg sm:text-xl text-white">Vybrant<span class="text-purple-400">⚡</span> Admin</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30">
-              Command Center
-            </span>
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div id="mobileDrawerBackdrop" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm hidden lg:hidden transition-opacity"></div>
+
+    <!-- PERSISTENT LEFT SIDEBAR NAVIGATION -->
+    <aside id="adminSidebar"
+      class="fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between border-r transition-all duration-300 transform -translate-x-full lg:translate-x-0 lg:static lg:z-30 shrink-0"
+      style="background-color: var(--bg-sidebar); border-color: var(--border-subtle);">
+      
+      <!-- Sidebar Top Section -->
+      <div class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Logo & Brand Header -->
+        <div class="p-4 sm:p-5 flex items-center justify-between border-b" style="border-color: var(--border-subtle);">
+          <div class="flex items-center space-x-3 sidebar-brand-container overflow-hidden">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/35 shrink-0">
+              <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </div>
+            <div class="sidebar-brand-text truncate">
+              <span class="font-display font-extrabold text-xl tracking-tight">TalkHop<span class="text-purple-500">⚡</span></span>
+              <span class="block text-[10px] font-bold text-purple-400 uppercase tracking-widest">Admin Center</span>
+            </div>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">vybrant.vybronx.online &bull; Live Telemetry & VIP Controller</p>
+          <!-- Desktop Rail Collapse/Expand Button -->
+          <button id="sidebarRailToggleBtn" type="button" class="hidden lg:flex items-center justify-center p-1.5 rounded-lg theme-card-subtle hover:text-purple-400 text-slate-400 transition-all cursor-pointer" title="Toggle Sidebar Width">
+            <svg id="sidebarRailIcon" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+          <!-- Close button for mobile drawer -->
+          <button id="mobileDrawerCloseBtn" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
         </div>
+
+        <!-- Navigation Links Grouped by Domain with Folders / Accordions -->
+        <nav class="p-3.5 space-y-3.5 text-xs font-medium">
+
+          <!-- Global Expand/Collapse All Helper -->
+          <div class="sidebar-hide-on-rail flex items-center justify-between px-3 pb-1 border-b border-purple-500/10 mb-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Navigation</span>
+            <button id="toggleAllSectionsBtn" type="button" class="text-[10px] font-bold text-purple-400 hover:text-purple-300 transition-colors cursor-pointer">Collapse All</button>
+          </div>
+
+          <!-- 1. OVERVIEW -->
+          <div class="sidebar-nav-section" data-section="overview">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>Overview</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="dashboard" class="nav-btn nav-item-active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer" title="Dashboard">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">🏠</span>
+                  <span class="font-semibold sidebar-hide-on-rail">Dashboard</span>
+                </div>
+              </button>
+              <button data-nav="analytics" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Live Analytics">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">📊</span>
+                  <span class="sidebar-hide-on-rail">Live Analytics</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. USERS & SESSIONS -->
+          <div class="sidebar-nav-section" data-section="sessions">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>Users & Sessions</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="users" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Online Users">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">👥</span>
+                  <span class="sidebar-hide-on-rail">Online Users</span>
+                </div>
+                <span id="badgeOnlineCount" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">0</span>
+              </button>
+              <button data-nav="calls" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Active Calls">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">📞</span>
+                  <span class="sidebar-hide-on-rail">Active Calls</span>
+                </div>
+                <span id="badgeCallsCount" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-500 border border-cyan-500/30">0</span>
+              </button>
+              <button data-nav="queue" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Matchmaking Queue">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">⏳</span>
+                  <span class="sidebar-hide-on-rail">Matchmaking Queue</span>
+                </div>
+                <span id="badgeQueueCount" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. ACCESS & VIP -->
+          <div class="sidebar-nav-section" data-section="vip">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>Access & VIP</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="vip-passes" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="VIP Pass Management">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">👑</span>
+                  <span class="sidebar-hide-on-rail">VIP Pass Management</span>
+                </div>
+                <span id="badgeVipTotal" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">0</span>
+              </button>
+              <button data-nav="vip-generator" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="VIP Code Generator">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">🎟️</span>
+                  <span class="sidebar-hide-on-rail">VIP Code Generator</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. SAFETY & MODERATION -->
+          <div class="sidebar-nav-section" data-section="safety">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>Safety & Moderation</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="reports" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Reports & Moderation">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">🛡️</span>
+                  <span class="sidebar-hide-on-rail">Reports & Moderation</span>
+                </div>
+                <span id="badgeReportsCount" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30">0</span>
+              </button>
+              <button data-nav="ip-bans" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Active IP Bans">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">🚫</span>
+                  <span class="sidebar-hide-on-rail">Active IP Bans</span>
+                </div>
+                <span id="badgeBannedCount" class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30">0</span>
+              </button>
+              <button data-nav="blocked-users" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Blocked Users">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">⛔</span>
+                  <span class="sidebar-hide-on-rail">Blocked Users</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 5. MONETIZATION -->
+          <div class="sidebar-nav-section" data-section="monetization">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>Monetization</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="sponsor" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Sponsor Card">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">📢</span>
+                  <span class="sidebar-hide-on-rail">Sponsor Card</span>
+                </div>
+                <span class="sidebar-hide-on-rail px-2 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/15 text-cyan-500 border border-cyan-500/30">Live</span>
+              </button>
+              <button data-nav="revenue" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Revenue">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">💳</span>
+                  <span class="sidebar-hide-on-rail">Revenue</span>
+                </div>
+                <span class="sidebar-hide-on-rail px-1.5 py-0.5 rounded text-[9px] font-medium text-slate-400 bg-slate-500/10">Sandbox</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 6. SYSTEM -->
+          <div class="sidebar-nav-section" data-section="system">
+            <div class="sidebar-hide-on-rail mb-1">
+              <button type="button" class="section-toggle-btn w-full flex items-center justify-between px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500 hover:text-purple-400 dark:hover:text-purple-400 transition-colors cursor-pointer select-none group">
+                <span>System</span>
+                <svg class="section-chevron w-3 h-3 text-slate-500 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </button>
+            </div>
+            <div class="section-items space-y-0.5">
+              <button data-nav="diagnostics" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Diagnostics">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">⚙️</span>
+                  <span class="sidebar-hide-on-rail">Diagnostics</span>
+                </div>
+              </button>
+              <button data-nav="settings" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer" title="Settings">
+                <div class="flex items-center space-x-2.5 nav-btn-content">
+                  <span class="text-base nav-icon">🔧</span>
+                  <span class="sidebar-hide-on-rail">Settings</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </nav>
       </div>
 
-      <!-- Controls: Refresh Timer, Status Badge & Logout -->
-      <div class="flex items-center space-x-3 text-xs">
-        <!-- Live Polling Radar Status -->
-        <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/30 text-emerald-300 font-medium">
-          <span class="relative flex h-2 w-2">
+      <!-- Sidebar Status Footer -->
+      <div class="p-3.5 border-t" style="border-color: var(--border-subtle);">
+        <div id="systemHealthBadge" class="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold theme-card-subtle justify-center lg:justify-start">
+          <span class="relative flex h-2 w-2 shrink-0">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span id="radarTimerText">Radar: 3s</span>
-        </div>
-
-        <!-- Manual Refresh Button -->
-        <button id="manualRefreshBtn" title="Fetch fresh statistics now"
-          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 transition-all active:scale-95">
-          <span>🔄</span>
-          <span class="hidden sm:inline">Refresh</span>
-        </button>
-
-        <!-- Admin Identity Pill -->
-        <div class="hidden md:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-300">
-          <span>👤</span>
-          <span id="adminUserPill" class="font-bold text-white">admin</span>
-        </div>
-
-        <!-- View Main Website Link -->
-        <a href="/" target="_blank"
-          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 transition-all font-semibold">
-          <span>🌐</span>
-          <span class="hidden sm:inline">Open Vybrant</span>
-        </a>
-
-        <!-- Logout Button -->
-        <button id="adminLogoutBtn"
-          class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-semibold transition-all active:scale-95">
-          <span>🚪</span>
-          <span>Logout</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Main Dashboard Container -->
-    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1720px] w-full mx-auto space-y-6">
-
-      <!-- ========================================== -->
-      <!-- SECTION 1: LIVE TRAFFIC RADAR KPI CARDS    -->
-      <!-- ========================================== -->
-      <div>
-        <div class="flex items-center justify-between mb-3.5">
-          <h2 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
-            <span>📡 Live Traffic Radar</span>
-            <span class="text-xs font-normal text-slate-400 font-sans">(Real-Time Engine Telemetry)</span>
-          </h2>
-          <span id="serverTimestampText" class="text-xs text-slate-500 font-mono">Syncing...</span>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-
-          <!-- Card 1: Total Online -->
-          <div class="glass-card rounded-2xl p-4 emerald-glow-border transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">Total Online</span>
-              <span class="text-emerald-400 text-lg">👥</span>
-            </div>
-            <div id="statTotalOnline" class="font-display font-extrabold text-2xl sm:text-3xl text-emerald-400">0</div>
-            <p class="text-[10px] text-slate-400 mt-1">Connected WebSockets</p>
-          </div>
-
-          <!-- Card 2: Active P2P Calls -->
-          <div class="glass-card rounded-2xl p-4 cyan-glow-border transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">In Calls (P2P)</span>
-              <span class="text-cyan-400 text-lg">📹</span>
-            </div>
-            <div id="statInCall" class="font-display font-extrabold text-2xl sm:text-3xl text-cyan-400">0</div>
-            <p class="text-[10px] text-slate-400 mt-1">Matched 1-on-1 pairs</p>
-          </div>
-
-          <!-- Card 3: Radar Queue Depth -->
-          <div class="glass-card rounded-2xl p-4 glow-border transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">Queue Depth</span>
-              <span class="text-purple-400 text-lg">⏳</span>
-            </div>
-            <div id="statInQueue" class="font-display font-extrabold text-2xl sm:text-3xl text-purple-400">0</div>
-            <p class="text-[10px] text-slate-400 mt-1">Waiting in matchmaking</p>
-          </div>
-
-          <!-- Card 4: Active VIP Passes -->
-          <div class="glass-card rounded-2xl p-4 gold-glow-border transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">Active VIPs</span>
-              <span class="text-amber-400 text-lg">👑</span>
-            </div>
-            <div id="statVipCount" class="font-display font-extrabold text-2xl sm:text-3xl text-amber-400">0</div>
-            <p class="text-[10px] text-slate-400 mt-1">Users with priority filter</p>
-          </div>
-
-          <!-- Card 5: Banned Threat IPs -->
-          <div class="glass-card rounded-2xl p-4 rose-glow-border transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">Blocked IPs</span>
-              <span class="text-rose-400 text-lg">🚫</span>
-            </div>
-            <div id="statBannedCount" class="font-display font-extrabold text-2xl sm:text-3xl text-rose-400">0</div>
-            <p class="text-[10px] text-slate-400 mt-1">Auto-Ban 24h active</p>
-          </div>
-
-          <!-- Card 6: Server Uptime -->
-          <div class="glass-card rounded-2xl p-4 border border-white/10 transition-transform hover:-translate-y-0.5">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-              <span class="text-xs font-semibold uppercase tracking-wider">Uptime</span>
-              <span class="text-slate-300 text-lg">⚡</span>
-            </div>
-            <div id="statUptime" class="font-display font-extrabold text-xl sm:text-2xl text-slate-200">0s</div>
-            <p class="text-[10px] text-slate-400 mt-1">Node engine uptime</p>
-          </div>
-
+          <span id="systemHealthText" class="text-emerald-500 font-medium sidebar-hide-on-rail truncate">All systems operational</span>
         </div>
       </div>
+    </aside>
 
-      <!-- ========================================== -->
-      <!-- SECTION 2: DEMOGRAPHICS & TRAFFIC RADAR    -->
-      <!-- ========================================== -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- MAIN DASHBOARD CONTENT AREA -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
 
-        <!-- Country Distribution -->
-        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col">
-          <div class="flex items-center justify-between mb-4">
+      <!-- TOP ADMIN NAVIGATION BAR -->
+      <header id="adminHeader" class="sticky top-0 z-20 px-4 sm:px-6 py-3.5 border-b backdrop-blur-xl flex flex-wrap items-center justify-between gap-3"
+        style="background-color: var(--bg-header); border-color: var(--border-subtle);">
+        
+        <!-- Left: Mobile Menu Toggle & Title -->
+        <div class="flex items-center space-x-3">
+          <button id="mobileMenuToggleBtn" class="lg:hidden p-2 rounded-xl theme-card-subtle text-slate-500 hover:text-purple-500 cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <div>
             <div class="flex items-center space-x-2">
-              <span class="text-lg">🌍</span>
-              <h3 class="font-display font-bold text-base text-white">Country Traffic Distribution</h3>
+              <span class="font-display font-extrabold text-base sm:text-lg">TalkHop<span class="text-purple-500">⚡</span> Admin</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                Command Center
+              </span>
             </div>
-            <span class="text-xs text-slate-400 font-mono">Top Geos</span>
-          </div>
-
-          <div id="countryStatsContainer" class="flex-1 space-y-3 overflow-y-auto max-h-[260px] pr-2">
-            <div class="text-xs text-slate-400 text-center py-6">Awaiting live connections...</div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">
+              talkhop.vybronx.online &bull; Live Telemetry & VIP Controller
+            </p>
           </div>
         </div>
 
-        <!-- Gender & Preference Ratios -->
-        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center space-x-2">
-              <span class="text-lg">👥</span>
-              <h3 class="font-display font-bold text-base text-white">Gender & Matching Preference Ratios</h3>
-            </div>
-            <span class="text-xs text-slate-400 font-mono">Live Ratios</span>
-          </div>
+        <!-- Right Controls: Radar, Refresh, Theme, Profile, Open Site, Logout -->
+        <div class="flex items-center space-x-2 sm:space-x-3 text-xs">
 
-          <div class="space-y-4">
-            <!-- Male Ratio -->
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-purple-300 flex items-center space-x-1">
-                  <span>♂️ Male Users</span>
-                </span>
-                <span id="maleCountText" class="text-slate-300 font-mono">0 (0%)</span>
-              </div>
-              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
-                <div id="maleProgressBar" class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-            </div>
-
-            <!-- Female Ratio -->
-            <div>
-              <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-pink-300 flex items-center space-x-1">
-                  <span>♀️ Female Users</span>
-                </span>
-                <span id="femaleCountText" class="text-slate-300 font-mono">0 (0%)</span>
-              </div>
-              <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
-                <div id="femaleProgressBar" class="h-full bg-pink-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-              </div>
-            </div>
-
-            <!-- Matching Queue Distribution -->
-            <div class="pt-3 border-t border-white/5">
-              <p class="text-[11px] text-slate-400 mb-2">Priority Matching Queue Breakdown:</p>
-              <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="p-2 rounded-xl bg-slate-900 border border-white/5">
-                  <span class="block text-xs font-bold text-slate-200" id="queueGlobalCount">0</span>
-                  <span class="text-[10px] text-slate-400">Global Any</span>
-                </div>
-                <div class="p-2 rounded-xl bg-slate-900 border border-amber-500/20">
-                  <span class="block text-xs font-bold text-amber-400" id="queueFemaleCount">0</span>
-                  <span class="text-[10px] text-amber-300">VIP Female</span>
-                </div>
-                <div class="p-2 rounded-xl bg-slate-900 border border-cyan-500/20">
-                  <span class="block text-xs font-bold text-cyan-400" id="queueCountryCount">0</span>
-                  <span class="text-[10px] text-cyan-300">VIP Country</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ========================================== -->
-      <!-- SECTION 3: VIP PASS GENERATOR & MANAGER   -->
-      <!-- ========================================== -->
-      <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-4">
-          <div>
-            <h3 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
-              <span>👑 VIP Micro-Pass Management & Generator</span>
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Issue custom VIP vouchers, inspect redemption status, and revoke codes in real-time.</p>
-          </div>
-          <span class="text-xs px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold">
-            1-Device Concurrency Lock Protected
-          </span>
-        </div>
-
-        <!-- VIP Code Generator Form -->
-        <form id="generateVipForm" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3.5 bg-slate-900/80 p-4 rounded-2xl border border-white/5">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custom Code (Optional)</label>
-            <input type="text" id="genCustomCode" placeholder="Auto-generate if empty"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400">
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</label>
-            <select id="genDurationSelect"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
-              <option value="60">1 Hour (Standard ₹19)</option>
-              <option value="720">12 Hours (Half-Day ₹39)</option>
-              <option value="1440">24 Hours (Full-Day)</option>
-              <option value="10080">7 Days (Weekly VIP)</option>
-              <option value="43200">30 Days (Monthly VIP)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Max Uses</label>
-            <input type="number" id="genMaxUses" value="1" min="1" max="1000"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Admin Tag / Note</label>
-            <input type="text" id="genNote" placeholder="e.g. Promo Giveaway"
-              class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400">
-          </div>
-
-          <div class="flex items-end">
-            <button type="submit" id="genSubmitBtn"
-              class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
-              <span>⚡</span>
-              <span>Generate VIP Pass</span>
-            </button>
-          </div>
-        </form>
-
-        <!-- Active VIP Codes Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead>
-              <tr class="border-b border-white/10 text-slate-400 uppercase tracking-wider font-semibold">
-                <th class="py-2.5 px-3">VIP Code</th>
-                <th class="py-2.5 px-3">Plan / Duration</th>
-                <th class="py-2.5 px-3">Status</th>
-                <th class="py-2.5 px-3">Active Socket Device</th>
-                <th class="py-2.5 px-3">Note</th>
-                <th class="py-2.5 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="vipTableBody" class="divide-y divide-white/5">
-              <tr>
-                <td colspan="6" class="py-6 text-center text-slate-500">Loading VIP passes...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ========================================== -->
-      <!-- SECTION 4: MODERATION & IP BAN MANAGER     -->
-      <!-- ========================================== -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Banned IPs Table (2 Cols) -->
-        <div class="lg:col-span-2 glass-card rounded-3xl p-5 border border-white/10 space-y-4">
-          <div class="flex items-center justify-between border-b border-white/10 pb-3">
-            <div class="flex items-center space-x-2">
-              <span class="text-rose-400 text-lg">🛡️</span>
-              <h3 class="font-display font-extrabold text-base text-white">Active IP Bans (24h Auto-Ban & Manual)</h3>
-            </div>
-            <span id="banCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 font-bold border border-rose-500/30">
-              0 Banned
+          <!-- Radar Timer Status -->
+          <div class="flex items-center space-x-2 px-3 py-1.5 rounded-xl theme-card-subtle text-emerald-500 font-medium border border-emerald-500/20">
+            <span class="relative flex h-2 w-2 shrink-0">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
+            <span id="radarTimerText">Radar: 3s</span>
           </div>
 
-          <div class="overflow-x-auto">
+          <!-- Manual Refresh Button -->
+          <button id="manualRefreshBtn" title="Fetch fresh statistics now"
+            class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl theme-card-subtle hover:border-purple-500/40 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer">
+            <svg id="refreshSpinner" class="w-3.5 h-3.5 text-purple-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span class="hidden sm:inline font-semibold">Refresh</span>
+          </button>
+
+          <!-- Administrator Profile Menu -->
+          <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl theme-card-subtle">
+            <svg class="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span id="adminUserPill" class="font-bold text-slate-800 dark:text-slate-100">admin</span>
+          </div>
+
+          <!-- Open User-Facing TalkHop Website -->
+          <a href="/" target="_blank" title="Open TalkHop User Application in a new tab"
+            class="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/30 text-purple-600 dark:text-purple-300 transition-all font-semibold cursor-pointer">
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span class="hidden md:inline">Open TalkHop</span>
+          </a>
+
+          <!-- Real Dark/Light Mode Toggle -->
+          <button id="adminThemeToggleBtn" title="Toggle Light/Dark Theme"
+            class="p-2 rounded-xl theme-card-subtle hover:border-purple-500/40 text-slate-600 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center">
+            <span id="themeToggleIcon" class="flex items-center justify-center">
+              <svg id="themeSunIcon" class="w-4 h-4 text-amber-500 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <svg id="themeMoonIcon" class="w-4 h-4 text-purple-300 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </span>
+          </button>
+
+          <!-- Logout Button -->
+          <button id="adminLogoutBtn" title="Safely terminate admin session"
+            class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-500 font-semibold transition-all active:scale-95 cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span class="hidden sm:inline">Logout</span>
+          </button>
+
+        </div>
+      </header>
+
+      <!-- VIEWS CONTAINER -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-7 max-w-[1720px] w-full mx-auto">
+
+        <!-- ======================================================= -->
+        <!-- VIEW 1: MAIN DASHBOARD OVERVIEW (Primary Command Center) -->
+        <!-- ======================================================= -->
+        <section id="view-dashboard" class="admin-view space-y-6">
+
+          <!-- Dashboard Title & Timestamp -->
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="font-display font-extrabold text-xl sm:text-2xl flex items-center space-x-2.5">
+                <span class="text-purple-500 text-2xl">📊</span>
+                <span>Live Traffic Overview</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Realtime platform health, active WebRTC sessions, and matchmaking queue</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="serverTimestampText" class="text-xs font-mono px-3 py-1 rounded-xl theme-card-subtle text-slate-400">Syncing...</span>
+            </div>
+          </div>
+
+          <!-- A. 6 LIVE KPI METRIC CARDS -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+
+            <!-- Card 1: Online Users -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden border-emerald-500/25">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Online Users</span>
+                <span class="text-emerald-500 text-lg">👥</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statTotalOnline" class="font-display font-extrabold text-2xl sm:text-3xl text-emerald-500">0</span>
+                <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">↑ Live</span>
+              </div>
+              <!-- Mini Sparkline Wave SVG -->
+              <svg class="w-full h-5 mt-2 text-emerald-500/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 15 Q25 5, 50 12 T100 8" />
+              </svg>
+            </div>
+
+            <!-- Card 2: Active Calls -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden border-cyan-500/25">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Active Calls</span>
+                <span class="text-cyan-500 text-lg">📞</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statInCall" class="font-display font-extrabold text-2xl sm:text-3xl text-cyan-500">0</span>
+                <span class="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded">P2P</span>
+              </div>
+              <svg class="w-full h-5 mt-2 text-cyan-500/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 18 Q20 8, 45 14 T100 5" />
+              </svg>
+            </div>
+
+            <!-- Card 3: Queue Depth -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden border-purple-500/25">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Queue Depth</span>
+                <span class="text-purple-500 text-lg">⏳</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statInQueue" class="font-display font-extrabold text-2xl sm:text-3xl text-purple-500">0</span>
+                <span class="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">Waiting</span>
+              </div>
+              <svg class="w-full h-5 mt-2 text-purple-500/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 12 Q30 18, 60 7 T100 14" />
+              </svg>
+            </div>
+
+            <!-- Card 4: Active VIPs -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden border-amber-500/25">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Active VIPs</span>
+                <span class="text-amber-500 text-lg">👑</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statVipCount" class="font-display font-extrabold text-2xl sm:text-3xl text-amber-500">0</span>
+                <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">Priority</span>
+              </div>
+              <svg class="w-full h-5 mt-2 text-amber-500/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 14 Q35 5, 70 15 T100 9" />
+              </svg>
+            </div>
+
+            <!-- Card 5: Blocked Threat IPs -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden border-rose-500/25">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Blocked IPs</span>
+                <span class="text-rose-500 text-lg">🚫</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statBannedCount" class="font-display font-extrabold text-2xl sm:text-3xl text-rose-500">0</span>
+                <span id="banCountBadge" class="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Auto-Ban</span>
+              </div>
+              <svg class="w-full h-5 mt-2 text-rose-500/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 10 Q25 18, 55 10 T100 16" />
+              </svg>
+            </div>
+
+            <!-- Card 6: Engine Uptime -->
+            <div class="theme-card rounded-2xl p-4 transition-transform hover:-translate-y-0.5 relative overflow-hidden">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider">Uptime</span>
+                <span class="text-indigo-400 text-lg">⚡</span>
+              </div>
+              <div class="flex items-baseline space-x-2">
+                <span id="statUptime" class="font-display font-extrabold text-xl sm:text-2xl text-indigo-400">0s</span>
+              </div>
+              <svg class="w-full h-5 mt-2 text-indigo-400/40" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M0 15 Q30 5, 60 10 T100 5" />
+              </svg>
+            </div>
+
+          </div>
+
+          <!-- B. TRAFFIC & SESSIONS CHART + USER DISTRIBUTION -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Traffic & Sessions Graph (8 cols) -->
+            <div class="lg:col-span-8 theme-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 class="font-display font-bold text-base sm:text-lg flex items-center space-x-2">
+                      <span class="text-purple-500">📈</span>
+                      <span>Traffic & Sessions</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Real-time telemetry trend over recorded history</p>
+                  </div>
+                  <!-- Time range filter tabs -->
+                  <div class="flex items-center space-x-1 p-1 rounded-xl theme-card-subtle text-xs font-semibold">
+                    <button class="time-tab-btn px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold">24h</button>
+                    <button class="time-tab-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white">7d</button>
+                    <button class="time-tab-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white">30d</button>
+                    <button class="time-tab-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white">Custom</button>
+                  </div>
+                </div>
+
+                <!-- Chart Legend -->
+                <div class="flex items-center space-x-4 text-xs font-medium mb-3">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    <span class="text-slate-400">Online Users</span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                    <span class="text-slate-400">Active Calls</span>
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    <span class="text-slate-400">In Queue</span>
+                  </div>
+                </div>
+
+                <!-- HTML5 Canvas Responsive Smooth Area Chart -->
+                <div class="relative w-full h-[240px]">
+                  <canvas id="trafficChartCanvas" class="w-full h-full block"></canvas>
+                  <div id="chartTooltip" class="absolute pointer-events-none hidden px-2.5 py-1.5 rounded-lg theme-card border text-[11px] font-mono shadow-xl z-20"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Distribution (Gender Donut & Geos) (4 cols) -->
+            <div class="lg:col-span-4 theme-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-display font-bold text-base flex items-center space-x-2">
+                    <span class="text-cyan-400">👥</span>
+                    <span>User Distribution</span>
+                  </h3>
+                  <button data-nav="analytics" class="text-xs text-purple-400 hover:underline cursor-pointer">Details →</button>
+                </div>
+
+                <!-- Gender Donut SVG -->
+                <div class="flex items-center justify-around py-2 border-b" style="border-color: var(--border-subtle);">
+                  <!-- SVG Ring Donut -->
+                  <div class="relative w-28 h-28 flex items-center justify-center shrink-0">
+                    <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <!-- Background circle -->
+                      <path class="text-slate-200 dark:text-slate-800" stroke-width="4" stroke="currentColor" fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <!-- Male circle slice -->
+                      <path id="donutMaleSegment" stroke-width="4" stroke="#06b6d4" stroke-dasharray="0, 100" fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <!-- Female circle slice -->
+                      <path id="donutFemaleSegment" stroke-width="4" stroke="#ec4899" stroke-dasharray="0, 100" fill="none"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span id="donutTotalUsers" class="font-display font-extrabold text-base">0</span>
+                      <span class="text-[9px] uppercase tracking-wider text-slate-400">Users</span>
+                    </div>
+                  </div>
+
+                  <!-- Gender Legend Stats -->
+                  <div class="space-y-2 text-xs shrink-0">
+                    <div class="flex items-center space-x-2 whitespace-nowrap">
+                      <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
+                      <span class="text-slate-400">Male:</span>
+                      <span id="maleCountText" class="font-bold">0 (0%)</span>
+                    </div>
+                    <div class="flex items-center space-x-2 whitespace-nowrap">
+                      <span class="w-2.5 h-2.5 rounded-full bg-pink-500 shrink-0"></span>
+                      <span class="text-slate-400">Female:</span>
+                      <span id="femaleCountText" class="font-bold">0 (0%)</span>
+                    </div>
+                    <div class="hidden">
+                      <div id="maleProgressBar"></div>
+                      <div id="femaleProgressBar"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Top Countries Breakdown -->
+                <div class="pt-3">
+                  <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+                    <span>Top Countries</span>
+                    <span>% Share</span>
+                  </div>
+                  <div id="countryStatsContainer" class="space-y-2.5 max-h-[140px] overflow-y-auto pr-1">
+                    <div class="text-xs text-slate-400 text-center py-4">Awaiting live connections...</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2 text-right">
+                <button data-nav="users" class="text-xs font-semibold text-purple-400 hover:text-purple-300">View all users →</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- C. 3 MANAGEMENT ACTION CARDS (VIP, Moderation, Sponsor) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Card 1: VIP Pass Management -->
+            <div class="theme-card rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between border-b pb-3 mb-3" style="border-color: var(--border-subtle);">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-amber-500 text-lg">👑</span>
+                    <h3 class="font-display font-bold text-base">VIP Pass Management</h3>
+                  </div>
+                  <button data-nav="vip-passes" class="text-xs font-semibold text-purple-400 hover:underline cursor-pointer">View All →</button>
+                </div>
+
+                <div class="mb-3">
+                  <button data-nav="vip-generator"
+                    class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+                    <span>+</span>
+                    <span>Generate VIP Pass</span>
+                  </button>
+                </div>
+
+                <!-- Mini VIP Passes Table -->
+                <div class="overflow-x-auto max-h-[190px]">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr class="text-slate-400 uppercase tracking-wider font-semibold border-b" style="border-color: var(--border-subtle);">
+                        <th class="py-1.5 px-2">Code</th>
+                        <th class="py-1.5 px-2">Duration</th>
+                        <th class="py-1.5 px-2">Status</th>
+                        <th class="py-1.5 px-2 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="quickVipTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                      <tr>
+                        <td colspan="4" class="py-4 text-center text-slate-500">Loading VIP passes...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Safety & Moderation -->
+            <div class="theme-card rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between border-b pb-3 mb-3" style="border-color: var(--border-subtle);">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-rose-500 text-lg">🛡️</span>
+                    <h3 class="font-display font-bold text-base">Safety & Moderation</h3>
+                  </div>
+                  <button data-nav="reports" class="text-xs font-semibold text-purple-400 hover:underline cursor-pointer">View All →</button>
+                </div>
+
+                <!-- 2 Quick Stat Pills -->
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                  <div class="p-2.5 rounded-xl theme-card-subtle flex items-center space-x-2">
+                    <span class="text-rose-500 text-base">🚨</span>
+                    <div>
+                      <span id="quickReportsCount" class="block font-bold text-sm text-rose-500">0</span>
+                      <span class="text-[10px] text-slate-400">Reports Pending</span>
+                    </div>
+                  </div>
+                  <div class="p-2.5 rounded-xl theme-card-subtle flex items-center space-x-2">
+                    <span class="text-amber-500 text-base">🚫</span>
+                    <div>
+                      <span id="quickBansCount" class="block font-bold text-sm text-amber-500">0</span>
+                      <span class="text-[10px] text-slate-400">Active Bans</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Review Reports Action -->
+                <div class="mb-3">
+                  <button data-nav="reports"
+                    class="w-full py-2 px-3 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/30 text-purple-400 font-bold text-xs transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+                    <span>Review Reports</span>
+                    <span>→</span>
+                  </button>
+                </div>
+
+                <!-- Mini Active Bans Table -->
+                <div class="overflow-x-auto max-h-[140px]">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr class="text-slate-400 uppercase tracking-wider font-semibold border-b" style="border-color: var(--border-subtle);">
+                        <th class="py-1.5 px-2">IP</th>
+                        <th class="py-1.5 px-2">Reason</th>
+                        <th class="py-1.5 px-2">Expires</th>
+                        <th class="py-1.5 px-2 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="quickBansTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                      <tr>
+                        <td colspan="4" class="py-3 text-center text-slate-500">No active bans</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Live Sponsor Card -->
+            <div class="theme-card rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between border-b pb-3 mb-3" style="border-color: var(--border-subtle);">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-cyan-400 text-lg">📢</span>
+                    <h3 class="font-display font-bold text-base">Live Sponsor Card</h3>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-bold border border-emerald-500/30">
+                    🟢 Live
+                  </span>
+                </div>
+
+                <!-- In-Chat Live Preview Card -->
+                <div class="my-2 p-3.5 rounded-2xl bg-gradient-to-tr from-purple-900/60 via-slate-900 to-indigo-950 border border-purple-500/35 text-xs shadow-xl relative overflow-hidden">
+                  <div class="flex items-center space-x-2 mb-1.5">
+                    <span id="quickPreviewTag" class="text-[10px] font-bold text-purple-300 uppercase tracking-wider bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                      🎮 Verified Partner
+                    </span>
+                    <span id="quickPreviewSubtag" class="text-[10px] text-slate-400">&bull; Zero-Ad Monetization</span>
+                  </div>
+                  <p id="quickPreviewMessage" class="text-slate-200 text-xs leading-relaxed my-2">
+                    Level up your setup with <strong>TalkHop Premium</strong>.
+                  </p>
+                  <div>
+                    <span id="quickPreviewUrlText" class="inline-flex items-center space-x-1 text-purple-400 font-semibold text-xs underline">
+                      <span>Visit Partner</span> <span>↗</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sponsor Actions -->
+              <div class="grid grid-cols-2 gap-2 mt-3">
+                <button data-nav="sponsor" class="py-2 rounded-xl theme-card-subtle text-slate-300 font-semibold text-xs hover:border-purple-500/40 text-center cursor-pointer">
+                  Edit Sponsor
+                </button>
+                <button data-nav="sponsor" class="py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs text-center shadow-md cursor-pointer">
+                  Broadcast Update →
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- D. SYSTEM STATUS & RECENT ADMIN ACTIVITY -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- System Status Bar (7 cols) -->
+            <div class="lg:col-span-7 theme-card rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center space-x-2 mb-4">
+                  <span class="text-emerald-500 text-lg">〰️</span>
+                  <h3 class="font-display font-bold text-base">System Status</h3>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div class="p-3 rounded-2xl theme-card-subtle">
+                    <span class="text-[10px] text-slate-400 block mb-1">Socket.IO Signaling</span>
+                    <span class="font-bold text-emerald-500 flex items-center space-x-1">
+                      <span>●</span>
+                      <span>Healthy</span>
+                    </span>
+                  </div>
+
+                  <div class="p-3 rounded-2xl theme-card-subtle">
+                    <span class="text-[10px] text-slate-400 block mb-1">WebRTC Signaling</span>
+                    <span class="font-bold text-emerald-500 flex items-center space-x-1">
+                      <span>●</span>
+                      <span>Healthy</span>
+                    </span>
+                  </div>
+
+                  <div class="p-3 rounded-2xl theme-card-subtle">
+                    <span class="text-[10px] text-slate-400 block mb-1">Database / Storage</span>
+                    <span class="font-bold text-purple-400">In-Memory (Active)</span>
+                  </div>
+
+                  <div class="p-3 rounded-2xl theme-card-subtle">
+                    <span class="text-[10px] text-slate-400 block mb-1">Telemetry Sync</span>
+                    <span class="font-bold text-cyan-400" id="syncStatusPill">Live (3s)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Admin Activity (5 cols) -->
+            <div class="lg:col-span-5 theme-card rounded-3xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3 border-b pb-2" style="border-color: var(--border-subtle);">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-purple-400">⏱️</span>
+                    <h3 class="font-display font-bold text-base">Recent Admin Activity</h3>
+                  </div>
+                  <button data-nav="diagnostics" class="text-xs text-purple-400 hover:underline cursor-pointer">View All →</button>
+                </div>
+
+                <div id="recentActivityList" class="space-y-2.5 max-h-[140px] overflow-y-auto text-xs pr-1">
+                  <div class="text-xs text-slate-500 py-3 text-center">No recent activity recorded yet.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 2: LIVE ANALYTICS                                   -->
+        <!-- ======================================================= -->
+        <section id="view-analytics" class="admin-view hidden space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+                <span>📊</span>
+                <span>Platform Telemetry & Matchmaking Analytics</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Deep inspection of matching queues, demographic distribution, and socket connection health.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Queue Breakdown -->
+            <div class="theme-card rounded-3xl p-5 space-y-4">
+              <h3 class="font-display font-bold text-base flex items-center space-x-2">
+                <span>⏳</span>
+                <span>Priority Match Queue Breakdown</span>
+              </h3>
+              <div class="space-y-3 text-xs">
+                <div class="flex justify-between items-center p-3 rounded-xl theme-card-subtle">
+                  <span>Global (Any Country / Gender)</span>
+                  <span id="queueGlobalCount" class="font-bold font-mono text-purple-400">0</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded-xl theme-card-subtle">
+                  <span>VIP Female Filter Preference</span>
+                  <span id="queueFemaleCount" class="font-bold font-mono text-pink-400">0</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded-xl theme-card-subtle">
+                  <span>VIP Country Filter Preference</span>
+                  <span id="queueCountryCount" class="font-bold font-mono text-cyan-400">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Demographics Summary -->
+            <div class="theme-card rounded-3xl p-5 space-y-4 md:col-span-2">
+              <h3 class="font-display font-bold text-base flex items-center space-x-2">
+                <span>🌍</span>
+                <span>Active Geolocation Footprint</span>
+              </h3>
+              <div id="analyticsCountryList" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[220px] overflow-y-auto">
+                <div class="text-xs text-slate-500 py-6 col-span-3 text-center">Awaiting geographic traffic...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 3: ONLINE USERS                                     -->
+        <!-- ======================================================= -->
+        <section id="view-users" class="admin-view hidden space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+                <span>👥</span>
+                <span>Connected Online Users</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Live inspection of all connected WebSocket peers and their session states.</p>
+            </div>
+            <input type="text" id="searchUsersInput" placeholder="🔍 Search socket ID, IP, country..."
+              class="theme-input rounded-xl px-4 py-2 text-xs w-64">
+          </div>
+
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead>
-                <tr class="border-b border-white/10 text-slate-400 uppercase tracking-wider font-semibold">
-                  <th class="py-2 px-3">IP Address</th>
-                  <th class="py-2 px-3">Reason</th>
-                  <th class="py-2 px-3">Remaining Time</th>
-                  <th class="py-2 px-3 text-right">Action</th>
+                <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                  <th class="py-2.5 px-3">Socket ID</th>
+                  <th class="py-2.5 px-3">IP Address</th>
+                  <th class="py-2.5 px-3">Country</th>
+                  <th class="py-2.5 px-3">Gender</th>
+                  <th class="py-2.5 px-3">Mode</th>
+                  <th class="py-2.5 px-3">State</th>
+                  <th class="py-2.5 px-3">VIP Status</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="bannedTableBody" class="divide-y divide-white/5">
+              <tbody id="detailedUsersTableBody" class="divide-y" style="border-color: var(--border-subtle);">
                 <tr>
-                  <td colspan="4" class="py-6 text-center text-slate-500">No active IP bans.</td>
+                  <td colspan="8" class="py-8 text-center text-slate-500">No active users connected.</td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <!-- Manual IP Ban Box (1 Col) -->
-        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+        <!-- ======================================================= -->
+        <!-- VIEW 4: ACTIVE CALLS                                     -->
+        <!-- ======================================================= -->
+        <section id="view-calls" class="admin-view hidden space-y-6">
           <div>
-            <div class="flex items-center space-x-2 mb-2">
-              <span class="text-lg">🔨</span>
-              <h3 class="font-display font-bold text-base text-white">Manual Threat Ban</h3>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>📞</span>
+              <span>Active P2P Sessions & Video Calls</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Currently matched 1-on-1 pairs streaming peer-to-peer over WebRTC.</p>
+          </div>
+
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                  <th class="py-2.5 px-3">Pair Reference</th>
+                  <th class="py-2.5 px-3">Peer A</th>
+                  <th class="py-2.5 px-3">Peer B</th>
+                  <th class="py-2.5 px-3">Call Mode</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="detailedCallsTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-500">No active P2P calls in progress.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 5: MATCHMAKING QUEUE                                -->
+        <!-- ======================================================= -->
+        <section id="view-queue" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>⏳</span>
+              <span>Matchmaking Queue Pool</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Users actively waiting in radar queue waiting for an eligible peer match.</p>
+          </div>
+
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                  <th class="py-2.5 px-3">Position</th>
+                  <th class="py-2.5 px-3">Socket ID</th>
+                  <th class="py-2.5 px-3">User Country</th>
+                  <th class="py-2.5 px-3">Target Gender Filter</th>
+                  <th class="py-2.5 px-3">Target Country Filter</th>
+                  <th class="py-2.5 px-3">Requested Mode</th>
+                </tr>
+              </thead>
+              <tbody id="detailedQueueTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-500">Matchmaking queue is currently empty.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 6: VIP PASS MANAGEMENT                              -->
+        <!-- ======================================================= -->
+        <section id="view-vip-passes" class="admin-view hidden space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+                <span>👑</span>
+                <span>VIP Pass Voucher Management</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Inspect, search, and revoke VIP access tokens.</p>
             </div>
-            <p class="text-xs text-slate-400 mb-4">Instantly ban an IP and terminate any active video calls or queue positions.</p>
+            <div class="flex items-center space-x-2">
+              <input type="text" id="searchVipInput" placeholder="🔍 Search voucher code or note..."
+                class="theme-input rounded-xl px-4 py-2 text-xs w-64">
+              <button data-nav="vip-generator" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md cursor-pointer">
+                + Generate Pass
+              </button>
+            </div>
+          </div>
 
-            <form id="manualBanForm" class="space-y-3">
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                  <th class="py-2.5 px-3">VIP Voucher Code</th>
+                  <th class="py-2.5 px-3">Plan / Duration</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3">Active Device Socket</th>
+                  <th class="py-2.5 px-3">Admin Note</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vipTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-500">Loading VIP passes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 7: VIP CODE GENERATOR                               -->
+        <!-- ======================================================= -->
+        <section id="view-vip-generator" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>🎟️</span>
+              <span>Generate VIP Pass Voucher</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Issue time-locked priority micro-passes with 1-device concurrency lock protection.</p>
+          </div>
+
+          <div class="theme-card rounded-3xl p-6 max-w-2xl">
+            <form id="generateVipForm" class="space-y-4">
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Target IP Address</label>
-                <input type="text" id="manualBanIp" required placeholder="e.g. 192.168.1.1"
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-bold text-slate-400 mb-1">Custom Code (Optional)</label>
+                <input type="text" id="genCustomCode" placeholder="Auto-generate if empty (e.g. VIP-7X92K)"
+                  class="w-full theme-input rounded-xl px-4 py-2.5 text-xs font-mono">
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-400 mb-1">Duration</label>
+                  <select id="genDurationSelect" class="w-full theme-input rounded-xl px-4 py-2.5 text-xs">
+                    <option value="60">1 Hour (Standard ₹19)</option>
+                    <option value="720">12 Hours (Half-Day ₹39)</option>
+                    <option value="1440">24 Hours (Full-Day)</option>
+                    <option value="10080">7 Days (Weekly VIP)</option>
+                    <option value="43200">30 Days (Monthly VIP)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-400 mb-1">Max Uses</label>
+                  <input type="number" id="genMaxUses" value="1" min="1" max="1000"
+                    class="w-full theme-input rounded-xl px-4 py-2.5 text-xs">
+                </div>
               </div>
 
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Ban Reason</label>
-                <input type="text" id="manualBanReason" placeholder="e.g. Severe harassment or abuse"
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-rose-500">
+                <label class="block text-xs font-bold text-slate-400 mb-1">Admin Note / Campaign Tag</label>
+                <input type="text" id="genNote" placeholder="e.g. Creator Promo Voucher"
+                  class="w-full theme-input rounded-xl px-4 py-2.5 text-xs">
               </div>
 
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Duration (Hours)</label>
-                <select id="manualBanHours"
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-rose-500">
-                  <option value="1">1 Hour</option>
-                  <option value="12">12 Hours</option>
-                  <option value="24" selected>24 Hours (Standard)</option>
-                  <option value="72">3 Days</option>
-                  <option value="168">7 Days</option>
-                </select>
-              </div>
-
-              <button type="submit" id="manualBanBtn"
-                class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-bold text-xs shadow-lg shadow-rose-600/30 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer mt-4">
-                <span>🚫</span>
-                <span>Ban IP & Kick Connections</span>
+              <button type="submit" id="genSubmitBtn"
+                class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+                <span>⚡</span>
+                <span>Generate VIP Pass Voucher</span>
               </button>
             </form>
           </div>
-        </div>
+        </section>
 
-      </div>
-
-      <!-- ========================================== -->
-      <!-- SECTION 5: LIVE SPONSOR & MONETIZATION     -->
-      <!-- ========================================== -->
-      <div class="glass-card rounded-3xl p-5 border border-white/10 space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+        <!-- ======================================================= -->
+        <!-- VIEW 8: REPORTS & MODERATION                             -->
+        <!-- ======================================================= -->
+        <section id="view-reports" class="admin-view hidden space-y-6">
           <div>
-            <h3 class="font-display font-extrabold text-lg text-white flex items-center space-x-2">
-              <span>📢 Live Sponsor & Monetization Engine</span>
-            </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Update the chat-box partner sponsor card in real-time. Changes are broadcast live to all connected chat users.</p>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>🛡️</span>
+              <span>Reports & Peer Moderation</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Inspect reported peers, accumulated violation counts, and dismiss or enforce bans.</p>
           </div>
-          <span class="text-xs px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-bold">
-            Real-Time Socket Broadcast
-          </span>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                  <th class="py-2.5 px-3">Reported IP Address</th>
+                  <th class="py-2.5 px-3">Reports in Last 24h</th>
+                  <th class="py-2.5 px-3">Threshold Status</th>
+                  <th class="py-2.5 px-3">Last Report Time</th>
+                  <th class="py-2.5 px-3 text-right">Moderation Actions</th>
+                </tr>
+              </thead>
+              <tbody id="detailedReportsTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-slate-500">🛡️ All clear! No pending user reports.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-          <!-- Edit Sponsor Form -->
-          <form id="sponsorUpdateForm" class="space-y-3.5 bg-slate-900/60 p-4 rounded-2xl border border-white/5">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Badge Tag</label>
-                <input type="text" id="sponsorTagInput" value="🎮 Verified Partner" required
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+        <!-- ======================================================= -->
+        <!-- VIEW 9: ACTIVE IP BANS & MANUAL BAN                      -->
+        <!-- ======================================================= -->
+        <section id="view-ip-bans" class="admin-view hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Active Banned IPs Table (2 cols) -->
+            <div class="lg:col-span-2 theme-card rounded-3xl p-5 space-y-4">
+              <div class="flex items-center justify-between border-b pb-3" style="border-color: var(--border-subtle);">
+                <div class="flex items-center space-x-2">
+                  <span class="text-rose-500 text-lg">🛡️</span>
+                  <h3 class="font-display font-extrabold text-base">Active IP Bans</h3>
+                </div>
               </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead>
+                    <tr class="border-b text-slate-400 uppercase tracking-wider font-semibold" style="border-color: var(--border-subtle);">
+                      <th class="py-2 px-3">IP Address</th>
+                      <th class="py-2 px-3">Reason</th>
+                      <th class="py-2 px-3">Remaining Time</th>
+                      <th class="py-2 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bannedTableBody" class="divide-y" style="border-color: var(--border-subtle);">
+                    <tr>
+                      <td colspan="4" class="py-6 text-center text-slate-500">No active IP bans.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Manual Threat Ban Form (1 col) -->
+            <div class="theme-card rounded-3xl p-5 flex flex-col justify-between">
               <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Subtag</label>
-                <input type="text" id="sponsorSubtagInput" value="Zero-Ad Monetization" required
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="text-lg">🔨</span>
+                  <h3 class="font-display font-bold text-base">Manual Threat Ban</h3>
+                </div>
+                <p class="text-xs text-slate-400 mb-4">Instantly ban an IP and terminate any active video calls or queue positions.</p>
+
+                <form id="manualBanForm" class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Target IP Address</label>
+                    <input type="text" id="manualBanIp" required placeholder="e.g. 192.168.1.1"
+                      class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Ban Reason</label>
+                    <input type="text" id="manualBanReason" placeholder="e.g. Severe harassment or abuse"
+                      class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Duration (Hours)</label>
+                    <select id="manualBanHours" class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                      <option value="1">1 Hour</option>
+                      <option value="12">12 Hours</option>
+                      <option value="24" selected>24 Hours (Standard)</option>
+                      <option value="72">3 Days</option>
+                      <option value="168">7 Days</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" id="manualBanBtn"
+                    class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-display font-bold text-xs shadow-lg shadow-rose-600/30 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer mt-4">
+                    <span>🚫</span>
+                    <span>Ban IP & Kick Connections</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 10: BLOCKED USERS                                   -->
+        <!-- ======================================================= -->
+        <section id="view-blocked-users" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>⛔</span>
+              <span>Blocked Users & Auto-Ban Log</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Permanent and threshold auto-ban violations tracked by AI Safety Shield.</p>
+          </div>
+
+          <div class="theme-card rounded-3xl p-5 overflow-x-auto">
+            <div id="blockedUsersLogContainer" class="space-y-3">
+              <div class="text-xs text-slate-500 py-6 text-center">No blocked user violations logged.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 11: SPONSOR CARD                                    -->
+        <!-- ======================================================= -->
+        <section id="view-sponsor" class="admin-view hidden space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3.5" style="border-color: var(--border-subtle);">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+                <span>📢</span>
+                <span>Live Sponsor & Monetization Engine</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Update the chat-box partner sponsor card in real-time. Changes are broadcast live to all connected chat users.</p>
+            </div>
+            <span class="text-xs px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 font-bold">
+              Real-Time Socket Broadcast
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <!-- Edit Sponsor Form -->
+            <form id="sponsorUpdateForm" class="space-y-3.5 theme-card rounded-3xl p-6">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">Badge Tag</label>
+                  <input type="text" id="sponsorTagInput" value="🎮 Verified Partner" required
+                    class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">Subtag</label>
+                  <input type="text" id="sponsorSubtagInput" value="Zero-Ad Monetization" required
+                    class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-400 mb-1">Main Message Headline</label>
+                <textarea id="sponsorMessageInput" rows="2" required
+                  class="w-full theme-input rounded-xl px-3 py-2 text-xs">Level up your setup with Vybronx Gaming Gear & Cloud Servers.</textarea>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">Button / Link Label</label>
+                  <input type="text" id="sponsorUrlTextInput" value="Visit vybronx.online/store" required
+                    class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1">Destination URL</label>
+                  <input type="url" id="sponsorUrlInput" value="https://vybronx.online" required
+                    class="w-full theme-input rounded-xl px-3 py-2 text-xs">
+                </div>
+              </div>
+
+              <button type="submit" id="sponsorSubmitBtn"
+                class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-display font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
+                <span>🚀</span>
+                <span>Broadcast Sponsor Live to All Chat Clients</span>
+              </button>
+            </form>
+
+            <!-- Live Visual Preview of Chat Card -->
+            <div class="theme-card rounded-3xl p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
+                    <span>📱</span>
+                    <span>In-Chat Card Visual Preview</span>
+                  </span>
+                  <span class="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                    Matches Client Chat Box
+                  </span>
+                </div>
+
+                <!-- Preview Card -->
+                <div class="my-2 p-4 rounded-2xl bg-gradient-to-tr from-purple-900/60 via-slate-900 to-indigo-950 border border-purple-500/30 text-xs shadow-xl">
+                  <div class="flex items-center space-x-2 mb-1.5">
+                    <span id="previewTag" class="text-[10px] font-bold text-purple-300 uppercase tracking-wider bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                      🎮 Verified Partner
+                    </span>
+                    <span id="previewSubtag" class="text-[10px] text-slate-400">&bull; Zero-Ad Monetization</span>
+                  </div>
+                  <p id="previewMessage" class="text-slate-200 text-xs leading-relaxed">
+                    Level up your setup with <strong class="text-white">Vybronx Gaming Gear & Cloud Servers</strong>.
+                  </p>
+                  <div class="mt-2">
+                    <span id="previewUrlText" class="inline-flex items-center space-x-1 text-purple-400 font-semibold text-xs underline">
+                      <span>Visit vybronx.online/store</span>
+                      <span>↗</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-500 mt-3 italic">
+                ℹ️ Injected into user chat streams every 5th consecutive match, or instantly broadcasted via WebSockets.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 12: REVENUE                                         -->
+        <!-- ======================================================= -->
+        <section id="view-revenue" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>💳</span>
+              <span>Monetization & Payment Engine Status</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">TalkHop Micro-Pass tier economics and payment gateway telemetry.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="theme-card rounded-3xl p-5 md:col-span-2 space-y-4">
+              <h3 class="font-display font-bold text-base">Razorpay Payment Gateway Configuration</h3>
+              <div class="p-4 rounded-2xl theme-card-subtle space-y-2 text-xs">
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400">Environment Mode:</span>
+                  <span class="font-bold text-amber-500">Sandbox / Instant Mock Mode (Active)</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400">Live Gateway Credentials:</span>
+                  <span class="font-mono text-slate-400">RZP_KEY_ID & RZP_KEY_SECRET</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400">Active Currency:</span>
+                  <span class="font-bold">INR (₹)</span>
+                </div>
+              </div>
+              <p class="text-xs text-slate-500">
+                Notice: Revenue tracking is calculated in the Razorpay merchant dashboard. Financial metrics are not fabricated or simulated.
+              </p>
+            </div>
+
+            <div class="theme-card rounded-3xl p-5 space-y-3">
+              <h3 class="font-display font-bold text-base">VIP Pricing Tiers</h3>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between p-2 rounded-xl theme-card-subtle">
+                  <span>1 Hour Pass</span>
+                  <span class="font-bold text-purple-400">₹19</span>
+                </div>
+                <div class="flex justify-between p-2 rounded-xl theme-card-subtle">
+                  <span>12 Hours Pass</span>
+                  <span class="font-bold text-purple-400">₹39</span>
+                </div>
+                <div class="flex justify-between p-2 rounded-xl theme-card-subtle">
+                  <span>24 Hours Pass</span>
+                  <span class="font-bold text-purple-400">₹59</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 13: SYSTEM DIAGNOSTICS                              -->
+        <!-- ======================================================= -->
+        <section id="view-diagnostics" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>⚙️</span>
+              <span>System Telemetry & Engine Diagnostics</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Real-time Node process telemetry, memory allocation, and WebRTC STUN/TURN status.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="theme-card rounded-2xl p-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Node Environment</span>
+              <span id="diagNodeVer" class="font-mono font-bold text-base text-purple-400">Node.js</span>
+            </div>
+            <div class="theme-card rounded-2xl p-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Process Platform</span>
+              <span id="diagPlatform" class="font-mono font-bold text-base text-cyan-400">OS</span>
+            </div>
+            <div class="theme-card rounded-2xl p-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Memory (RSS)</span>
+              <span id="diagMemory" class="font-mono font-bold text-base text-emerald-400">0 MB</span>
+            </div>
+            <div class="theme-card rounded-2xl p-4">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Heap Used</span>
+              <span id="diagHeap" class="font-mono font-bold text-base text-amber-400">0 MB</span>
+            </div>
+          </div>
+
+          <!-- Diagnostic Ping Tool -->
+          <div class="theme-card rounded-3xl p-5 space-y-4">
+            <h3 class="font-display font-bold text-base">Dynamic STUN / TURN Fallback Test</h3>
+            <div class="flex items-center space-x-3">
+              <button id="runPingBtn" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer">
+                Ping /api/rtc-config
+              </button>
+              <span id="pingResultText" class="text-xs font-mono text-slate-400">Ready to test.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 14: SETTINGS                                        -->
+        <!-- ======================================================= -->
+        <section id="view-settings" class="admin-view hidden space-y-6">
+          <div>
+            <h2 class="font-display font-extrabold text-2xl flex items-center space-x-2">
+              <span>🔧</span>
+              <span>Admin Console Preferences</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Configure telemetry polling intervals, visual appearance, and notification preferences.</p>
+          </div>
+
+          <div class="theme-card rounded-3xl p-6 max-w-2xl space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Theme Preference</label>
+              <div class="grid grid-cols-3 gap-3">
+                <button type="button" id="prefThemeDark" class="py-2.5 px-3 rounded-xl border border-purple-500 font-bold text-xs text-purple-400 theme-card-subtle cursor-pointer text-center">
+                  🌙 Dark Mode
+                </button>
+                <button type="button" id="prefThemeLight" class="py-2.5 px-3 rounded-xl border border-slate-300 font-bold text-xs text-slate-400 theme-card-subtle cursor-pointer text-center">
+                  ☀️ Light Mode
+                </button>
+                <button type="button" id="prefThemeSystem" class="py-2.5 px-3 rounded-xl border border-slate-300 font-bold text-xs text-slate-400 theme-card-subtle cursor-pointer text-center">
+                  💻 System
+                </button>
               </div>
             </div>
 
             <div>
-              <label class="block text-[11px] font-bold text-slate-400 mb-1">Main Message Headline</label>
-              <textarea id="sponsorMessageInput" rows="2" required
-                class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">Level up your setup with Vybronx Gaming Gear & Cloud Servers.</textarea>
+              <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Radar Polling Frequency</label>
+              <select id="prefPollInterval" class="w-full theme-input rounded-xl px-4 py-2.5 text-xs">
+                <option value="1">1 second (High Frequency)</option>
+                <option value="3" selected>3 seconds (Recommended)</option>
+                <option value="5">5 seconds (Standard)</option>
+                <option value="10">10 seconds (Low Bandwidth)</option>
+                <option value="30">30 seconds (Relaxed)</option>
+              </select>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Button / Link Label</label>
-                <input type="text" id="sponsorUrlTextInput" value="Visit vybronx.online/store" required
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-slate-400 mb-1">Destination URL</label>
-                <input type="url" id="sponsorUrlInput" value="https://vybronx.online" required
-                  class="w-full bg-[#111422] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
-              </div>
-            </div>
-
-            <button type="submit" id="sponsorSubmitBtn"
-              class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-display font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
-              <span>🚀</span>
-              <span>Broadcast Sponsor Live to All Chat Clients</span>
-            </button>
-          </form>
-
-          <!-- Live Visual Preview of Chat Card -->
-          <div class="bg-[#0b0e17] p-5 rounded-2xl border border-white/10 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
-                  <span>📱</span>
-                  <span>In-Chat Card Visual Preview</span>
-                </span>
-                <span class="text-[10px] text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                  Matches Client Chat Box
-                </span>
-              </div>
-
-              <!-- Preview Card -->
-              <div class="my-2 p-3.5 rounded-2xl bg-slate-900 border border-purple-500/30 text-xs shadow-xl">
-                <div class="flex items-center space-x-2 mb-1.5">
-                  <span id="previewTag" class="text-[10px] font-bold text-purple-300 uppercase tracking-wider bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30">
-                    🎮 Verified Partner
-                  </span>
-                  <span id="previewSubtag" class="text-[10px] text-slate-400">&bull; Zero-Ad Monetization</span>
-                </div>
-                <p id="previewMessage" class="text-slate-300 text-xs leading-relaxed">
-                  Level up your setup with <strong class="text-white">Vybronx Gaming Gear & Cloud Servers</strong>.
-                </p>
-                <div class="mt-2">
-                  <span id="previewUrlText" class="inline-flex items-center space-x-1 text-purple-400 font-semibold text-xs underline">
-                    <span>Visit vybronx.online/store</span>
-                    <span>↗</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <p class="text-[11px] text-slate-500 mt-3 italic">
-              ℹ️ Injected into user chat streams every 5th consecutive match, or instantly broadcasted via WebSockets.
-            </p>
           </div>
+        </section>
 
-        </div>
-      </div>
+      </main>
 
-    </main>
+    </div>
 
   </div>
 
@@ -681,10 +1686,12 @@
   <!-- ======================================================= -->
   <script>
     // State Variables
-    let adminToken = sessionStorage.getItem('vybrant_admin_token') || sessionStorage.getItem('blip_admin_token') || null;
+    let adminToken = sessionStorage.getItem('talkhop_admin_token') || sessionStorage.getItem('vybrant_admin_token') || sessionStorage.getItem('blip_admin_token') || null;
     let pollInterval = null;
+    let radarSecondsSetting = 3;
     let countdownSeconds = 3;
-    let isPolling = true;
+    let isFetching = false;
+    let latestStatsData = null;
 
     // Toast Notification Utility
     function showAdminToast(message, type = 'info', duration = 3000) {
@@ -693,10 +1700,10 @@
 
       const toast = document.createElement('div');
       const colors = {
-        info: 'bg-slate-900/95 border-purple-500/40 text-purple-200',
-        success: 'bg-slate-900/95 border-emerald-500/40 text-emerald-200',
-        warning: 'bg-slate-900/95 border-amber-500/40 text-amber-200',
-        danger: 'bg-slate-900/95 border-rose-500/40 text-rose-200'
+        info: 'bg-purple-950/95 border-purple-500/40 text-purple-200',
+        success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
+        warning: 'bg-amber-950/95 border-amber-500/40 text-amber-200',
+        danger: 'bg-rose-950/95 border-rose-500/40 text-rose-200'
       };
 
       toast.className = `flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-2xl backdrop-blur-xl text-xs font-semibold ${colors[type] || colors.info} transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
@@ -725,8 +1732,8 @@
       const response = await fetch(endpoint, { ...options, headers });
 
       if (response.status === 401) {
-        // Token invalid or expired
         adminToken = null;
+        sessionStorage.removeItem('talkhop_admin_token');
         sessionStorage.removeItem('vybrant_admin_token');
         sessionStorage.removeItem('blip_admin_token');
         showLoginScreen('Session expired. Please log in again.');
@@ -768,20 +1775,30 @@
 
       fetchStats();
       startPolling();
+
+      // Trigger initial hash route
+      const currentHash = window.location.hash.replace('#', '') || 'dashboard';
+      navigateToSection(currentHash);
     }
 
-    // Polling Mechanism (Every 3 seconds)
+    // Polling Mechanism
     function startPolling() {
       if (pollInterval) clearInterval(pollInterval);
-      countdownSeconds = 3;
+      countdownSeconds = radarSecondsSetting;
 
       pollInterval = setInterval(() => {
         countdownSeconds--;
         const timerText = document.getElementById('radarTimerText');
-        if (timerText) timerText.textContent = `Radar: ${countdownSeconds}s`;
+        if (timerText) {
+          if (countdownSeconds <= 0 || isFetching) {
+            timerText.textContent = 'Syncing...';
+          } else {
+            timerText.textContent = `Radar: ${countdownSeconds}s`;
+          }
+        }
 
         if (countdownSeconds <= 0) {
-          countdownSeconds = 3;
+          countdownSeconds = radarSecondsSetting;
           fetchStats();
         }
       }, 1000);
@@ -800,64 +1817,178 @@
       return `${s}s`;
     }
 
-    // 1. Fetch & Render All Dashboard Statistics
+    // Format Relative Time (e.g. "2m ago")
+    function formatRelativeTime(timestamp) {
+      if (!timestamp) return 'Just now';
+      const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+      if (diffSec < 60) return `${Math.max(1, diffSec)}s ago`;
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      return `${Math.floor(diffHr / 24)}d ago`;
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Navigation Switcher
+    function navigateToSection(navId) {
+      if (!navId) navId = 'dashboard';
+      const targetView = document.getElementById(`view-${navId}`);
+      if (!targetView) navId = 'dashboard';
+
+      // Hide all views, show target view
+      document.querySelectorAll('.admin-view').forEach(view => view.classList.add('hidden'));
+      const activeView = document.getElementById(`view-${navId}`);
+      if (activeView) activeView.classList.remove('hidden');
+
+      // Update sidebar nav active pill
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-nav') === navId) {
+          btn.className = 'nav-btn nav-item-active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all cursor-pointer';
+        } else {
+          btn.className = 'nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-500/10 hover:text-purple-500 transition-all cursor-pointer';
+        }
+      });
+
+      // If target button is inside an accordion section that is collapsed, uncollapse it
+      const targetBtn = document.querySelector(`[data-nav="${navId}"]`);
+      if (targetBtn) {
+        const parentSection = targetBtn.closest('.sidebar-nav-section');
+        if (parentSection && parentSection.classList.contains('is-collapsed')) {
+          parentSection.classList.remove('is-collapsed');
+          const sectionName = parentSection.getAttribute('data-section');
+          if (sectionName) localStorage.setItem(`talkhop_nav_section_${sectionName}`, 'expanded');
+        }
+      }
+
+      window.location.hash = navId;
+
+      // Close mobile drawer if open
+      const sidebar = document.getElementById('adminSidebar');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (sidebar && backdrop) {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+
+      // Redraw canvas chart if viewing dashboard
+      if (navId === 'dashboard' && latestStatsData) {
+        requestAnimationFrame(() => renderTrafficChart(latestStatsData.trafficHistory || []));
+      }
+    }
+
+    // Fetch All Statistics
     async function fetchStats() {
+      if (isFetching) return;
+      isFetching = true;
+
+      const refreshSpinner = document.getElementById('refreshSpinner');
+      if (refreshSpinner) refreshSpinner.classList.add('animate-spin');
+      const timerText = document.getElementById('radarTimerText');
+      if (timerText) timerText.textContent = 'Syncing...';
+
       try {
         const data = await adminFetch('/api/admin/stats');
         if (!data || !data.stats) return;
 
+        latestStatsData = data.stats;
         const stats = data.stats;
 
-        // Render Top KPI Cards
+        // Render KPI Top Cards
         document.getElementById('statTotalOnline').textContent = (stats.totalOnline || 0).toLocaleString();
         document.getElementById('statInCall').textContent = (stats.inCall || 0).toLocaleString();
         document.getElementById('statInQueue').textContent = (stats.inQueue || 0).toLocaleString();
         document.getElementById('statVipCount').textContent = (stats.vipUsersCount || 0).toLocaleString();
         document.getElementById('statBannedCount').textContent = (stats.totalBannedCount || 0).toLocaleString();
         document.getElementById('statUptime').textContent = formatUptime(stats.uptimeSeconds);
-        document.getElementById('banCountBadge').textContent = `${stats.totalBannedCount || 0} Banned`;
+        const banBadge = document.getElementById('banCountBadge');
+        if (banBadge) banBadge.textContent = 'Auto-Shield';
+
+        // Update Sidebar Badges
+        document.getElementById('badgeOnlineCount').textContent = stats.totalOnline || 0;
+        document.getElementById('badgeCallsCount').textContent = stats.inCall || 0;
+        document.getElementById('badgeQueueCount').textContent = stats.inQueue || 0;
+        document.getElementById('badgeVipTotal').textContent = stats.totalVipCodes || 0;
+        document.getElementById('badgeBannedCount').textContent = stats.totalBannedCount || 0;
+        document.getElementById('badgeReportsCount').textContent = (stats.reportedIPs || []).length;
+
+        // Quick overview cards
+        document.getElementById('quickReportsCount').textContent = (stats.reportedIPs || []).length;
+        document.getElementById('quickBansCount').textContent = stats.totalBannedCount || 0;
 
         if (stats.serverTime) {
           const syncTime = new Date(stats.serverTime).toLocaleTimeString();
           document.getElementById('serverTimestampText').textContent = `Synced at ${syncTime}`;
         }
 
-        // Render Gender & Demographic Breakdown
+        // Render Demographics & Donut
         renderDemographics(stats);
 
-        // Render VIP Codes Table
-        renderVipTable(stats.activeVipCodes || []);
+        // Render Traffic & Sessions Spline Canvas
+        renderTrafficChart(stats.trafficHistory || []);
 
-        // Render Banned Threat IPs Table
-        renderBannedTable(stats.bannedIPs || []);
+        // Render VIP Tables (Dashboard quick + full)
+        renderVipTables(stats.activeVipCodes || []);
 
-        // Update Sponsor Input Fields (if not currently focused)
+        // Render Banned Tables (Dashboard quick + full)
+        renderBannedTables(stats.bannedIPs || []);
+
+        // Render Reports Table
+        renderReportsTable(stats.reportedIPs || []);
+
+        // Render Detailed Sessions (Users, Calls, Queue)
+        renderDetailedSessions(stats);
+
+        // Render Audit Activity Log
+        renderAuditLog(stats.auditLog || []);
+
+        // Render Diagnostics Info
+        renderDiagnostics(stats.diagnostics);
+
+        // Sync Sponsor Preview
         syncSponsorFields(stats.sponsorConfig);
 
       } catch (err) {
         console.warn('[Admin] fetchStats notice:', err);
+      } finally {
+        isFetching = false;
+        if (refreshSpinner) refreshSpinner.classList.remove('animate-spin');
+        const timerText = document.getElementById('radarTimerText');
+        if (timerText) timerText.textContent = `Radar: ${countdownSeconds}s`;
       }
     }
 
-    // Render Country & Gender Demographics
+    // Render Demographics (Gender Donut & Countries)
     function renderDemographics(stats) {
       const countryContainer = document.getElementById('countryStatsContainer');
+      const analyticsCountryList = document.getElementById('analyticsCountryList');
       const countryStats = stats.countryStats || {};
       const totalUsers = Math.max(1, stats.totalOnline || 1);
 
       const countryEntries = Object.entries(countryStats).sort((a, b) => b[1] - a[1]);
 
       if (countryEntries.length === 0) {
-        countryContainer.innerHTML = `<div class="text-xs text-slate-500 text-center py-6">No geo location traffic detected yet.</div>`;
+        countryContainer.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">No active geographic traffic yet.</div>`;
+        if (analyticsCountryList) analyticsCountryList.innerHTML = `<div class="text-xs text-slate-400 py-6 col-span-3 text-center">No traffic detected.</div>`;
       } else {
-        countryContainer.innerHTML = countryEntries.map(([country, count]) => {
+        const countryHtml = countryEntries.slice(0, 5).map(([country, count]) => {
           const pct = Math.round((count / totalUsers) * 100);
           return `
             <div>
               <div class="flex justify-between text-xs font-semibold mb-1">
-                <span class="text-slate-200 flex items-center space-x-1.5">
-                  <span class="font-mono text-purple-300 font-bold">${country}</span>
-                  <span class="text-slate-400 font-normal">(${count} online)</span>
+                <span class="text-slate-300 flex items-center space-x-1.5">
+                  <span class="font-mono text-purple-400 font-bold">${escapeHtml(country)}</span>
+                  <span class="text-slate-400 font-normal">(${count})</span>
                 </span>
                 <span class="text-slate-400 font-mono">${pct}%</span>
               </div>
@@ -867,9 +1998,19 @@
             </div>
           `;
         }).join('');
+        countryContainer.innerHTML = countryHtml;
+
+        if (analyticsCountryList) {
+          analyticsCountryList.innerHTML = countryEntries.map(([country, count]) => `
+            <div class="p-3 rounded-2xl theme-card-subtle flex items-center justify-between">
+              <span class="font-bold font-mono">${escapeHtml(country)}</span>
+              <span class="text-xs text-purple-400 font-bold">${count} online</span>
+            </div>
+          `).join('');
+        }
       }
 
-      // Gender Breakdown
+      // Gender Breakdown & SVG Donut
       const genderStats = stats.genderStats || { male: 0, female: 0 };
       const totalGender = Math.max(1, (genderStats.male || 0) + (genderStats.female || 0));
       const malePct = Math.round(((genderStats.male || 0) / totalGender) * 100);
@@ -877,90 +2018,412 @@
 
       document.getElementById('maleCountText').textContent = `${genderStats.male || 0} (${malePct}%)`;
       document.getElementById('femaleCountText').textContent = `${genderStats.female || 0} (${femalePct}%)`;
-      document.getElementById('maleProgressBar').style.width = `${malePct}%`;
-      document.getElementById('femaleProgressBar').style.width = `${femalePct}%`;
+      document.getElementById('donutTotalUsers').textContent = stats.totalOnline || 0;
 
+      // SVG Donut circumference = 100
+      const maleSegment = document.getElementById('donutMaleSegment');
+      const femaleSegment = document.getElementById('donutFemaleSegment');
+      if (maleSegment && femaleSegment) {
+        maleSegment.setAttribute('stroke-dasharray', `${malePct}, 100`);
+        femaleSegment.setAttribute('stroke-dasharray', `${femalePct}, 100`);
+        femaleSegment.setAttribute('stroke-dashoffset', `-${malePct}`);
+      }
+
+      // Queue Breakdown
       document.getElementById('queueGlobalCount').textContent = stats.inQueue || 0;
       document.getElementById('queueFemaleCount').textContent = stats.vipUsersCount || 0;
       document.getElementById('queueCountryCount').textContent = stats.vipUsersCount > 0 ? 1 : 0;
     }
 
-    // Render Active VIP Passes Table
-    function renderVipTable(codes) {
-      const tbody = document.getElementById('vipTableBody');
-      if (!tbody) return;
+    // Render Traffic Spline Chart via HTML5 Canvas
+    function renderTrafficChart(history) {
+      const canvas = document.getElementById('trafficChartCanvas');
+      if (!canvas) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.06)';
+      const textColor = isDark ? '#64748b' : '#94a3b8';
+
+      // Ensure at least 4 data points
+      let points = (history && history.length >= 2) ? history : [
+        { hourLabel: '12:00', onlineUsers: 0, activeCalls: 0, inQueue: 0 },
+        { hourLabel: '15:00', onlineUsers: 1, activeCalls: 0, inQueue: 0 },
+        { hourLabel: '18:00', onlineUsers: 0, activeCalls: 0, inQueue: 0 },
+        { hourLabel: '21:00', onlineUsers: 1, activeCalls: 0, inQueue: 0 }
+      ];
+
+      const maxVal = Math.max(5, ...points.map(p => Math.max(p.onlineUsers, p.activeCalls, p.inQueue || 0)));
+
+      // Draw Gridlines & Y-Axis
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.font = '10px "Space Grotesk", sans-serif';
+      ctx.fillStyle = textColor;
+
+      const yRows = 4;
+      for (let i = 0; i <= yRows; i++) {
+        const y = height - 25 - (i * (height - 40) / yRows);
+        const val = Math.round((maxVal / yRows) * i);
+        ctx.beginPath();
+        ctx.moveTo(35, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+        ctx.fillText(val, 5, y + 3);
+      }
+
+      // X-Axis Coordinates
+      const plotWidth = width - 45;
+      const xStep = plotWidth / (points.length - 1);
+
+      // Draw Series Function
+      function drawSpline(dataArr, strokeColor, fillColor) {
+        ctx.beginPath();
+        points.forEach((p, idx) => {
+          const val = p[dataArr] || 0;
+          const x = 40 + idx * xStep;
+          const y = height - 25 - (val / maxVal) * (height - 40);
+          if (idx === 0) ctx.moveTo(x, y);
+          else {
+            const prevX = 40 + (idx - 1) * xStep;
+            const prevVal = points[idx - 1][dataArr] || 0;
+            const prevY = height - 25 - (prevVal / maxVal) * (height - 40);
+            const cpX = (prevX + x) / 2;
+            ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+          }
+        });
+
+        // Fill area
+        ctx.lineTo(40 + (points.length - 1) * xStep, height - 25);
+        ctx.lineTo(40, height - 25);
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+
+        // Stroke line
+        ctx.beginPath();
+        points.forEach((p, idx) => {
+          const val = p[dataArr] || 0;
+          const x = 40 + idx * xStep;
+          const y = height - 25 - (val / maxVal) * (height - 40);
+          if (idx === 0) ctx.moveTo(x, y);
+          else {
+            const prevX = 40 + (idx - 1) * xStep;
+            const prevVal = points[idx - 1][dataArr] || 0;
+            const prevY = height - 25 - (prevVal / maxVal) * (height - 40);
+            const cpX = (prevX + x) / 2;
+            ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+          }
+        });
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Draw points
+        points.forEach((p, idx) => {
+          const val = p[dataArr] || 0;
+          const x = 40 + idx * xStep;
+          const y = height - 25 - (val / maxVal) * (height - 40);
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = strokeColor;
+          ctx.fill();
+        });
+      }
+
+      // Draw Online Users (Purple Area)
+      const gradPurple = ctx.createLinearGradient(0, 0, 0, height);
+      gradPurple.addColorStop(0, 'rgba(139, 92, 246, 0.25)');
+      gradPurple.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
+      drawSpline('onlineUsers', '#8b5cf6', gradPurple);
+
+      // Draw Active Calls (Cyan Area)
+      const gradCyan = ctx.createLinearGradient(0, 0, 0, height);
+      gradCyan.addColorStop(0, 'rgba(6, 182, 212, 0.2)');
+      gradCyan.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+      drawSpline('activeCalls', '#06b6d4', gradCyan);
+
+      // Draw Queue (Emerald Area)
+      const gradEmerald = ctx.createLinearGradient(0, 0, 0, height);
+      gradEmerald.addColorStop(0, 'rgba(16, 185, 129, 0.15)');
+      gradEmerald.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+      drawSpline('inQueue', '#10b981', gradEmerald);
+
+      // Draw X-Axis Labels (clamped to prevent right-edge clipping)
+      ctx.fillStyle = textColor;
+      points.forEach((p, idx) => {
+        if (idx % 2 === 0 || idx === points.length - 1) {
+          const label = p.hourLabel || '';
+          const textWidth = ctx.measureText(label).width;
+          let drawX = 40 + idx * xStep - textWidth / 2;
+          drawX = Math.max(5, Math.min(drawX, width - textWidth - 6));
+          ctx.fillText(label, drawX, height - 8);
+        }
+      });
+    }
+
+    // Render VIP Tables
+    function renderVipTables(codes) {
+      const quickTbody = document.getElementById('quickVipTableBody');
+      const fullTbody = document.getElementById('vipTableBody');
 
       if (!codes || codes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-500">No VIP passes issued yet. Generate one above!</td></tr>`;
+        const emptyHtml = `<tr><td colspan="6" class="py-6 text-center text-slate-500">No VIP passes issued yet. Generate one above!</td></tr>`;
+        if (quickTbody) quickTbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500">No VIP passes issued.</td></tr>`;
+        if (fullTbody) fullTbody.innerHTML = emptyHtml;
         return;
       }
 
-      tbody.innerHTML = codes.map((item) => {
-        let statusBadge = '';
-        if (item.isExpired) {
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">Expired</span>`;
-        } else if (item.isActivated) {
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 animate-pulse">Active (Live)</span>`;
-        } else {
-          statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">Saved</span>`;
-        }
-
-        const socketPill = item.activeSocketId 
-          ? `<span class="font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">${item.activeSocketId.slice(0, 10)}...</span>`
-          : `<span class="text-slate-500 italic">None</span>`;
-
-        return `
-          <tr class="hover:bg-white/[0.02] transition-colors">
-            <td class="py-2.5 px-3">
-              <div class="flex items-center space-x-2">
-                <span class="font-mono font-bold text-amber-300 text-xs">${item.code}</span>
-                <button onclick="copyToClipboard('${item.code}')" title="Copy code" class="text-slate-400 hover:text-white transition-colors">
-                  📋
-                </button>
-              </div>
+      // Quick table (first 3)
+      if (quickTbody) {
+        quickTbody.innerHTML = codes.slice(0, 3).map(item => `
+          <tr class="hover:bg-purple-500/5 transition-colors">
+            <td class="py-2 px-2 font-mono font-bold text-amber-500">${escapeHtml(item.code)}</td>
+            <td class="py-2 px-2 text-slate-400">${item.plan || item.durationMinutes + 'm'}</td>
+            <td class="py-2 px-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.isExpired ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}">
+                ${item.isExpired ? 'Expired' : 'Active'}
+              </span>
             </td>
-            <td class="py-2.5 px-3 font-medium text-slate-300">${item.plan || item.durationMinutes + 'm'}</td>
-            <td class="py-2.5 px-3">${statusBadge}</td>
-            <td class="py-2.5 px-3">${socketPill}</td>
-            <td class="py-2.5 px-3 text-slate-400 truncate max-w-[120px]">${item.note || '-'}</td>
-            <td class="py-2.5 px-3 text-right">
-              <button onclick="revokeVipCode('${item.code}')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 font-bold border border-rose-500/25 transition-all active:scale-95">
+            <td class="py-2 px-2 text-right">
+              <button onclick="revokeVipCode('${escapeHtml(item.code)}')" class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 font-bold hover:bg-rose-500/25">
                 Revoke
               </button>
             </td>
           </tr>
-        `;
-      }).join('');
+        `).join('');
+      }
+
+      // Full table
+      if (fullTbody) {
+        fullTbody.innerHTML = codes.map(item => {
+          let statusBadge = item.isExpired
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">Expired</span>`
+            : (item.isActivated
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">Active (Live)</span>`
+              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Saved</span>`);
+
+          const socketPill = item.activeSocketId
+            ? `<span class="font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">${escapeHtml(item.activeSocketId.slice(0, 10))}...</span>`
+            : `<span class="text-slate-500 italic">None</span>`;
+
+          return `
+            <tr class="hover:bg-purple-500/5 transition-colors">
+              <td class="py-2.5 px-3">
+                <div class="flex items-center space-x-2">
+                  <span class="font-mono font-bold text-amber-500 text-xs">${escapeHtml(item.code)}</span>
+                  <button onclick="copyToClipboard('${escapeHtml(item.code)}')" title="Copy code" class="text-slate-400 hover:text-purple-400 transition-colors">
+                    📋
+                  </button>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 font-medium">${escapeHtml(item.plan || item.durationMinutes + 'm')}</td>
+              <td class="py-2.5 px-3">${statusBadge}</td>
+              <td class="py-2.5 px-3">${socketPill}</td>
+              <td class="py-2.5 px-3 text-slate-400 truncate max-w-[120px]">${escapeHtml(item.note || '-')}</td>
+              <td class="py-2.5 px-3 text-right">
+                <button onclick="revokeVipCode('${escapeHtml(item.code)}')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 font-bold border border-rose-500/25 transition-all active:scale-95">
+                  Revoke
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
 
-    // Render Banned Threat IPs Table
-    function renderBannedTable(bans) {
-      const tbody = document.getElementById('bannedTableBody');
-      if (!tbody) return;
+    // Render Banned Tables
+    function renderBannedTables(bans) {
+      const quickTbody = document.getElementById('quickBansTableBody');
+      const fullTbody = document.getElementById('bannedTableBody');
 
       if (!bans || bans.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">🛡️ All clear! No active IP bans.</td></tr>`;
+        if (quickTbody) quickTbody.innerHTML = `<tr><td colspan="4" class="py-3 text-center text-slate-500">No active bans</td></tr>`;
+        if (fullTbody) fullTbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">🛡️ All clear! No active IP bans.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = bans.map((b) => {
+      const rows = bans.map(b => {
         const hours = b.remainingHours || 0;
         const mins = b.remainingMinutes || 0;
-        const timeDisplay = hours > 0 ? `${hours} hours remaining` : `${mins} mins remaining`;
+        const timeDisplay = hours > 0 ? `${hours}h left` : `${mins}m left`;
 
         return `
-          <tr class="hover:bg-white/[0.02] transition-colors">
-            <td class="py-2.5 px-3 font-mono font-bold text-rose-300">${b.ip}</td>
-            <td class="py-2.5 px-3 text-slate-300">${b.reason || 'Community violations'}</td>
-            <td class="py-2.5 px-3 text-slate-400 font-mono">${timeDisplay}</td>
-            <td class="py-2.5 px-3 text-right">
-              <button onclick="unbanIpAddress('${b.ip}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/25 transition-all active:scale-95">
-                Unban IP
+          <tr class="hover:bg-rose-500/5 transition-colors">
+            <td class="py-2 px-3 font-mono font-bold text-rose-400">${escapeHtml(b.ip)}</td>
+            <td class="py-2 px-3 text-slate-300 truncate max-w-[150px]">${escapeHtml(b.reason || 'Community violation')}</td>
+            <td class="py-2 px-3 text-slate-400 font-mono">${timeDisplay}</td>
+            <td class="py-2 px-3 text-right">
+              <button onclick="unbanIpAddress('${escapeHtml(b.ip)}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 font-bold border border-emerald-500/25 transition-all active:scale-95">
+                Unban
               </button>
             </td>
           </tr>
         `;
       }).join('');
+
+      if (quickTbody) quickTbody.innerHTML = rows;
+      if (fullTbody) fullTbody.innerHTML = rows;
+    }
+
+    // Render Reports Table
+    function renderReportsTable(reports) {
+      const tbody = document.getElementById('detailedReportsTableBody');
+      if (!tbody) return;
+
+      if (!reports || reports.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500">🛡️ All clear! No pending user reports.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = reports.map(r => `
+        <tr class="hover:bg-rose-500/5 transition-colors">
+          <td class="py-2.5 px-3 font-mono font-bold text-rose-400">${escapeHtml(r.ip)}</td>
+          <td class="py-2.5 px-3 font-bold">${r.reportCount} reports</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.reportCount >= 3 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-amber-500/20 text-amber-400'}">
+              ${r.reportCount >= 3 ? 'Auto-Ban Triggered' : 'Under Observation'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-slate-400 font-mono">${formatRelativeTime(r.lastReportTime)}</td>
+          <td class="py-2.5 px-3 text-right space-x-1.5">
+            <button onclick="dismissReport('${escapeHtml(r.ip)}')" class="px-2.5 py-1 rounded-lg theme-card-subtle text-slate-300 font-bold hover:text-white">
+              Dismiss
+            </button>
+            <button onclick="manualBanTarget('${escapeHtml(r.ip)}')" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold">
+              Ban IP
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Detailed Sessions Lists
+    function renderDetailedSessions(stats) {
+      // 1. Online Users
+      const usersTbody = document.getElementById('detailedUsersTableBody');
+      const users = stats.detailedUsers || [];
+      if (usersTbody) {
+        if (users.length === 0) {
+          usersTbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500">No active users connected.</td></tr>`;
+        } else {
+          usersTbody.innerHTML = users.map(u => `
+            <tr class="hover:bg-purple-500/5 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-purple-400">${escapeHtml(u.maskedId)}</td>
+              <td class="py-2.5 px-3 font-mono text-slate-400">${escapeHtml(u.ip)}</td>
+              <td class="py-2.5 px-3 font-semibold">${escapeHtml(u.country)}</td>
+              <td class="py-2.5 px-3 capitalize">${escapeHtml(u.gender)}</td>
+              <td class="py-2.5 px-3 uppercase text-[10px] font-bold text-cyan-400">${escapeHtml(u.mode)}</td>
+              <td class="py-2.5 px-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.state === 'In Call' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-500/15 text-slate-400'}">
+                  ${escapeHtml(u.state)}
+                </span>
+              </td>
+              <td class="py-2.5 px-3">
+                ${u.isVip ? '<span class="text-amber-400 font-bold">👑 VIP</span>' : '<span class="text-slate-500">Standard</span>'}
+              </td>
+              <td class="py-2.5 px-3 text-right">
+                <button onclick="kickUserSocket('${escapeHtml(u.socketId)}')" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 font-bold text-[11px]">
+                  Kick
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // 2. Active Calls
+      const callsTbody = document.getElementById('detailedCallsTableBody');
+      const calls = stats.detailedCalls || [];
+      if (callsTbody) {
+        if (calls.length === 0) {
+          callsTbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">No active P2P calls in progress.</td></tr>`;
+        } else {
+          callsTbody.innerHTML = calls.map(c => `
+            <tr class="hover:bg-cyan-500/5 transition-colors">
+              <td class="py-2.5 px-3 font-mono text-cyan-400">${escapeHtml(c.pairId)}</td>
+              <td class="py-2.5 px-3">${escapeHtml(c.user1.socketId)} (${escapeHtml(c.user1.country)})</td>
+              <td class="py-2.5 px-3">${escapeHtml(c.user2.socketId)} (${escapeHtml(c.user2.country)})</td>
+              <td class="py-2.5 px-3 uppercase text-[10px] font-bold text-purple-400">${escapeHtml(c.mode)}</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400">P2P Streaming</span></td>
+              <td class="py-2.5 px-3 text-right">
+                <button onclick="kickUserSocket('${escapeHtml(c.user1.socketId)}')" class="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 font-bold text-[11px]">
+                  Terminate
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // 3. Queue Users
+      const queueTbody = document.getElementById('detailedQueueTableBody');
+      const queue = stats.detailedQueue || [];
+      if (queueTbody) {
+        if (queue.length === 0) {
+          queueTbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500">Matchmaking queue is currently empty.</td></tr>`;
+        } else {
+          queueTbody.innerHTML = queue.map(q => `
+            <tr class="hover:bg-purple-500/5 transition-colors">
+              <td class="py-2.5 px-3 font-bold text-purple-400">#${q.position}</td>
+              <td class="py-2.5 px-3 font-mono">${escapeHtml(q.socketId)}</td>
+              <td class="py-2.5 px-3">${escapeHtml(q.country)}</td>
+              <td class="py-2.5 px-3 capitalize">${escapeHtml(q.targetGender)}</td>
+              <td class="py-2.5 px-3">${escapeHtml(q.targetCountry)}</td>
+              <td class="py-2.5 px-3 uppercase text-[10px] font-bold text-cyan-400">${escapeHtml(q.mode)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    // Render Recent Activity Audit Log
+    function renderAuditLog(log) {
+      const container = document.getElementById('recentActivityList');
+      if (!container) return;
+
+      if (!log || log.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 py-3 text-center">No recent activity recorded yet.</div>`;
+        return;
+      }
+
+      const iconMap = {
+        vip: '👑',
+        moderation: '🛡️',
+        sponsor: '📢',
+        auth: '👤',
+        system: '⚙️'
+      };
+
+      container.innerHTML = log.slice(0, 5).map(item => `
+        <div class="flex items-center justify-between p-2 rounded-xl theme-card-subtle">
+          <div class="flex items-center space-x-2 truncate">
+            <span class="text-sm">${iconMap[item.type] || '⚡'}</span>
+            <span class="font-medium truncate text-slate-300">${escapeHtml(item.action)}: <span class="text-slate-400">${escapeHtml(item.details)}</span></span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono whitespace-nowrap ml-2">${formatRelativeTime(item.timestamp)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Render Diagnostics Readout
+    function renderDiagnostics(diag) {
+      if (!diag) return;
+      if (document.getElementById('diagNodeVer')) document.getElementById('diagNodeVer').textContent = diag.nodeVersion || 'Node.js';
+      if (document.getElementById('diagPlatform')) document.getElementById('diagPlatform').textContent = diag.platform || 'Platform';
+      if (document.getElementById('diagMemory')) document.getElementById('diagMemory').textContent = `${diag.memoryUsageMb || 0} MB`;
+      if (document.getElementById('diagHeap')) document.getElementById('diagHeap').textContent = `${diag.heapUsedMb || 0} MB`;
     }
 
     // Synchronize Live Sponsor Fields & Visual Preview
@@ -969,7 +2432,7 @@
 
       const activeEl = document.activeElement;
       const form = document.getElementById('sponsorUpdateForm');
-      if (form && form.contains(activeEl)) return; // Don't overwrite if user is currently typing!
+      if (form && form.contains(activeEl)) return;
 
       if (config.tag) document.getElementById('sponsorTagInput').value = config.tag;
       if (config.subTag) document.getElementById('sponsorSubtagInput').value = config.subTag;
@@ -986,10 +2449,25 @@
       const message = document.getElementById('sponsorMessageInput').value;
       const urlText = document.getElementById('sponsorUrlTextInput').value;
 
-      document.getElementById('previewTag').textContent = tag || '🎮 Verified Partner';
-      document.getElementById('previewSubtag').textContent = `• ${subtag || 'Zero-Ad Monetization'}`;
-      document.getElementById('previewMessage').textContent = message || '';
-      document.getElementById('previewUrlText').innerHTML = `<span>${urlText || 'Visit vybronx.online'}</span> <span>↗</span>`;
+      ['previewTag', 'quickPreviewTag'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = tag || '🎮 Verified Partner';
+      });
+
+      ['previewSubtag', 'quickPreviewSubtag'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `• ${subtag || 'Zero-Ad Monetization'}`;
+      });
+
+      ['previewMessage', 'quickPreviewMessage'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = message || '';
+      });
+
+      ['previewUrlText', 'quickPreviewUrlText'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = `<span>${escapeHtml(urlText || 'Visit Partner')}</span> <span>↗</span>`;
+      });
     }
 
     // Copy to clipboard utility
@@ -1041,16 +2519,243 @@
       }
     }
 
+    // Action: Dismiss Report
+    async function dismissReport(ip) {
+      try {
+        const res = await adminFetch('/api/admin/dismiss-report', {
+          method: 'POST',
+          body: JSON.stringify({ ip })
+        });
+
+        if (res.success) {
+          showAdminToast(`🛡️ Reports for ${ip} dismissed.`, 'info');
+          fetchStats();
+        } else {
+          showAdminToast(res.error || 'Failed to dismiss reports.', 'danger');
+        }
+      } catch (err) {
+        showAdminToast('Network error dismissing reports.', 'danger');
+      }
+    }
+
+    // Action: Quick Ban from Reports
+    function manualBanTarget(ip) {
+      navigateToSection('ip-bans');
+      const ipInput = document.getElementById('manualBanIp');
+      if (ipInput) {
+        ipInput.value = ip;
+        ipInput.focus();
+      }
+    }
+
+    // Action: Kick User Socket
+    async function kickUserSocket(socketId) {
+      if (!confirm(`Disconnect socket ${socketId}?`)) return;
+
+      try {
+        const res = await adminFetch('/api/admin/kick-user', {
+          method: 'POST',
+          body: JSON.stringify({ socketId })
+        });
+
+        if (res.success) {
+          showAdminToast(`⚡ User ${socketId.slice(0, 8)} disconnected.`, 'warning');
+          fetchStats();
+        } else {
+          showAdminToast(res.error || 'Failed to disconnect user.', 'danger');
+        }
+      } catch (err) {
+        showAdminToast('Network error kicking user.', 'danger');
+      }
+    }
+
+    // Theme Management System
+    function updateThemeToggleIcon(theme) {
+      const sunIcon = document.getElementById('themeSunIcon');
+      const moonIcon = document.getElementById('themeMoonIcon');
+      if (sunIcon && moonIcon) {
+        if (theme === 'dark') {
+          sunIcon.classList.remove('hidden');
+          sunIcon.classList.add('block');
+          moonIcon.classList.remove('block');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.remove('block');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          moonIcon.classList.add('block');
+        }
+      }
+    }
+
+    function setTheme(theme) {
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(theme);
+      localStorage.setItem('talkhop_admin_theme', theme);
+
+      updateThemeToggleIcon(theme);
+
+      // Redraw canvas with updated theme palette
+      if (latestStatsData) renderTrafficChart(latestStatsData.trafficHistory || []);
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'light' : 'dark');
+    }
+
     // ==========================================
     // DOM EVENT LISTENERS & SETUP
     // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
+
+      // Initial Theme Icon setup
+      const isDark = document.documentElement.classList.contains('dark');
+      updateThemeToggleIcon(isDark ? 'dark' : 'light');
 
       // Check existing session
       if (adminToken) {
         showDashboard();
       } else {
         showLoginScreen();
+      }
+
+      // Hash change router listener
+      window.addEventListener('hashchange', () => {
+        const hash = window.location.hash.replace('#', '') || 'dashboard';
+        navigateToSection(hash);
+      });
+
+      // Navigation button click listeners
+      document.addEventListener('click', (e) => {
+        const navBtn = e.target.closest('[data-nav]');
+        if (navBtn) {
+          const navId = navBtn.getAttribute('data-nav');
+          navigateToSection(navId);
+        }
+      });
+
+      // Sidebar Accordion Section Toggling
+      document.querySelectorAll('.section-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const sectionEl = btn.closest('.sidebar-nav-section');
+          if (!sectionEl) return;
+          sectionEl.classList.toggle('is-collapsed');
+
+          // Save state to localStorage
+          const sectionName = sectionEl.getAttribute('data-section');
+          if (sectionName) {
+            const isCollapsed = sectionEl.classList.contains('is-collapsed');
+            localStorage.setItem(`talkhop_nav_section_${sectionName}`, isCollapsed ? 'collapsed' : 'expanded');
+          }
+        });
+      });
+
+      // Restore accordion states from localStorage
+      document.querySelectorAll('.sidebar-nav-section').forEach(sectionEl => {
+        const sectionName = sectionEl.getAttribute('data-section');
+        if (sectionName && localStorage.getItem(`talkhop_nav_section_${sectionName}`) === 'collapsed') {
+          sectionEl.classList.add('is-collapsed');
+        }
+      });
+
+      // Expand All / Collapse All Toggle Button
+      const toggleAllBtn = document.getElementById('toggleAllSectionsBtn');
+      if (toggleAllBtn) {
+        toggleAllBtn.addEventListener('click', () => {
+          const allSections = document.querySelectorAll('.sidebar-nav-section');
+          const anyExpanded = Array.from(allSections).some(s => !s.classList.contains('is-collapsed'));
+          allSections.forEach(sectionEl => {
+            if (anyExpanded) {
+              sectionEl.classList.add('is-collapsed');
+            } else {
+              sectionEl.classList.remove('is-collapsed');
+            }
+            const sectionName = sectionEl.getAttribute('data-section');
+            if (sectionName) {
+              localStorage.setItem(`talkhop_nav_section_${sectionName}`, anyExpanded ? 'collapsed' : 'expanded');
+            }
+          });
+          toggleAllBtn.textContent = anyExpanded ? 'Expand All' : 'Collapse All';
+        });
+      }
+
+      // Mobile drawer open/close & Desktop Rail Toggle
+      const mobileToggleBtn = document.getElementById('mobileMenuToggleBtn');
+      const mobileCloseBtn = document.getElementById('mobileDrawerCloseBtn');
+      const mobileBackdrop = document.getElementById('mobileDrawerBackdrop');
+      const sidebar = document.getElementById('adminSidebar');
+      const railToggleBtn = document.getElementById('sidebarRailToggleBtn');
+      const railIcon = document.getElementById('sidebarRailIcon');
+
+      if (railToggleBtn && sidebar) {
+        const setRailState = (enable) => {
+          if (enable) {
+            sidebar.classList.add('collapsed-rail');
+            if (railIcon) railIcon.classList.add('rotate-180');
+            localStorage.setItem('talkhop_admin_sidebar_rail', '1');
+          } else {
+            sidebar.classList.remove('collapsed-rail');
+            if (railIcon) railIcon.classList.remove('rotate-180');
+            localStorage.setItem('talkhop_admin_sidebar_rail', '0');
+          }
+        };
+
+        railToggleBtn.addEventListener('click', () => {
+          const isRail = sidebar.classList.contains('collapsed-rail');
+          setRailState(!isRail);
+        });
+
+        // Restore rail state
+        if (localStorage.getItem('talkhop_admin_sidebar_rail') === '1') {
+          setRailState(true);
+        }
+      }
+
+      if (mobileToggleBtn && sidebar && mobileBackdrop) {
+        mobileToggleBtn.addEventListener('click', () => {
+          sidebar.classList.remove('-translate-x-full');
+          mobileBackdrop.classList.remove('hidden');
+        });
+      }
+
+      if (mobileCloseBtn && sidebar && mobileBackdrop) {
+        mobileCloseBtn.addEventListener('click', () => {
+          sidebar.classList.add('-translate-x-full');
+          mobileBackdrop.classList.add('hidden');
+        });
+      }
+
+      if (mobileBackdrop && sidebar) {
+        mobileBackdrop.addEventListener('click', () => {
+          sidebar.classList.add('-translate-x-full');
+          mobileBackdrop.classList.add('hidden');
+        });
+      }
+
+      // Theme toggle buttons
+      const themeToggleBtn = document.getElementById('adminThemeToggleBtn');
+      if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+
+      const prefDark = document.getElementById('prefThemeDark');
+      if (prefDark) prefDark.addEventListener('click', () => setTheme('dark'));
+      const prefLight = document.getElementById('prefThemeLight');
+      if (prefLight) prefLight.addEventListener('click', () => setTheme('light'));
+      const prefSystem = document.getElementById('prefThemeSystem');
+      if (prefSystem) prefSystem.addEventListener('click', () => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light');
+      });
+
+      // Polling frequency selector
+      const pollSelect = document.getElementById('prefPollInterval');
+      if (pollSelect) {
+        pollSelect.addEventListener('change', (e) => {
+          radarSecondsSetting = parseInt(e.target.value, 10) || 3;
+          startPolling();
+          showAdminToast(`Radar polling interval set to ${radarSecondsSetting}s`, 'info');
+        });
       }
 
       // Password visibility toggle
@@ -1085,6 +2790,7 @@
 
             if (res.ok && data.success) {
               adminToken = data.token;
+              sessionStorage.setItem('talkhop_admin_token', adminToken);
               sessionStorage.setItem('vybrant_admin_token', adminToken);
               document.getElementById('adminUserPill').textContent = data.user || username;
               showAdminToast(`Welcome, ${username}! Admin session active. ⚡`, 'success');
@@ -1109,6 +2815,7 @@
             await adminFetch('/api/admin/logout', { method: 'POST' });
           } catch (e) {}
           adminToken = null;
+          sessionStorage.removeItem('talkhop_admin_token');
           sessionStorage.removeItem('vybrant_admin_token');
           sessionStorage.removeItem('blip_admin_token');
           showLoginScreen();
@@ -1121,7 +2828,7 @@
       if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
           fetchStats();
-          countdownSeconds = 3;
+          countdownSeconds = radarSecondsSetting;
           showAdminToast('Telemetry refreshed 🔄', 'info', 1500);
         });
       }
@@ -1150,6 +2857,7 @@
               document.getElementById('genCustomCode').value = '';
               document.getElementById('genNote').value = '';
               fetchStats();
+              navigateToSection('vip-passes');
             } else {
               showAdminToast(res.error || 'Failed to generate VIP pass.', 'danger');
             }
@@ -1230,6 +2938,60 @@
           }
         });
       }
+
+      // Ping Diagnostic Tool
+      const pingBtn = document.getElementById('runPingBtn');
+      if (pingBtn) {
+        pingBtn.addEventListener('click', async () => {
+          const resEl = document.getElementById('pingResultText');
+          resEl.textContent = 'Pinging /api/rtc-config...';
+          const t0 = performance.now();
+          try {
+            const res = await fetch('/api/rtc-config');
+            const dt = Math.round(performance.now() - t0);
+            const data = await res.json();
+            if (res.ok && data.iceServers) {
+              resEl.textContent = `✓ 200 OK (${dt}ms) - Dynamic STUN/TURN active (${data.iceServers.length} servers configured)`;
+              resEl.className = 'text-xs font-mono text-emerald-400 font-bold';
+            } else {
+              resEl.textContent = `⚠️ Response received but missing ICE servers.`;
+            }
+          } catch (e) {
+            resEl.textContent = `✗ Connection failed: ${e.message}`;
+            resEl.className = 'text-xs font-mono text-rose-400 font-bold';
+          }
+        });
+      }
+
+      // Search filters for tables
+      const searchUsers = document.getElementById('searchUsersInput');
+      if (searchUsers) {
+        searchUsers.addEventListener('input', (e) => {
+          const q = e.target.value.toLowerCase().trim();
+          const rows = document.querySelectorAll('#detailedUsersTableBody tr');
+          rows.forEach(r => {
+            const text = r.textContent.toLowerCase();
+            r.style.display = text.includes(q) ? '' : 'none';
+          });
+        });
+      }
+
+      const searchVip = document.getElementById('searchVipInput');
+      if (searchVip) {
+        searchVip.addEventListener('input', (e) => {
+          const q = e.target.value.toLowerCase().trim();
+          const rows = document.querySelectorAll('#vipTableBody tr');
+          rows.forEach(r => {
+            const text = r.textContent.toLowerCase();
+            r.style.display = text.includes(q) ? '' : 'none';
+          });
+        });
+      }
+
+      // Window resize listener to redraw chart
+      window.addEventListener('resize', () => {
+        if (latestStatsData) renderTrafficChart(latestStatsData.trafficHistory || []);
+      });
 
     });
   </script>

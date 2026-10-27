@@ -72,6 +72,9 @@ let typingTimeout = null;
 let lastSkipTime = 0;
 let remoteAudioMonitor = null;
 
+// TalkHop Application Mode: 'text' (Random Chat) | 'video' (Video Call)
+let currentAppMode = localStorage.getItem('talkhop_selected_mode') || 'text';
+
 // Connection Resilience & Recovery State
 let currentCallState = ConnectionState.IDLE;
 let iceRestartCount = 0;
@@ -91,7 +94,7 @@ let isRemoteAudioBlocked = false;
 let consecutiveSkips = 0;
 let matchCount = 0;
 let isVip = false;
-let vipCode = localStorage.getItem('vybrant_vip_code') || localStorage.getItem('blip_vip_code') || null;
+let vipCode = localStorage.getItem('talkhop_vip_code') || localStorage.getItem('vybrant_vip_code') || localStorage.getItem('blip_vip_code') || null;
 let vipExpiresAt = 0;
 let vipTimerInterval = null;
 let latestGeneratedCode = null;
@@ -219,6 +222,7 @@ function setCallState(newState, meta = {}) {
   const previousState = currentCallState;
   currentCallState = newState;
 
+  // Video Mode Elements
   const statusDot = document.getElementById('strangerStatusDot');
   const badgeText = document.getElementById('strangerBadgeText');
   const p2pBadge = document.getElementById('networkP2pBadge');
@@ -226,23 +230,51 @@ function setCallState(newState, meta = {}) {
   const recoveryTitle = document.getElementById('recoveryOverlayTitle');
   const recoveryDesc = document.getElementById('recoveryOverlayDesc');
 
+  // Chat Mode Elements
+  const statusDotText = document.getElementById('strangerStatusDotText');
+  const badgeTextMode = document.getElementById('strangerBadgeTextMode');
+  const subtitleTextMode = document.getElementById('strangerSubtitleTextMode');
+  const chatStatusBanner = document.getElementById('chatStatusBanner');
+  const chatStatusBannerText = document.getElementById('chatStatusBannerText');
+  const chatStatusBannerIcon = document.getElementById('chatStatusBannerIcon');
+
   switch (newState) {
     case ConnectionState.IDLE:
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
       if (badgeText) badgeText.textContent = 'Standby';
       if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-slate-400';
+      if (badgeTextMode) badgeTextMode.textContent = 'Standby';
+      if (subtitleTextMode) subtitleTextMode.textContent = 'Click Start to begin matching';
+      if (chatStatusBanner) chatStatusBanner.classList.add('hidden');
       break;
 
     case ConnectionState.SEARCHING:
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
       if (badgeText) badgeText.textContent = 'Searching...';
       if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+      if (badgeTextMode) badgeTextMode.textContent = 'Searching...';
+      if (subtitleTextMode) subtitleTextMode.textContent = meta.message || 'Looking for someone awesome around the world...';
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerText) chatStatusBannerText.textContent = meta.message || 'Looking for a stranger for text chat...';
+        if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '🔍';
+      }
       break;
 
     case ConnectionState.CONNECTING:
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
       if (badgeText) badgeText.textContent = 'Connecting...';
       if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-cyan-400 animate-pulse';
+      if (badgeTextMode) badgeTextMode.textContent = 'Connecting...';
+      if (subtitleTextMode) subtitleTextMode.textContent = 'Connecting with a stranger...';
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerText) chatStatusBannerText.textContent = 'Connecting to stranger...';
+        if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '⚡';
+      }
       break;
 
     case ConnectionState.CONNECTED:
@@ -250,6 +282,17 @@ function setCallState(newState, meta = {}) {
       if (badgeText) badgeText.textContent = isAudioOnly ? 'Connected (Voice)' : 'Connected (Live)';
       if (p2pBadge) p2pBadge.textContent = 'Encrypted P2P';
       if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-emerald-500';
+      if (badgeTextMode) badgeTextMode.textContent = 'Stranger';
+      if (subtitleTextMode) subtitleTextMode.textContent = (currentAppMode === 'text') ? 'Connected anonymously • No media shared' : 'Connected live • WebRTC P2P';
+      if (chatStatusBanner) {
+        if (chatStatusBannerText) chatStatusBannerText.textContent = 'Connected anonymously with Stranger';
+        setTimeout(() => {
+          if (currentPartnerId && currentCallState === ConnectionState.CONNECTED && chatStatusBanner) {
+            chatStatusBanner.classList.add('hidden');
+          }
+        }, 3000);
+      }
       break;
 
     case ConnectionState.TEMPORARILY_INTERRUPTED:
@@ -260,6 +303,14 @@ function setCallState(newState, meta = {}) {
         if (recoveryDesc) recoveryDesc.textContent = meta.message || 'Temporary network fluctuation detected. Preserving call...';
         recoveryOverlay.classList.remove('hidden');
       }
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-amber-500 animate-pulse';
+      if (badgeTextMode) badgeTextMode.textContent = 'Reconnecting...';
+      if (subtitleTextMode) subtitleTextMode.textContent = meta.message || 'Temporary network fluctuation. Preserving chat...';
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerText) chatStatusBannerText.textContent = meta.message || 'Reconnecting session...';
+        if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '🔄';
+      }
       break;
 
     case ConnectionState.RECOVERING:
@@ -269,6 +320,10 @@ function setCallState(newState, meta = {}) {
         if (recoveryTitle) recoveryTitle.textContent = 'Restoring Call...';
         if (recoveryDesc) recoveryDesc.textContent = meta.message || 'Performing ICE recovery handshake...';
         recoveryOverlay.classList.remove('hidden');
+      }
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerText) chatStatusBannerText.textContent = 'Restoring connection...';
       }
       break;
 
@@ -282,6 +337,14 @@ function setCallState(newState, meta = {}) {
       if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
       if (badgeText) badgeText.textContent = 'Disconnected';
       if (recoveryOverlay) recoveryOverlay.classList.add('hidden');
+      if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-slate-400';
+      if (badgeTextMode) badgeTextMode.textContent = 'Stranger';
+      if (subtitleTextMode) subtitleTextMode.textContent = 'Stranger disconnected. Press Skip to find someone new.';
+      if (chatStatusBanner) {
+        chatStatusBanner.classList.remove('hidden');
+        if (chatStatusBannerText) chatStatusBannerText.textContent = meta.message || 'Stranger has disconnected. Press Skip or Start to match.';
+        if (chatStatusBannerIcon) chatStatusBannerIcon.textContent = '👋';
+      }
       break;
   }
 
@@ -630,7 +693,7 @@ window.getVybrantAudioDiagnostics = async function() {
 let themeInitialized = false;
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('vybrant_theme') || 'light';
+  const savedTheme = localStorage.getItem('talkhop_theme') || localStorage.getItem('vybrant_theme') || 'light';
   applyTheme(savedTheme);
 
   if (themeInitialized) return;
@@ -642,6 +705,7 @@ function initTheme() {
       const isCurrentlyDark = document.documentElement.classList.contains('dark');
       const newTheme = isCurrentlyDark ? 'light' : 'dark';
       applyTheme(newTheme);
+      localStorage.setItem('talkhop_theme', newTheme);
       localStorage.setItem('vybrant_theme', newTheme);
       showToast(`Switched to ${newTheme === 'dark' ? 'Dark 🌙' : 'Light ☀️'} mode`, 'info', 2000);
     });
@@ -664,7 +728,7 @@ function applyTheme(theme) {
 }
 
 // Immediate Theme Apply on load
-applyTheme(localStorage.getItem('vybrant_theme') || 'light');
+applyTheme(localStorage.getItem('talkhop_theme') || localStorage.getItem('vybrant_theme') || 'light');
 
 // ==========================================
 // TOAST NOTIFICATIONS (De-duplicated & Anti-Spam)
@@ -674,7 +738,7 @@ function showToast(message, type = 'info', duration = 3500) {
   if (!container) return;
 
   // 1. Prevent duplicate toasts with identical content
-  const existingToasts = container.querySelectorAll('.vybrant-toast');
+  const existingToasts = container.querySelectorAll('.talkhop-toast, .vybrant-toast');
   for (const t of existingToasts) {
     if (t.dataset.message === message) {
       // Re-trigger entrance animation without creating a duplicate DOM node
@@ -697,7 +761,7 @@ function showToast(message, type = 'info', duration = 3500) {
     danger: 'bg-white dark:bg-slate-900/95 border-zinc-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-200 shadow-md'
   };
 
-  toast.className = `vybrant-toast pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-semibold ${bgColors[type] || bgColors.info} transform transition-all duration-300 translate-y-3 opacity-0`;
+  toast.className = `talkhop-toast vybrant-toast pointer-events-auto flex items-center space-x-2 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-xl text-xs font-semibold ${bgColors[type] || bgColors.info} transform transition-all duration-300 translate-y-3 opacity-0`;
   toast.innerHTML = `<span>${message}</span>`;
   
   container.appendChild(toast);
@@ -712,7 +776,143 @@ function showToast(message, type = 'info', duration = 3500) {
 }
 
 // ==========================================
-// 1. AGE GATE INITIALIZATION
+// 1. TALKHOP MODE MANAGEMENT & WIDGET MOUNTING
+// ==========================================
+function stopLocalMedia() {
+  if (localStream) {
+    try {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        console.debug('[Media] Local track stopped:', track.kind);
+      });
+    } catch (e) {
+      console.warn('[Media] Error stopping local tracks:', e);
+    }
+    localStream = null;
+  }
+  const localVid = document.getElementById('localVideo');
+  if (localVid) {
+    localVid.srcObject = null;
+  }
+  const localPlaceholder = document.getElementById('localVideoPlaceholder');
+  if (localPlaceholder) {
+    localPlaceholder.classList.remove('hidden');
+    localPlaceholder.style.display = 'flex';
+  }
+  isAudioMuted = false;
+  isVideoDisabled = false;
+}
+
+function mountSharedWidgets(mode) {
+  const filterToolbar = document.getElementById('filterToolbar');
+  const chatAside = document.getElementById('chatAside');
+  const actionControlsBar = document.getElementById('actionControlsBar');
+  const sharedPool = document.getElementById('sharedWidgetsPool');
+  const filterSlotShared = document.getElementById('filterSlotShared');
+
+  // Filter toolbar permanently resides in the shared top toolbar directly below header
+  if (filterToolbar && filterSlotShared && filterToolbar.parentElement !== filterSlotShared) {
+    filterSlotShared.appendChild(filterToolbar);
+  }
+
+  if (mode === 'text') {
+    const chatSlot = document.getElementById('chatAsideSlotText');
+    const controlsSlot = document.getElementById('controlsSlotText');
+    if (chatSlot && chatAside) chatSlot.appendChild(chatAside);
+    if (controlsSlot && actionControlsBar) controlsSlot.appendChild(actionControlsBar);
+  } else {
+    // In Video mode: action controls mount in the dedicated action row below video viewports
+    const controlsSlot = document.getElementById('controlsSlotVideo');
+    if (controlsSlot && actionControlsBar) controlsSlot.appendChild(actionControlsBar);
+    // In Video mode: chat is completely removed from the layout
+    if (chatAside && sharedPool && chatAside.parentElement !== sharedPool) {
+      sharedPool.appendChild(chatAside);
+    }
+  }
+}
+
+function selectAppMode(mode, autoSearch = false) {
+  currentAppMode = (mode === 'video') ? 'video' : 'text';
+  document.body.setAttribute('data-mode', currentAppMode);
+  localStorage.setItem('talkhop_selected_mode', currentAppMode);
+
+  const chatView = document.getElementById('chatModeView');
+  const videoView = document.getElementById('videoModeView');
+  const chatTab = document.getElementById('switchModeChatBtn');
+  const videoTab = document.getElementById('switchModeVideoBtn');
+
+  if (currentAppMode === 'text') {
+    if (chatView) {
+      chatView.classList.remove('hidden');
+      chatView.style.display = '';
+    }
+    if (videoView) {
+      videoView.classList.add('hidden');
+      videoView.style.display = 'none';
+    }
+    if (chatTab) {
+      chatTab.setAttribute('aria-selected', 'true');
+      chatTab.className = 'relative z-10 flex-1 py-1.5 px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-200 text-white cursor-pointer select-none';
+    }
+    if (videoTab) {
+      videoTab.setAttribute('aria-selected', 'false');
+      videoTab.className = 'relative z-10 flex-1 py-1.5 px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-200 text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer select-none';
+    }
+    mountSharedWidgets('text');
+    stopLocalMedia();
+    teardownPeerConnection(false);
+    stopNsfwScanner();
+  } else {
+    if (videoView) {
+      videoView.classList.remove('hidden');
+      videoView.style.display = '';
+    }
+    if (chatView) {
+      chatView.classList.add('hidden');
+      chatView.style.display = 'none';
+    }
+    if (videoTab) {
+      videoTab.setAttribute('aria-selected', 'true');
+      videoTab.className = 'relative z-10 flex-1 py-1.5 px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-200 text-white cursor-pointer select-none';
+    }
+    if (chatTab) {
+      chatTab.setAttribute('aria-selected', 'false');
+      chatTab.className = 'relative z-10 flex-1 py-1.5 px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors duration-200 text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer select-none';
+    }
+    mountSharedWidgets('video');
+  }
+
+  if (autoSearch) {
+    if (currentAppMode === 'video') {
+      initLocalMedia().then(() => {
+        startSearching();
+      }).catch(err => {
+        console.warn('[Mode] Media init error:', err);
+      });
+    } else {
+      startSearching();
+    }
+  }
+}
+
+function showModeSelectionModal() {
+  const modal = document.getElementById('modeSelectionModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+}
+
+function hideModeSelectionModal() {
+  const modal = document.getElementById('modeSelectionModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+
+// ==========================================
+// 2. AGE GATE INITIALIZATION
 // ==========================================
 function initAgeGate() {
   const ageGateModal = document.getElementById('ageGateModal');
@@ -730,12 +930,13 @@ function initAgeGate() {
   }
 
   // Restore stored gender preference or default to male
-  const savedGender = localStorage.getItem('vybrant_my_gender') || userPreferences.myGender || 'male';
+  const savedGender = localStorage.getItem('talkhop_my_gender') || localStorage.getItem('vybrant_my_gender') || userPreferences.myGender || 'male';
   let chosenGender = savedGender;
 
   function updateAgeGenderUI(gender) {
     chosenGender = gender;
     userPreferences.myGender = gender;
+    localStorage.setItem('talkhop_my_gender', gender);
     localStorage.setItem('vybrant_my_gender', gender);
 
     if (maleBtn && femaleBtn) {
@@ -748,7 +949,7 @@ function initAgeGate() {
       }
     }
 
-    // Sync with the in-app gender buttons
+    // Sync with in-app gender buttons
     const myM = document.getElementById('myGenderMale');
     const myF = document.getElementById('myGenderFemale');
     if (myM && myF) {
@@ -775,10 +976,17 @@ function initAgeGate() {
   }
 
   // Check if previously verified in sessionStorage
-  const isVerified = sessionStorage.getItem('vybrant_age_verified') || sessionStorage.getItem('blip_age_verified');
+  const isVerified = sessionStorage.getItem('talkhop_age_verified') || sessionStorage.getItem('vybrant_age_verified') || sessionStorage.getItem('blip_age_verified');
   if (isVerified === 'true') {
     ageGateModal.style.display = 'none';
-    initLocalMedia();
+    initSocketConnection();
+    const savedMode = localStorage.getItem('talkhop_selected_mode');
+    if (!savedMode) {
+      selectAppMode('text');
+      showModeSelectionModal();
+    } else {
+      selectAppMode(savedMode);
+    }
     return;
   }
 
@@ -807,17 +1015,21 @@ function initAgeGate() {
         void ageCheckContainer.offsetWidth; // Restart CSS animation
         ageCheckContainer.classList.add('shake-warning');
       }
-      showToast('⚠️ Please check "I am 18+" to enter Vybrant.', 'warning', 3000);
+      showToast('⚠️ Please check "I am 18+" to enter TalkHop.', 'warning', 3000);
       return;
     }
 
+    sessionStorage.setItem('talkhop_age_verified', 'true');
     sessionStorage.setItem('vybrant_age_verified', 'true');
+    localStorage.setItem('talkhop_my_gender', chosenGender);
     localStorage.setItem('vybrant_my_gender', chosenGender);
     ageGateModal.style.display = 'none';
+    initSocketConnection();
     if (socket) {
       socket.emit('update-preferences', userPreferences);
     }
-    initLocalMedia();
+    selectAppMode('text');
+    showModeSelectionModal();
   });
 }
 
@@ -878,6 +1090,7 @@ async function initLocalMedia() {
   const localVideoPlaceholder = document.getElementById('localVideoPlaceholder');
   const localBadgeText = document.getElementById('localBadgeText');
   const localCamBtn = document.getElementById('localCamBtn');
+  const flipCamBtn = document.getElementById('flipCamBtn');
 
   if (grantPermissionBtn) {
     grantPermissionBtn.disabled = true;
@@ -886,19 +1099,33 @@ async function initLocalMedia() {
 
   isAudioOnly = false;
 
+  // Query hardware device presence via enumerateDevices if supported
+  let videoDevices = [];
+  let audioDevices = [];
   try {
-    // 1. Primary Attempt: Request Video + Audio
-    const constraints = {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      videoDevices = devices.filter(d => d.kind === 'videoinput');
+      audioDevices = devices.filter(d => d.kind === 'audioinput');
+      console.log(`[Media] Detected devices: ${videoDevices.length} camera(s), ${audioDevices.length} microphone(s)`);
+    }
+  } catch (enumErr) {
+    console.debug('[Media] enumerateDevices notice:', enumErr);
+  }
+
+  try {
+    // 1. Primary Attempt: Flexible ideal constraints without rigid min values that trigger OverconstrainedError
+    const primaryConstraints = {
       video: {
-        width: { ideal: 1280, min: 640 },
-        height: { ideal: 720, min: 480 },
-        facingMode: 'user'
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: currentFacingMode || 'user'
       },
       audio: PREFERRED_AUDIO_CONSTRAINTS
     };
 
     try {
-      localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      localStream = await navigator.mediaDevices.getUserMedia(primaryConstraints);
       logAudioTrackSettings(localStream);
       const vidTrack = localStream.getVideoTracks()[0];
       if (vidTrack && typeof vidTrack.getSettings === 'function') {
@@ -906,146 +1133,157 @@ async function initLocalMedia() {
         if (vidSettings?.deviceId) currentVideoDeviceId = vidSettings.deviceId;
       }
     } catch (camErr) {
-      console.warn('[Media] Video + Audio failed, testing for missing camera hardware:', camErr.name, camErr.message);
+      console.warn('[Media] Primary constraints failed:', camErr.name, camErr.message);
 
-      // Check if error is due to missing camera hardware or constraint errors
-      const isCameraHardwareError =
-        camErr.name === 'NotFoundError' ||
-        camErr.name === 'DevicesNotFoundError' ||
-        camErr.name === 'OverconstrainedError' ||
-        camErr.name === 'NotReadableError' ||
-        camErr.name === 'TrackStartError' ||
-        (camErr.message && /camera|video|device|found|constraint/i.test(camErr.message));
-
-      // Retry requesting audio-only if camera is missing or unavailable
-      if (isCameraHardwareError || (camErr.name !== 'NotAllowedError' && camErr.name !== 'PermissionDeniedError')) {
-        console.log('[Media] Retrying with Audio-Only fallback...');
+      // If OverconstrainedError or constraint issue, try basic relaxed video before giving up!
+      if (camErr.name === 'OverconstrainedError' || (camErr.message && /constraint|resolution|facing/i.test(camErr.message))) {
+        console.log('[Media] Retrying with basic relaxed video constraints...');
         try {
           localStream = await navigator.mediaDevices.getUserMedia({
-            video: false,
+            video: true,
             audio: PREFERRED_AUDIO_CONSTRAINTS
           });
-        } catch (audioConstraintErr) {
-          console.warn('[Media] Audio-only fallback with preferred constraints failed, degrading gracefully to basic audio:', audioConstraintErr);
-          localStream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-          });
+        } catch (basicErr) {
+          console.warn('[Media] Basic video failed:', basicErr.name);
+          throw basicErr;
         }
-        logAudioTrackSettings(localStream);
-        isAudioOnly = true;
       } else {
         throw camErr;
       }
     }
 
-    // Attach stream to local video element
+    // Camera + Audio succeeded!
+    isAudioOnly = false;
     if (localVid) {
       localVid.srcObject = localStream;
       localVid.play().catch(() => {});
     }
 
-    // Cleanly hide the warning overlay
     if (cameraPermissionNotice) {
       cameraPermissionNotice.classList.add('hidden');
       cameraPermissionNotice.style.display = 'none';
     }
-
-    if (grantPermissionBtn) {
-      grantPermissionBtn.disabled = false;
-      grantPermissionBtn.innerHTML = `<span>Allow Camera & Mic</span>`;
-    }
-
-    if (isAudioOnly) {
-      // Audio-only fallback UI presentation
-      if (localVideoPlaceholder) {
-        localVideoPlaceholder.classList.add('hidden');
-        localVideoPlaceholder.style.display = 'none';
-      }
-      if (audioOnlyPlaceholder) {
-        audioOnlyPlaceholder.classList.remove('hidden');
-        audioOnlyPlaceholder.style.display = 'flex';
-      }
-      if (localBadgeText) {
-        localBadgeText.textContent = 'You (Voice Only)';
-      }
-      if (localCamBtn) {
-        localCamBtn.title = 'No Webcam Detected (Audio Only Mode)';
-        localCamBtn.classList.add('opacity-60');
-      }
-      const flipCamBtn = document.getElementById('flipCamBtn');
-      if (flipCamBtn) {
-        flipCamBtn.title = 'Camera Flip Unavailable (Audio Only Mode)';
-        flipCamBtn.classList.add('opacity-40', 'cursor-not-allowed');
-      }
-      showToast('🎙️ Webcam not found. Audio-Only voice chat active!', 'info', 3500);
-    } else {
-      // Full video + audio mode UI
-      if (audioOnlyPlaceholder) {
-        audioOnlyPlaceholder.classList.add('hidden');
-        audioOnlyPlaceholder.style.display = 'none';
-      }
-      if (localVideoPlaceholder) {
-        localVideoPlaceholder.classList.add('hidden');
-        localVideoPlaceholder.style.display = 'none';
-      }
-      if (localBadgeText) {
-        localBadgeText.textContent = 'You (Local)';
-      }
-      if (localCamBtn) {
-        localCamBtn.title = 'Turn Camera On/Off';
-        localCamBtn.classList.remove('opacity-60');
-      }
-      const flipCamBtn = document.getElementById('flipCamBtn');
-      if (flipCamBtn) {
-        flipCamBtn.title = 'Flip Camera / Mirror View';
-        flipCamBtn.classList.remove('opacity-40', 'cursor-not-allowed');
-      }
-      showToast('Camera and microphone connected! 📹', 'success', 2500);
-      initNsfwShield();
-    }
-
-    initSocketConnection();
-
-  } catch (err) {
-    console.warn('[Media] getUserMedia error:', err.name || err);
-
-    // Show single, clean status alert inside the video frame
-    if (cameraPermissionNotice) {
-      cameraPermissionNotice.classList.remove('hidden');
-      cameraPermissionNotice.style.display = 'flex';
-    }
-
     if (audioOnlyPlaceholder) {
       audioOnlyPlaceholder.classList.add('hidden');
       audioOnlyPlaceholder.style.display = 'none';
     }
-
+    if (localVideoPlaceholder) {
+      localVideoPlaceholder.classList.add('hidden');
+      localVideoPlaceholder.style.display = 'none';
+    }
+    if (localBadgeText) {
+      localBadgeText.textContent = 'You';
+    }
+    if (localCamBtn) {
+      localCamBtn.title = 'Turn Camera On/Off';
+      localCamBtn.classList.remove('opacity-60');
+    }
+    if (flipCamBtn) {
+      flipCamBtn.title = 'Flip Camera / Mirror View';
+      flipCamBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+    }
     if (grantPermissionBtn) {
       grantPermissionBtn.disabled = false;
       grantPermissionBtn.innerHTML = `<span>Allow Camera & Mic</span>`;
     }
 
-    let userFriendlyError = 'Camera & microphone required to chat.';
-    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      userFriendlyError = 'Media permissions blocked in browser. Click the lock/camera icon in your address bar to enable.';
-      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'Access Blocked';
-      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Microphone/camera access was blocked. Please enable permissions in your browser URL bar.';
-    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-      userFriendlyError = 'No microphone or webcam found on your device.';
-      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'No Hardware Found';
-      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Please plug in a microphone or headset to start chatting.';
-    } else {
-      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'Audio Access Required';
-      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Vybrant needs microphone access to connect you to voice and text chats.';
-    }
-
-    // Single user-friendly notification toast (never duplicate or stack)
-    showToast(`⚠️ ${userFriendlyError}`, 'warning', 4000);
-
-    // Initialize socket connection regardless so user can browse/redeem
+    showToast('Camera and microphone connected! 📹', 'success', 2500);
+    initNsfwShield();
     initSocketConnection();
 
+  } catch (err) {
+    console.warn('[Media] Video acquisition error:', err.name || err, err.message);
+
+    const isNotFoundError = err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError' || (videoDevices.length === 0 && err.name !== 'NotAllowedError');
+    const isLockedError = err.name === 'NotReadableError' || err.name === 'TrackStartError';
+
+    // If hardware genuinely has no camera or camera is locked by another app, try Audio-Only fallback
+    if (isNotFoundError || isLockedError) {
+      console.log(`[Media] Fallback to Audio-Only mode (${err.name})...`);
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: false,
+          audio: PREFERRED_AUDIO_CONSTRAINTS
+        });
+      } catch (audioErr) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+        } catch (basicAudioErr) {
+          console.warn('[Media] Audio-only fallback also failed:', basicAudioErr.name);
+          localStream = null;
+        }
+      }
+
+      if (localStream && localStream.getAudioTracks().length > 0) {
+        logAudioTrackSettings(localStream);
+        isAudioOnly = true;
+
+        if (localVid) {
+          localVid.srcObject = localStream;
+        }
+        if (cameraPermissionNotice) {
+          cameraPermissionNotice.classList.add('hidden');
+          cameraPermissionNotice.style.display = 'none';
+        }
+        if (localVideoPlaceholder) {
+          localVideoPlaceholder.classList.add('hidden');
+          localVideoPlaceholder.style.display = 'none';
+        }
+        if (audioOnlyPlaceholder) {
+          audioOnlyPlaceholder.classList.remove('hidden');
+          audioOnlyPlaceholder.style.display = 'flex';
+        }
+        if (localBadgeText) {
+          localBadgeText.textContent = 'You (Voice Only)';
+        }
+        if (localCamBtn) {
+          localCamBtn.title = isLockedError ? 'Camera in use by another app' : 'No Webcam Detected (Audio Only)';
+          localCamBtn.classList.add('opacity-60');
+        }
+        if (flipCamBtn) {
+          flipCamBtn.title = 'Camera Flip Unavailable in Audio Only';
+          flipCamBtn.classList.add('opacity-40', 'cursor-not-allowed');
+        }
+
+        const msg = isLockedError
+          ? '🎙️ Camera in use by another application. Audio-Only voice active!'
+          : '🎙️ No webcam hardware detected. Audio-Only voice active!';
+        showToast(msg, 'info', 3500);
+        initSocketConnection();
+        return;
+      }
+    }
+
+    // Permission denied or total device failure
+    if (cameraPermissionNotice) {
+      cameraPermissionNotice.classList.remove('hidden');
+      cameraPermissionNotice.style.display = 'flex';
+    }
+    if (audioOnlyPlaceholder) {
+      audioOnlyPlaceholder.classList.add('hidden');
+      audioOnlyPlaceholder.style.display = 'none';
+    }
+    if (grantPermissionBtn) {
+      grantPermissionBtn.disabled = false;
+      grantPermissionBtn.innerHTML = `<span>Allow Camera & Mic</span>`;
+    }
+
+    let userFriendlyError = 'Camera & microphone access required to start video call.';
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      userFriendlyError = 'Camera & mic permissions were denied. Please click the lock icon in your browser address bar to allow.';
+      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'Camera & Mic Access Blocked';
+      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Permission was dismissed or blocked. Please allow camera and microphone in browser settings.';
+    } else if (isNotFoundError) {
+      userFriendlyError = 'No microphone or webcam detected on your device.';
+      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'No Devices Found';
+      if (cameraNoticeDesc) cameraNoticeDesc.textContent = 'Please plug in a webcam or microphone headset to continue.';
+    } else {
+      if (cameraNoticeTitle) cameraNoticeTitle.textContent = 'Device Error';
+      if (cameraNoticeDesc) cameraNoticeDesc.textContent = `Could not access media devices (${err.name || 'Unknown'}).`;
+    }
+
+    showToast(`⚠️ ${userFriendlyError}`, 'warning', 4500);
+    initSocketConnection();
   } finally {
     isMediaRequesting = false;
   }
@@ -1564,9 +1802,8 @@ function initSocketConnection() {
   });
 
   socket.on('waiting', (data) => {
-    setCallState(ConnectionState.SEARCHING);
+    setCallState(ConnectionState.SEARCHING, { message: data?.message });
     setSearchingUI(true);
-    addSystemChatMessage(data.message || 'Looking for a stranger...');
   });
 
   socket.on('match-found', async (data) => {
@@ -1574,31 +1811,84 @@ function initSocketConnection() {
     currentPartnerId = data.partnerId;
     currentSessionId = data.sessionId || `sess_${Date.now()}`;
     isInitiator = Boolean(data.initiator);
+    const sessionMode = (data && data.mode === 'text') ? 'text' : 'video';
     matchCount++;
 
     setCallState(ConnectionState.CONNECTING);
     setSearchingUI(false);
     clearChatMessages();
-    addSystemChatMessage('✨ You are now paired with a stranger. Say hello!');
+
+    if (sessionMode === 'text') {
+      selectAppMode('text');
+      setCallState(ConnectionState.CONNECTED);
+    } else {
+      selectAppMode('video');
+      await setupPeerConnection();
+      startAntiFlashShield();
+      startNsfwScanner();
+
+      if (isInitiator) {
+        setupDataChannelAsInitiator();
+        createAndSendOffer();
+      }
+    }
 
     if (matchCount % 5 === 0 && matchCount > 0) {
       injectSponsorMessage();
     }
+  });
 
-    await setupPeerConnection();
-    startAntiFlashShield();
-    startNsfwScanner();
-
-    if (isInitiator) {
-      setupDataChannelAsInitiator();
-      createAndSendOffer();
+  // Handle Stranger requested Video Call switch
+  socket.on('partner-requested-video-switch', (data) => {
+    console.log('[Mode Switch] Stranger requested video switch:', data);
+    const modal = document.getElementById('videoSwitchModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
     }
+  });
+
+  // Handle Video Switch Accepted by Stranger
+  socket.on('video-switch-accepted', async (data) => {
+    console.log('[Mode Switch] Video switch accepted:', data);
+    selectAppMode('video');
+    showToast('Stranger accepted video call! Initializing camera... 📹', 'success', 3000);
+    try {
+      await initLocalMedia();
+      if (data && data.initiator) {
+        await setupPeerConnection();
+        setupDataChannelAsInitiator();
+        createAndSendOffer();
+      }
+    } catch (err) {
+      console.warn('[Mode Switch] Error establishing video after switch:', err);
+      showToast('Could not access camera/mic. Preserving text chat.', 'warning', 3500);
+      selectAppMode('text');
+      socket.emit('switch-to-text');
+    }
+  });
+
+  // Handle Video Switch Declined by Stranger
+  socket.on('video-switch-declined', (data) => {
+    console.log('[Mode Switch] Video switch declined:', data);
+    showToast(data.message || 'Stranger declined to switch to video.', 'info', 3000);
+  });
+
+  // Handle Stranger switched back to text chat
+  socket.on('switched-to-text', () => {
+    console.log('[Mode Switch] Switched to text chat mode');
+    selectAppMode('text');
+    teardownPeerConnection(false);
+    stopNsfwScanner();
+    stopLocalMedia();
+    showToast('Switched to text chat mode 💬', 'info', 2500);
   });
 
   socket.on('match-notice', (data) => {
     if (data && data.message) {
-      addSystemChatMessage(`⚡ ${data.message}`);
       showToast(data.message, 'info', 3000);
+      const chatStatusBannerText = document.getElementById('chatStatusBannerText');
+      if (chatStatusBannerText) chatStatusBannerText.textContent = data.message;
     }
   });
 
@@ -1683,8 +1973,7 @@ function initSocketConnection() {
   socket.on('partner-disconnected', (data) => {
     teardownPeerConnection();
     stopNsfwScanner();
-    setCallState(ConnectionState.DISCONNECTED);
-    addSystemChatMessage(data.message || '👋 Stranger has disconnected.');
+    setCallState(ConnectionState.DISCONNECTED, { message: data.message || 'Stranger has disconnected.' });
     showToast(data.message || 'Stranger skipped.', 'info', 2500);
 
     setTimeout(() => {
@@ -1707,7 +1996,6 @@ function initSocketConnection() {
     teardownPeerConnection();
     stopNsfwScanner();
     setCallState(ConnectionState.IDLE);
-    addSystemChatMessage('Search stopped. Click Start to resume.');
     const matchText = document.getElementById('toggleMatchText');
     const matchIcon = document.getElementById('toggleMatchIcon');
     if (matchText) matchText.textContent = 'Start';
@@ -2109,13 +2397,17 @@ function monitorRemoteAudio(stream) {
 // ==========================================
 function startSearching() {
   if (!socket) return;
+  if (isSearching) {
+    console.debug('[Match] Already in searching state, skipping duplicate startSearching call');
+    return;
+  }
   isSearching = true;
   const matchText = document.getElementById('toggleMatchText');
   const matchIcon = document.getElementById('toggleMatchIcon');
   if (matchText) matchText.textContent = 'Stop';
   if (matchIcon) matchIcon.textContent = '⏹';
 
-  socket.emit('start-search', { preferences: userPreferences });
+  socket.emit('start-search', { mode: currentAppMode, preferences: userPreferences });
   setSearchingUI(true);
 }
 
@@ -2141,14 +2433,13 @@ function handleSkip(isReport = false) {
 
   if (isReport) {
     socket.emit('report-peer', {
+      mode: currentAppMode,
       reason: 'User reported peer for inappropriate or non-consensual behavior',
       preferences: userPreferences
     });
     showToast('🚩 Report submitted. Searching for someone new...', 'warning');
-    addSystemChatMessage('🚩 You reported and skipped this stranger.');
   } else {
-    socket.emit('skip', { preferences: userPreferences });
-    addSystemChatMessage('⏭️ Skipped. Looking for someone new...');
+    socket.emit('skip', { mode: currentAppMode, preferences: userPreferences });
   }
 
   if (consecutiveSkips % 10 === 0 && consecutiveSkips > 0) {
@@ -2161,20 +2452,68 @@ function setSearchingUI(searching) {
   const radarTitle = document.getElementById('radarTitle');
   const statusDot = document.getElementById('strangerStatusDot');
   const badgeText = document.getElementById('strangerBadgeText');
+  const statusDotText = document.getElementById('strangerStatusDotText');
+  const badgeTextMode = document.getElementById('strangerBadgeTextMode');
+  const subtitleTextMode = document.getElementById('strangerSubtitleTextMode');
+  const chatStatusBanner = document.getElementById('chatStatusBanner');
+  const chatStatusBannerText = document.getElementById('chatStatusBannerText');
 
   if (searching) {
     if (radarOverlay) radarOverlay.classList.remove('hidden');
     if (radarTitle) radarTitle.textContent = 'Looking for someone awesome...';
     if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
     if (badgeText) badgeText.textContent = 'Searching...';
+    if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-amber-400 animate-pulse';
+    if (badgeTextMode) badgeTextMode.textContent = 'Searching...';
+    if (subtitleTextMode) subtitleTextMode.textContent = 'Looking for someone awesome around the world...';
+    if (chatStatusBanner) {
+      chatStatusBanner.classList.remove('hidden');
+      if (chatStatusBannerText) chatStatusBannerText.textContent = 'Looking for a stranger for text chat...';
+    }
   } else {
     if (radarOverlay) radarOverlay.classList.add('hidden');
+    if (statusDot) statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+    if (badgeText) badgeText.textContent = 'Stranger';
+    if (statusDotText) statusDotText.className = 'w-3 h-3 rounded-full bg-emerald-500';
+    if (badgeTextMode) badgeTextMode.textContent = 'Stranger';
+    if (subtitleTextMode) subtitleTextMode.textContent = (currentAppMode === 'text') ? 'Connected anonymously • No media shared' : 'Connected live • WebRTC P2P';
+    if (chatStatusBanner) chatStatusBanner.classList.add('hidden');
   }
 }
 
 // ==========================================
 // SMART CHAT TRIGGERS & PROMPTS
 // ==========================================
+let isUserNearChatBottom = true;
+const CHAT_BOTTOM_THRESHOLD_PX = 80;
+
+function isChatNearBottom() {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return true;
+  const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+  return distanceFromBottom <= CHAT_BOTTOM_THRESHOLD_PX;
+}
+
+function scrollChatToBottom(smooth = true) {
+  const chatMessages = document.getElementById('chatMessages');
+  const scrollBtn = document.getElementById('scrollToBottomBtn');
+  if (!chatMessages) return;
+  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  isUserNearChatBottom = true;
+  if (scrollBtn) scrollBtn.classList.add('hidden');
+}
+
+function handleIncomingChatScroll(force = false) {
+  const scrollBtn = document.getElementById('scrollToBottomBtn');
+  if (force || isUserNearChatBottom) {
+    scrollChatToBottom(true);
+  } else {
+    // If the user scrolls upward to read older messages, do not forcibly jump to the bottom
+    // Provide a return to latest message button
+    if (scrollBtn) scrollBtn.classList.remove('hidden');
+  }
+}
+
 function injectVipTipPrompt() {
   const chatMessages = document.getElementById('chatMessages');
   if (!chatMessages) return;
@@ -2201,7 +2540,7 @@ function injectVipTipPrompt() {
   });
 
   chatMessages.appendChild(tipWrapper);
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+  handleIncomingChatScroll(false);
 }
 
 function injectSponsorMessage() {
@@ -2235,7 +2574,7 @@ function injectSponsorMessage() {
   `;
 
   chatMessages.appendChild(sponsorWrapper);
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+  handleIncomingChatScroll(false);
 }
 
 // ==========================================
@@ -2260,6 +2599,8 @@ function appendChatMessage(sender, text) {
         <span class="text-blue-500 font-bold ml-1 text-xs select-none">✔✔</span>
       </div>
     `;
+    chatMessages.appendChild(msgWrapper);
+    scrollChatToBottom(true);
   } else {
     msgWrapper.className += ' items-start';
     msgWrapper.innerHTML = `
@@ -2268,10 +2609,9 @@ function appendChatMessage(sender, text) {
       </div>
       <span class="text-[11px] text-zinc-400 dark:text-slate-500 mt-1 ml-1">${timeString}</span>
     `;
+    chatMessages.appendChild(msgWrapper);
+    handleIncomingChatScroll(false);
   }
-
-  chatMessages.appendChild(msgWrapper);
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
 }
 
 function addSystemChatMessage(text) {
@@ -2286,12 +2626,15 @@ function addSystemChatMessage(text) {
     </div>
   `;
   chatMessages.appendChild(systemMsg);
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+  handleIncomingChatScroll(false);
 }
 
 function clearChatMessages() {
   const chatMessages = document.getElementById('chatMessages');
+  const scrollBtn = document.getElementById('scrollToBottomBtn');
   if (chatMessages) chatMessages.innerHTML = '';
+  isUserNearChatBottom = true;
+  if (scrollBtn) scrollBtn.classList.add('hidden');
 }
 
 function sendTypingSignal(isTyping) {
@@ -2360,6 +2703,7 @@ async function activateVipCode(code, isImmediateActivation = false) {
       isVip = true;
       vipCode = result.code;
       vipExpiresAt = result.expiresAt;
+      localStorage.setItem('talkhop_vip_code', vipCode);
       localStorage.setItem('vybrant_vip_code', vipCode);
 
       if (redeemModal) redeemModal.classList.add('hidden');
@@ -2408,6 +2752,7 @@ function startVipCountdownTimer(expiryTimestamp) {
       clearInterval(vipTimerInterval);
       vipTimerInterval = null;
       isVip = false;
+      localStorage.removeItem('talkhop_vip_code');
       localStorage.removeItem('vybrant_vip_code');
       localStorage.removeItem('blip_vip_code');
       if (openVipBtn) openVipBtn.classList.remove('hidden');
@@ -2458,12 +2803,312 @@ function updateVipFilterUi(vipUnlocked) {
     const countrySel = document.getElementById('filterCountrySelect');
     if (countrySel) countrySel.value = 'any';
   }
+
+  if (typeof window.syncCustomFiltersUi === 'function') {
+    window.syncCustomFiltersUi(vipUnlocked);
+  }
+}
+
+// ==========================================
+// CUSTOM ACCESSIBLE FILTER DROPDOWNS CONTROLLER
+// ==========================================
+function initCustomFilterDropdowns() {
+  const genderWrap = document.getElementById('genderDropdownWrap');
+  const genderTrigger = document.getElementById('customGenderTrigger');
+  const genderLabel = document.getElementById('customGenderLabel');
+  const genderMenu = document.getElementById('customGenderMenu');
+  const genderOptionsList = document.getElementById('customGenderOptionsList');
+  const genderSelect = document.getElementById('filterGenderSelect');
+
+  const countryWrap = document.getElementById('countryDropdownWrap');
+  const countryTrigger = document.getElementById('customCountryTrigger');
+  const countryLabel = document.getElementById('customCountryLabel');
+  const countryMenu = document.getElementById('customCountryMenu');
+  const countryOptionsList = document.getElementById('customCountryOptionsList');
+  const countrySearch = document.getElementById('countrySearchInput');
+  const countrySelect = document.getElementById('filterCountrySelect');
+
+  if (!genderWrap || !countryWrap || !genderSelect || !countrySelect) return;
+
+  // 1. Populate Gender Options
+  if (genderOptionsList && genderOptionsList.children.length === 0) {
+    genderOptionsList.innerHTML = '';
+    const genderData = [
+      { value: 'any', icon: '🎯', label: 'Gender: Random', vip: false },
+      { value: 'female', icon: '♀️', label: 'Gender: Female', vip: true },
+      { value: 'male', icon: '♂️', label: 'Gender: Male', vip: true }
+    ];
+
+    genderData.forEach(item => {
+      const optEl = document.createElement('div');
+      optEl.className = 'custom-dropdown-option';
+      optEl.setAttribute('role', 'option');
+      optEl.setAttribute('tabindex', '0');
+      optEl.setAttribute('data-value', item.value);
+      optEl.setAttribute('aria-selected', 'false');
+
+      optEl.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="text-sm">${item.icon}</span>
+          <span class="font-semibold text-xs text-zinc-800 dark:text-slate-100">${item.label}</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          ${item.vip ? `<span class="vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50">🔒 VIP</span>` : ''}
+          <span class="option-check text-purple-600 dark:text-purple-400 font-bold hidden text-xs">✓</span>
+        </div>
+      `;
+      genderOptionsList.appendChild(optEl);
+    });
+  }
+
+  // 2. Populate Country Options from the underlying select element
+  if (countryOptionsList && countryOptionsList.children.length === 0) {
+    countryOptionsList.innerHTML = '';
+    Array.from(countrySelect.options).forEach(opt => {
+      const val = opt.value;
+      const rawText = opt.textContent.trim();
+      const isAny = (val === 'any');
+
+      let flag = '🌐';
+      let cleanName = rawText;
+      if (!isAny) {
+        cleanName = rawText.replace(/🔒|\(VIP\)|✨/g, '').trim();
+        const parts = cleanName.split(/\s+/);
+        if (parts.length > 1) {
+          flag = parts[0];
+          cleanName = parts.slice(1).join(' ');
+        }
+      }
+
+      const optEl = document.createElement('div');
+      optEl.className = 'custom-dropdown-option';
+      optEl.setAttribute('role', 'option');
+      optEl.setAttribute('tabindex', '0');
+      optEl.setAttribute('data-value', val);
+      optEl.setAttribute('data-search', `${cleanName.toLowerCase()} ${val.toLowerCase()}`);
+      optEl.setAttribute('aria-selected', 'false');
+
+      optEl.innerHTML = `
+        <div class="flex items-center space-x-2 min-w-0">
+          <span class="text-sm flex-shrink-0">${flag}</span>
+          <span class="font-medium text-xs text-zinc-800 dark:text-slate-200 truncate">${isAny ? 'Global (Any Country)' : cleanName}</span>
+        </div>
+        <div class="flex items-center space-x-1.5 flex-shrink-0 ml-1.5">
+          ${!isAny && flag !== val ? `<span class="text-[10px] font-mono text-zinc-400 dark:text-slate-500 uppercase">${val}</span>` : ''}
+          ${!isAny ? `<span class="vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50">🔒 VIP</span>` : ''}
+          <span class="option-check text-purple-600 dark:text-purple-400 font-bold hidden text-xs">✓</span>
+        </div>
+      `;
+      countryOptionsList.appendChild(optEl);
+    });
+  }
+
+  // 3. Sync UI with active state
+  function syncCustomFilters(vipUnlocked) {
+    const isUnlocked = typeof vipUnlocked === 'boolean' ? vipUnlocked : !!isVip;
+
+    // Sync Gender
+    const curGender = genderSelect.value || 'any';
+    const gOpts = genderOptionsList.querySelectorAll('.custom-dropdown-option');
+    gOpts.forEach(el => {
+      const v = el.getAttribute('data-value');
+      const isSel = (v === curGender);
+      el.classList.toggle('selected', isSel);
+      el.setAttribute('aria-selected', isSel ? 'true' : 'false');
+      const badge = el.querySelector('.vip-badge');
+      if (badge) {
+        badge.textContent = isUnlocked ? '✨ VIP' : '🔒 VIP';
+        badge.className = isUnlocked
+          ? 'vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50'
+          : 'vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50';
+      }
+    });
+
+    if (curGender === 'female') genderLabel.textContent = 'Gender: Female';
+    else if (curGender === 'male') genderLabel.textContent = 'Gender: Male';
+    else genderLabel.textContent = 'Gender: Random';
+
+    // Sync Country
+    const curCountry = countrySelect.value || 'any';
+    const cOpts = countryOptionsList.querySelectorAll('.custom-dropdown-option');
+    let selCountryLabel = 'Global (Any Country)';
+    cOpts.forEach(el => {
+      const v = el.getAttribute('data-value');
+      const isSel = (v === curCountry);
+      el.classList.toggle('selected', isSel);
+      el.setAttribute('aria-selected', isSel ? 'true' : 'false');
+      if (isSel) {
+        const nameNode = el.querySelector('.truncate');
+        if (nameNode) selCountryLabel = nameNode.textContent;
+      }
+      const badge = el.querySelector('.vip-badge');
+      if (badge) {
+        badge.textContent = isUnlocked ? '✨ VIP' : '🔒 VIP';
+        badge.className = isUnlocked
+          ? 'vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/50'
+          : 'vip-badge text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50';
+      }
+    });
+    countryLabel.textContent = selCountryLabel;
+  }
+
+  window.syncCustomFiltersUi = syncCustomFilters;
+
+  // 4. Open / Close helpers
+  function closeAllDropdowns() {
+    genderWrap.classList.remove('open');
+    genderMenu.classList.add('hidden');
+    genderTrigger.setAttribute('aria-expanded', 'false');
+    genderMenu.classList.remove('open-upward');
+
+    countryWrap.classList.remove('open');
+    countryMenu.classList.add('hidden');
+    countryTrigger.setAttribute('aria-expanded', 'false');
+    countryMenu.classList.remove('open-upward');
+  }
+
+  function toggleDropdown(wrap, trigger, menu) {
+    const isCurrentlyOpen = wrap.classList.contains('open');
+    closeAllDropdowns();
+    if (isCurrentlyOpen) return;
+
+    // Viewport collision detection
+    const triggerRect = trigger.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    if (spaceBelow < 280 && triggerRect.top > 280) {
+      menu.classList.add('open-upward');
+    } else {
+      menu.classList.remove('open-upward');
+    }
+
+    wrap.classList.add('open');
+    menu.classList.remove('hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+
+    if (wrap === countryWrap) {
+      if (countrySearch) {
+        countrySearch.value = '';
+        countryOptionsList.querySelectorAll('.custom-dropdown-option').forEach(el => el.style.display = 'flex');
+        setTimeout(() => countrySearch.focus(), 50);
+      }
+      const activeOption = countryOptionsList.querySelector('.custom-dropdown-option.selected');
+      if (activeOption) {
+        activeOption.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }
+
+  // 5. Trigger click events
+  genderTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown(genderWrap, genderTrigger, genderMenu);
+  });
+
+  countryTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown(countryWrap, countryTrigger, countryMenu);
+  });
+
+  // Stop click bubbling from inside menu panels
+  genderMenu.addEventListener('click', (e) => e.stopPropagation());
+  countryMenu.addEventListener('click', (e) => e.stopPropagation());
+
+  // Click outside to dismiss
+  document.addEventListener('pointerdown', (e) => {
+    if (!genderWrap.contains(e.target) && !countryWrap.contains(e.target)) {
+      closeAllDropdowns();
+    }
+  });
+
+  // Escape key to dismiss
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAllDropdowns();
+    }
+  });
+
+  // 6. Real-time Country Search Filter
+  if (countrySearch) {
+    countrySearch.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const allOpts = countryOptionsList.querySelectorAll('.custom-dropdown-option');
+      allOpts.forEach(el => {
+        const searchStr = (el.getAttribute('data-search') || '').toLowerCase();
+        if (!q || searchStr.includes(q)) {
+          el.style.display = 'flex';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    });
+
+    countrySearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const firstVisible = Array.from(countryOptionsList.querySelectorAll('.custom-dropdown-option')).find(el => el.style.display !== 'none');
+        if (firstVisible) firstVisible.click();
+      }
+    });
+  }
+
+  // 7. Option selection handlers (updates select, fires change event, syncs UI)
+  genderOptionsList.addEventListener('click', (e) => {
+    const opt = e.target.closest('.custom-dropdown-option');
+    if (!opt) return;
+    const val = opt.getAttribute('data-value');
+    genderSelect.value = val;
+    genderSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    syncCustomFilters(isVip);
+    closeAllDropdowns();
+    genderTrigger.focus();
+  });
+
+  countryOptionsList.addEventListener('click', (e) => {
+    const opt = e.target.closest('.custom-dropdown-option');
+    if (!opt) return;
+    const val = opt.getAttribute('data-value');
+    countrySelect.value = val;
+    countrySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    syncCustomFilters(isVip);
+    closeAllDropdowns();
+    countryTrigger.focus();
+  });
+
+  // Keyboard navigation on list options
+  [genderOptionsList, countryOptionsList].forEach(list => {
+    list.addEventListener('keydown', (e) => {
+      const cur = document.activeElement;
+      if (!cur || !cur.classList.contains('.custom-dropdown-option')) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = cur.nextElementSibling;
+        if (next && next.classList.contains('custom-dropdown-option')) next.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = cur.previousElementSibling;
+        if (prev && prev.classList.contains('custom-dropdown-option')) prev.focus();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        cur.click();
+      }
+    });
+  });
+
+  // Keep synced if select changes programmatically
+  genderSelect.addEventListener('change', () => syncCustomFilters(isVip));
+  countrySelect.addEventListener('change', () => syncCustomFilters(isVip));
+
+  // Initial sync
+  syncCustomFilters(isVip);
 }
 
 // ==========================================
 // DOM BINDINGS & EVENT LISTENERS
 // ==========================================
 function bindUiEventListeners() {
+  initCustomFilterDropdowns();
+
   const localMic = document.getElementById('localMicBtn');
   const localCam = document.getElementById('localCamBtn');
   const flipBtn = document.getElementById('flipCamBtn');
@@ -2512,7 +3157,19 @@ function bindUiEventListeners() {
   }
   if (closeRedeem && redeemModal) {
     closeRedeem.addEventListener('click', () => redeemModal.classList.add('hidden'));
-  }
+  document.querySelectorAll('input[name="vipPlan"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.vip-plan-card').forEach(card => {
+        card.classList.remove('border-amber-500/40', 'bg-amber-500/10');
+        card.classList.add('border-zinc-200', 'dark:border-white/10', 'bg-zinc-50', 'dark:bg-white/5');
+      });
+      const parent = radio.closest('.vip-plan-card');
+      if (parent) {
+        parent.classList.remove('border-zinc-200', 'dark:border-white/10', 'bg-zinc-50', 'dark:bg-white/5');
+        parent.classList.add('border-amber-500/40', 'bg-amber-500/10');
+      }
+    });
+  });
 
   const simPayBtn = document.getElementById('simulatePaymentBtn');
   if (simPayBtn) {
@@ -2540,8 +3197,9 @@ function bindUiEventListeners() {
           latestGeneratedCode = code;
           const codeEl = document.getElementById('generatedVipCodeText');
           const detEl = document.getElementById('generatedPassDetails');
+          const planLabel = plan === '24-hour' ? '24-Hour' : (plan === '12-hour' ? '12-Hour' : '1-Hour');
           if (codeEl) codeEl.textContent = code;
-          if (detEl) detEl.textContent = `${plan === '12-hour' ? '12-Hour' : '1-Hour'} Pass (₹${price}) • 1-Device Concurrency Lock`;
+          if (detEl) detEl.textContent = `${planLabel} Pass (₹${price}) • 1-Device Concurrency Lock`;
 
           const selView = document.getElementById('vipPlanSelectionView');
           const sucView = document.getElementById('vipSuccessView');
@@ -2555,12 +3213,13 @@ function bindUiEventListeners() {
 
         // 2. If Razorpay Checkout SDK is loaded and not a mock order
         if (typeof window.Razorpay === 'function' && !orderData.isMock && orderData.key_id && !orderData.key_id.includes('mock')) {
+          const planDesc = selectedPlan === '24-hour' ? '24-Hour' : (selectedPlan === '12-hour' ? '12-Hour' : '1-Hour');
           const options = {
             key: orderData.key_id,
             amount: orderData.amount,
             currency: orderData.currency || 'INR',
-            name: 'Vybrant ⚡ Video Engine',
-            description: `${selectedPlan === '12-hour' ? '12-Hour' : '1-Hour'} VIP Micro-Pass`,
+            name: 'TalkHop ⚡ Engine',
+            description: `${planDesc} VIP Micro-Pass`,
             order_id: orderData.order_id,
             image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238b5cf6"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
             handler: async function (response) {
@@ -2591,8 +3250,8 @@ function bindUiEventListeners() {
               }
             },
             prefill: {
-              name: 'Vybrant User',
-              email: 'guest@vybrant.vybronx.online',
+              name: 'TalkHop User',
+              email: 'guest@talkhop.vybronx.online',
               contact: '9999999999'
             },
             theme: {
@@ -2820,6 +3479,24 @@ function bindUiEventListeners() {
     });
   }
 
+  const chatMessagesEl = document.getElementById('chatMessages');
+  const scrollBottomBtn = document.getElementById('scrollToBottomBtn');
+
+  if (chatMessagesEl) {
+    chatMessagesEl.addEventListener('scroll', () => {
+      isUserNearChatBottom = isChatNearBottom();
+      if (isUserNearChatBottom && scrollBottomBtn) {
+        scrollBottomBtn.classList.add('hidden');
+      }
+    });
+  }
+
+  if (scrollBottomBtn) {
+    scrollBottomBtn.addEventListener('click', () => {
+      scrollChatToBottom(true);
+    });
+  }
+
   const EMOJIS = ['👋', '🔥', '✨', '⚡', '😂', '💀', '😎', '❤️'];
   let emojiIndex = 0;
   if (emojiB && cInput) {
@@ -2857,6 +3534,111 @@ function bindUiEventListeners() {
       const overlay = document.getElementById('connectionRecoveryOverlay');
       if (overlay) overlay.classList.add('hidden');
       handleSkip(false);
+    });
+  }
+
+  // ==========================================
+  // TALKHOP MODE SELECTION MODAL BINDINGS
+  // ==========================================
+  const startChatBtn = document.getElementById('startChatModeBtn');
+  const startVideoBtn = document.getElementById('startVideoModeBtn');
+  const modeCardChat = document.getElementById('modeCardChat');
+  const modeCardVideo = document.getElementById('modeCardVideo');
+
+  const handleStartChatMode = () => {
+    hideModeSelectionModal();
+    selectAppMode('text', true);
+    showToast('Random Chat mode active 💬 Searching for stranger...', 'info', 2500);
+  };
+
+  const handleStartVideoMode = () => {
+    hideModeSelectionModal();
+    selectAppMode('video', true);
+    showToast('Video Call mode active 📹 Connecting camera...', 'info', 2500);
+  };
+
+  if (startChatBtn) startChatBtn.addEventListener('click', handleStartChatMode);
+  if (modeCardChat) modeCardChat.addEventListener('click', (e) => {
+    if (e.target !== startChatBtn) handleStartChatMode();
+  });
+
+  if (startVideoBtn) startVideoBtn.addEventListener('click', handleStartVideoMode);
+  if (modeCardVideo) modeCardVideo.addEventListener('click', (e) => {
+    if (e.target !== startVideoBtn) handleStartVideoMode();
+  });
+
+  // ==========================================
+  // SLIDE-TO-SWITCH MODE TABS & CTA BINDINGS
+  // ==========================================
+  const switchChatBtn = document.getElementById('switchModeChatBtn');
+  const switchVideoBtn = document.getElementById('switchModeVideoBtn');
+  const requestVideoBtn = document.getElementById('requestVideoSwitchBtn');
+
+  if (switchChatBtn) {
+    switchChatBtn.addEventListener('click', () => {
+      if (currentAppMode === 'video') {
+        if (currentPartnerId) {
+          socket.emit('switch-to-text');
+          selectAppMode('text');
+          showToast('Switched to text chat mode 💬', 'info', 2500);
+        } else {
+          selectAppMode('text');
+          if (isSearching) startSearching();
+        }
+      }
+    });
+  }
+
+  const handleRequestVideo = () => {
+    if (currentAppMode === 'text') {
+      if (currentPartnerId) {
+        showToast('Video Call request sent to stranger... 📹', 'info', 3000);
+        socket.emit('request-video-switch');
+      } else {
+        selectAppMode('video');
+        initLocalMedia().then(() => {
+          if (isSearching) startSearching();
+        }).catch(err => {
+          console.warn('[Mode] Media init error:', err);
+        });
+      }
+    }
+  };
+
+  if (switchVideoBtn) switchVideoBtn.addEventListener('click', handleRequestVideo);
+  if (requestVideoBtn) requestVideoBtn.addEventListener('click', handleRequestVideo);
+
+  // Stranger requested video call accept/decline buttons
+  const acceptVideoBtn = document.getElementById('acceptVideoSwitchBtn');
+  const declineVideoBtn = document.getElementById('declineVideoSwitchBtn');
+
+  if (acceptVideoBtn) {
+    acceptVideoBtn.addEventListener('click', async () => {
+      const modal = document.getElementById('videoSwitchModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
+      socket.emit('accept-video-switch');
+      selectAppMode('video');
+      showToast('Video Call accepted! Initializing camera... 📹', 'success', 2500);
+      try {
+        await initLocalMedia();
+      } catch (err) {
+        console.warn('[Video Switch] Camera init error:', err);
+      }
+    });
+  }
+
+  if (declineVideoBtn) {
+    declineVideoBtn.addEventListener('click', () => {
+      const modal = document.getElementById('videoSwitchModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
+      socket.emit('decline-video-switch');
+      showToast('Declined video switch. Remaining in text chat 💬', 'info', 2500);
     });
   }
 
@@ -3014,9 +3796,9 @@ window.getVybrantDiagnosticSummary = async function() {
   const inVid = d.stats.inboundVideo;
 
   return [
-    `=== VYBRANT WEBRTC CONNECTION DIAGNOSTICS ===`,
+    `=== TALKHOP WEBRTC CONNECTION DIAGNOSTICS ===`,
     `Time: ${d.timestamp} | Visitor: ${d.visitorId} | Session: ${d.sessionId || 'none'}`,
-    `Call State: ${d.state} | PC: ${d.peerConnectionState} | ICE: ${d.iceConnectionState}`,
+    `Mode: ${currentAppMode} | Call State: ${d.state} | PC: ${d.peerConnectionState} | ICE: ${d.iceConnectionState}`,
     `Quality Tier: ${d.quality.activeVideoTier} (Paused: ${d.quality.isAdaptiveVideoPaused}) | Camera Off: ${d.quality.isVideoDisabled}`,
     `Transport: ${pair ? `${pair.localCandidateType} -> ${pair.remoteCandidateType} (${pair.localProtocol}, Relay: ${pair.isRelay})` : 'none'}`,
     `RTT: ${pair?.currentRoundTripTimeMs ?? 'N/A'} ms | BWE Out: ${pair?.availableOutgoingBitrateKbps ?? 'N/A'} kbps`,
@@ -3025,6 +3807,19 @@ window.getVybrantDiagnosticSummary = async function() {
     `===============================================`
   ].join('\n');
 };
+
+// TalkHop diagnostic aliases (maintains backward compatibility for window.getVybrant...)
+window.getTalkHopConnectionDiagnostics = window.getVybrantConnectionDiagnostics;
+window.getTalkHopDiagnosticSummary = window.getVybrantDiagnosticSummary;
+if (typeof window.getVybrantAudioDiagnostics === 'function') {
+  window.getTalkHopAudioDiagnostics = window.getVybrantAudioDiagnostics;
+}
+
+// TalkHop mode & chat helpers on window for programmatic & testing access
+window.selectAppMode = selectAppMode;
+window.mountSharedWidgets = mountSharedWidgets;
+window.appendChatMessage = appendChatMessage;
+window.clearChatMessages = clearChatMessages;
 
 // ==========================================
 // BOOTSTRAP APPLICATION

@@ -1,12 +1,11 @@
 {
-  "name": "vybrant",
+  "name": "talkhop",
   "version": "1.0.0",
-  "description": "Vybrant - Instant P2P Random Video Chat (Hosted at vybrant.vybronx.online)",
+  "description": "TalkHop - Instant Random Chat & Live Video Calls (Hosted at vybrant.vybronx.online)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
-    "test": "node tests/state_machine.test.js && node tests/adaptive_quality.test.js && node tests/sdp_tuning.test.js && node tests/session_recovery.test.js && node tests/presence_online_count.test.js && node tests/server_endpoints.test.js"
+    "test": "node tests/state_machine.test.js && node tests/adaptive_quality.test.js && node tests/sdp_tuning.test.js && node tests/session_recovery.test.js && node tests/presence_online_count.test.js && node tests/server_endpoints.test.js && node tests/mode_matchmaking.test.js && node tests/branding_and_ui_flow.test.js && node tests/ui_integration_repair.test.js && node tests/full_height_layout_fix.test.js && node tests/filter_dropdowns_and_report_button.test.js && node tests/admin_command_center_redesign.test.js"
   },
   "keywords": [
     "webrtc",

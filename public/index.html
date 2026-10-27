@@ -4,16 +4,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vybrant⚡</title>
+  <title>TalkHop⚡ — Instant Random Chat</title>
   <meta name="description"
-    content="Connect instantly with random strangers worldwide via private, encrypted peer-to-peer video chat with AI Safety Shield on Vybrant.">
+    content="Connect instantly with random strangers worldwide via private, encrypted peer-to-peer text chat and video calls with AI Safety Shield on TalkHop.">
   <meta name="theme-color" content="#f4f4f5">
+  <meta property="og:title" content="TalkHop⚡ — Instant Random Chat">
+  <meta property="og:description"
+    content="Connect instantly with random strangers worldwide via private, encrypted text chat and live video calls on TalkHop.">
+  <meta property="og:type" content="website">
 
   <!-- Immediate Theme Initialization Script (Prevents FOUC) -->
   <script>
     (function () {
       try {
-        var t = localStorage.getItem('vybrant_theme') || 'light';
+        var t = localStorage.getItem('talkhop_theme') || localStorage.getItem('vybrant_theme') || 'light';
         if (t === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
@@ -87,9 +91,9 @@
     }
   </script>
 
-  <!-- Client-Side AI Safety Shield: TensorFlow.js & NSFWJS CDNs (Milestone 3) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/nsfwjs@3.0.1/dist/nsfwjs.min.js"></script>
+  <!-- Client-Side AI Safety Shield: TensorFlow.js & NSFWJS CDNs -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/nsfwjs@3.0.1/dist/nsfwjs.min.js"></script>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/style.css">
@@ -111,15 +115,15 @@
     </div>
   </div>
 
-  <!-- Header Navigation (Clean desktop two-group layout & mobile row) -->
+  <!-- Header Navigation -->
   <header
     class="relative z-20 border-b border-zinc-200/80 dark:border-white/5 bg-white/95 dark:bg-[#090b12]/85 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex flex-col justify-center">
     <!-- Primary Header Row -->
     <div class="flex items-center justify-between gap-3 w-full flex-nowrap">
-      <!-- Left group: Logo + Branding + P2P Badge -->
+      <!-- Left group: Logo + Branding + AI Shield Badge -->
       <div class="flex items-center space-x-3 flex-shrink-0">
         <div
-          class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 shadow-md shadow-blue-500/20 flex-shrink-0">
+          class="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 shadow-md shadow-purple-500/20 flex-shrink-0">
           <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
@@ -128,7 +132,7 @@
           <div class="flex items-center space-x-2">
             <span
               class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-zinc-900 dark:text-white flex items-center">
-              Vybrant<span class="text-amber-500 text-xl font-normal ml-0.5">⚡</span>
+              TalkHop<span class="text-amber-500 text-xl font-normal ml-0.5">⚡</span>
             </span>
             <span
               class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 shadow-xs">
@@ -136,7 +140,7 @@
             </span>
           </div>
           <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-slate-400 font-medium hidden sm:block">
-            Instant Encrypted Video Chat
+            Instant Random Chat
           </p>
         </div>
       </div>
@@ -146,7 +150,7 @@
         <!-- 1. Get VIP Pass Container (Desktop) -->
         <div id="vipStatusContainer" class="hidden sm:flex flex-shrink-0">
           <button id="openVipModalBtn"
-            class="flex items-center space-x-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-bold bg-[#fff4eb] hover:bg-[#ffe8d6] dark:bg-amber-950/30 border border-[#fed7aa] dark:border-amber-800/40 text-[#ea580c] dark:text-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xs">
+            class="flex items-center space-x-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-bold bg-[#fff4eb] hover:bg-[#ffe8d6] dark:bg-amber-950/30 border border-[#fed7aa] dark:border-amber-800/40 text-[#ea580c] dark:text-amber-400 transition-all hover:scale-105 active:scale-95 shadow-xs cursor-pointer">
             <span>👑</span>
             <span>Get VIP Pass</span>
           </button>
@@ -161,12 +165,12 @@
 
         <!-- 2. Redeem Code Trigger (Desktop) -->
         <button id="openRedeemModalBtn"
-          class="hidden sm:flex items-center space-x-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-white hover:bg-zinc-50 dark:bg-slate-900 dark:hover:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-slate-200 shadow-xs transition-all flex-shrink-0">
+          class="hidden sm:flex items-center space-x-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-white hover:bg-zinc-50 dark:bg-slate-900 dark:hover:bg-white/5 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-slate-200 shadow-xs transition-all flex-shrink-0 cursor-pointer">
           <span class="text-rose-500 text-sm">🎟️</span>
           <span>Redeem Code</span>
         </button>
 
-        <!-- 3. Live User Counter Badge -->
+        <!-- 3. Live User Counter Badge (Authoritative) -->
         <div
           class="flex items-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#ecfdf5] dark:bg-emerald-950/40 border border-[#a7f3d0] dark:border-emerald-800/40 text-[#059669] dark:text-emerald-400 font-bold text-xs shadow-xs flex-shrink-0">
           <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -183,20 +187,258 @@
       </div>
     </div>
 
-    <!-- Mobile Dedicated Secondary Row for Get VIP Pass and Redeem Code (Visible ONLY on mobile screens < 640px) -->
+    <!-- Mobile Dedicated Secondary Row for Get VIP Pass and Redeem Code -->
     <div id="mobileVipRedeemRow"
       class="flex sm:hidden items-center justify-center gap-2 pt-2.5 mt-2 border-t border-zinc-100 dark:border-white/5 w-full">
       <button id="mobileOpenVipModalBtn"
-        class="flex-1 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#fff4eb] active:bg-[#ffe8d6] dark:bg-amber-950/30 border border-[#fed7aa] dark:border-amber-800/40 text-[#ea580c] dark:text-amber-400 shadow-xs">
+        class="flex-1 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#fff4eb] active:bg-[#ffe8d6] dark:bg-amber-950/30 border border-[#fed7aa] dark:border-amber-800/40 text-[#ea580c] dark:text-amber-400 shadow-xs cursor-pointer">
         <span>👑</span>
         <span id="mobileVipBtnText">Get VIP Pass</span>
       </button>
       <button id="mobileOpenRedeemModalBtn"
-        class="flex-1 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white active:bg-zinc-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-slate-200 shadow-xs">
+        class="flex-1 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white active:bg-zinc-50 dark:bg-slate-900 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-slate-200 shadow-xs cursor-pointer">
         <span class="text-rose-500 text-sm">🎟️</span>
         <span>Redeem Code</span>
+      </button>
     </div>
   </header>
+
+  <!-- ========================================================== -->
+  <!-- SHARED TOP TOOLBAR: SELECTOR (LEFT) + FILTERS (RIGHT)      -->
+  <!-- ========================================================== -->
+  <div id="modeSwitchBar"
+    class="shared-top-toolbar relative z-20 w-full bg-white/95 dark:bg-[#090b12]/90 border-b border-zinc-200/80 dark:border-white/5 backdrop-blur-md px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex items-center justify-between gap-2 sm:gap-4 flex-nowrap">
+    
+    <!-- LEFT SECTION: Left-Aligned Mode Selector -->
+    <div class="mode-selector-wrap flex items-center flex-shrink-0">
+      <div
+        class="relative bg-zinc-200/80 dark:bg-[#141724] p-1 rounded-full flex items-center shadow-inner border border-zinc-300/60 dark:border-white/10 w-[170px] xs:w-[200px] sm:w-[260px]"
+        role="tablist" aria-label="Mode Selection Switch">
+        <!-- Animated slider pill -->
+        <div id="modeSwitchSlider"
+          class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 shadow-md transition-all duration-300 ease-out pointer-events-none">
+        </div>
+
+        <!-- Chat tab button -->
+        <button id="switchModeChatBtn" type="button" role="tab" aria-selected="true"
+          class="relative z-10 flex-1 py-1 sm:py-1.5 px-2 sm:px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-200 text-white cursor-pointer select-none">
+          <span class="text-xs sm:text-sm">💬</span>
+          <span>Chat</span>
+        </button>
+
+        <!-- Video tab button -->
+        <button id="switchModeVideoBtn" type="button" role="tab" aria-selected="false"
+          class="relative z-10 flex-1 py-1 sm:py-1.5 px-2 sm:px-3 rounded-full text-xs font-extrabold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-200 text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white cursor-pointer select-none">
+          <span class="text-xs sm:text-sm">📹</span>
+          <span>Video</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT SECTION: Shared Filter Toolbar -->
+    <div id="filterSlotShared" class="shared-filters-wrap flex items-center justify-end flex-shrink min-w-0">
+      <!-- 1. MATCHING FILTER TOOLBAR -->
+      <div id="filterToolbar"
+        class="filter-toolbar bg-transparent sm:bg-white/80 dark:sm:bg-[#0d0f17]/80 sm:backdrop-blur-md rounded-2xl sm:border sm:border-zinc-200/80 dark:sm:border-white/10 px-1 sm:px-4 py-1 sm:py-1.5 flex items-center justify-end gap-1.5 sm:gap-2.5 text-xs sm:shadow-xs flex-shrink-0 max-w-full min-w-0">
+
+        <span class="filter-label-wrap text-zinc-500 dark:text-slate-400 font-medium hidden md:flex items-center space-x-1 text-xs flex-shrink-0">
+          <span class="text-amber-500">⚡</span>
+          <span class="font-semibold text-zinc-700 dark:text-slate-300"><span class="hidden xl:inline">Matching </span>Filter:</span>
+        </span>
+
+        <!-- Gender Filter Dropdown Pill (Custom Accessible Dropdown) -->
+        <div id="genderDropdownWrap" class="filter-pill-wrap custom-dropdown relative inline-flex items-center min-w-0 flex-shrink">
+          <!-- Hidden native select retained for state and test compatibility -->
+          <select id="filterGenderSelect" class="sr-only" tabindex="-1" aria-hidden="true">
+            <option value="any">Gender: Random</option>
+            <option value="female">Gender: Female 🔒</option>
+            <option value="male">Gender: Male 🔒</option>
+          </select>
+
+          <!-- Custom Trigger Button -->
+          <button id="customGenderTrigger" type="button"
+            class="custom-dropdown-trigger flex items-center space-x-1 sm:space-x-1.5 rounded-full px-2 sm:px-2.5 py-1 sm:py-1.5 shadow-xs min-w-0 cursor-pointer border border-zinc-200/80 dark:border-white/10 bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/5 dark:hover:bg-white/10 transition-all select-none"
+            aria-haspopup="listbox" aria-expanded="false" aria-controls="customGenderMenu" aria-label="Gender Filter">
+            <div
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-300 text-[10px] sm:text-[11px] flex-shrink-0 shadow-xs">
+              🎯
+            </div>
+            <span id="customGenderLabel"
+              class="text-zinc-800 dark:text-slate-100 text-[11px] sm:text-xs font-semibold truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
+              Gender: Random
+            </span>
+            <svg class="chevron-icon w-3 h-3 text-zinc-400 dark:text-slate-400 transition-transform duration-200 pointer-events-none -ml-0.5 flex-shrink-0" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Floating Custom Menu -->
+          <div id="customGenderMenu"
+            class="custom-dropdown-menu hidden absolute top-[calc(100%+6px)] right-0 z-[100] w-48 sm:w-52 py-1.5 rounded-2xl bg-white/95 dark:bg-[#0e111d]/95 backdrop-blur-xl border border-zinc-200/90 dark:border-white/10 shadow-2xl shadow-purple-500/10 dark:shadow-black/70 text-xs text-zinc-800 dark:text-slate-100 select-none"
+            role="listbox" aria-labelledby="customGenderTrigger">
+            <div class="px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-slate-500 border-b border-zinc-100 dark:border-white/5 mb-1">
+              Select Gender
+            </div>
+            <div id="customGenderOptionsList" class="flex flex-col gap-0.5 px-1">
+              <!-- Dynamically populated and synced -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5 hidden lg:block flex-shrink-0"></div>
+
+        <!-- Country Filter Dropdown Pill (Custom Accessible Dropdown) -->
+        <div id="countryDropdownWrap" class="filter-pill-wrap custom-dropdown relative inline-flex items-center min-w-0 flex-shrink sm:flex-1">
+          <!-- Hidden native select retained for state and test compatibility -->
+          <select id="filterCountrySelect" class="sr-only" tabindex="-1" aria-hidden="true">
+            <option value="any">Global (Any Country)</option>
+            <option value="IN">🇮🇳 India 🔒 (VIP)</option>
+            <option value="US">🇺🇸 United States 🔒 (VIP)</option>
+            <option value="GB">🇬🇧 United Kingdom 🔒 (VIP)</option>
+            <option value="CA">🇨🇦 Canada 🔒 (VIP)</option>
+            <option value="AU">🇦🇺 Australia 🔒 (VIP)</option>
+            <option value="DE">🇩🇪 Germany 🔒 (VIP)</option>
+            <option value="FR">🇫🇷 France 🔒 (VIP)</option>
+            <option value="BR">🇧🇷 Brazil 🔒 (VIP)</option>
+            <option value="JP">🇯🇵 Japan 🔒 (VIP)</option>
+            <option value="KR">🇰🇷 South Korea 🔒 (VIP)</option>
+            <option value="RU">🇷🇺 Russia 🔒 (VIP)</option>
+            <option value="IT">🇮🇹 Italy 🔒 (VIP)</option>
+            <option value="ES">🇪🇸 Spain 🔒 (VIP)</option>
+            <option value="MX">🇲🇽 Mexico 🔒 (VIP)</option>
+            <option value="ID">🇮🇩 Indonesia 🔒 (VIP)</option>
+            <option value="NL">🇳🇱 Netherlands 🔒 (VIP)</option>
+            <option value="SA">🇸🇦 Saudi Arabia 🔒 (VIP)</option>
+            <option value="TR">🇹🇷 Turkey 🔒 (VIP)</option>
+            <option value="CH">🇨🇭 Switzerland 🔒 (VIP)</option>
+            <option value="PL">🇵🇱 Poland 🔒 (VIP)</option>
+            <option value="SE">🇸🇪 Sweden 🔒 (VIP)</option>
+            <option value="BE">🇧🇪 Belgium 🔒 (VIP)</option>
+            <option value="AR">🇦🇷 Argentina 🔒 (VIP)</option>
+            <option value="NO">🇳🇴 Norway 🔒 (VIP)</option>
+            <option value="AT">🇦🇹 Austria 🔒 (VIP)</option>
+            <option value="AE">🇦🇪 United Arab Emirates 🔒 (VIP)</option>
+            <option value="SG">🇸🇬 Singapore 🔒 (VIP)</option>
+            <option value="MY">🇲🇾 Malaysia 🔒 (VIP)</option>
+            <option value="PH">🇵🇭 Philippines 🔒 (VIP)</option>
+            <option value="VN">🇻🇳 Vietnam 🔒 (VIP)</option>
+            <option value="TH">🇹🇭 Thailand 🔒 (VIP)</option>
+            <option value="ZA">🇿🇦 South Africa 🔒 (VIP)</option>
+            <option value="EG">🇪🇬 Egypt 🔒 (VIP)</option>
+            <option value="NG">🇳🇬 Nigeria 🔒 (VIP)</option>
+            <option value="PK">🇵🇰 Pakistan 🔒 (VIP)</option>
+            <option value="BD">🇧🇩 Bangladesh 🔒 (VIP)</option>
+            <option value="CO">🇨🇴 Colombia 🔒 (VIP)</option>
+            <option value="CL">🇨🇱 Chile 🔒 (VIP)</option>
+            <option value="PE">🇵🇪 Peru 🔒 (VIP)</option>
+            <option value="NZ">🇳🇿 New Zealand 🔒 (VIP)</option>
+            <option value="IE">🇮🇪 Ireland 🔒 (VIP)</option>
+            <option value="PT">🇵🇹 Portugal 🔒 (VIP)</option>
+            <option value="GR">🇬🇷 Greece 🔒 (VIP)</option>
+            <option value="CZ">🇨🇿 Czech Republic 🔒 (VIP)</option>
+            <option value="RO">🇷🇴 Romania 🔒 (VIP)</option>
+            <option value="HU">🇭🇺 Hungary 🔒 (VIP)</option>
+            <option value="DK">🇩🇰 Denmark 🔒 (VIP)</option>
+            <option value="FI">🇫🇮 Finland 🔒 (VIP)</option>
+            <option value="UA">🇺🇦 Ukraine 🔒 (VIP)</option>
+            <option value="IL">🇮🇱 Israel 🔒 (VIP)</option>
+            <option value="QA">🇶🇦 Qatar 🔒 (VIP)</option>
+            <option value="KW">🇰🇼 Kuwait 🔒 (VIP)</option>
+            <option value="MA">🇲🇦 Morocco 🔒 (VIP)</option>
+            <option value="KE">🇰🇪 Kenya 🔒 (VIP)</option>
+            <option value="GH">🇬🇭 Ghana 🔒 (VIP)</option>
+            <option value="LK">🇱🇰 Sri Lanka 🔒 (VIP)</option>
+            <option value="NP">🇳🇵 Nepal 🔒 (VIP)</option>
+            <option value="HK">🇭🇰 Hong Kong 🔒 (VIP)</option>
+            <option value="TW">🇹🇼 Taiwan 🔒 (VIP)</option>
+            <option value="HR">🇭🇷 Croatia 🔒 (VIP)</option>
+            <option value="BG">🇧🇬 Bulgaria 🔒 (VIP)</option>
+            <option value="SK">🇸🇰 Slovakia 🔒 (VIP)</option>
+            <option value="RS">🇷🇸 Serbia 🔒 (VIP)</option>
+            <option value="LT">🇱🇹 Lithuania 🔒 (VIP)</option>
+            <option value="SI">🇸🇮 Slovenia 🔒 (VIP)</option>
+            <option value="LV">🇱🇻 Latvia 🔒 (VIP)</option>
+            <option value="EE">🇪🇪 Estonia 🔒 (VIP)</option>
+            <option value="CY">🇨🇾 Cyprus 🔒 (VIP)</option>
+            <option value="LU">🇱🇺 Luxembourg 🔒 (VIP)</option>
+            <option value="IS">🇮🇸 Iceland 🔒 (VIP)</option>
+            <option value="MT">🇲🇹 Malta 🔒 (VIP)</option>
+            <option value="KZ">🇰🇿 Kazakhstan 🔒 (VIP)</option>
+            <option value="UZ">UZ Uzbekistan 🔒 (VIP)</option>
+            <option value="AZ">🇦🇿 Azerbaijan 🔒 (VIP)</option>
+            <option value="GE">🇬🇪 Georgia 🔒 (VIP)</option>
+            <option value="AM">🇦🇲 Armenia 🔒 (VIP)</option>
+            <option value="JO">🇯🇴 Jordan 🔒 (VIP)</option>
+            <option value="LB">🇱🇧 Lebanon 🔒 (VIP)</option>
+            <option value="OM">🇴🇲 Oman 🔒 (VIP)</option>
+            <option value="BH">🇧🇭 Bahrain 🔒 (VIP)</option>
+            <option value="IQ">🇮🇶 Iraq 🔒 (VIP)</option>
+            <option value="DZ">🇩🇿 Algeria 🔒 (VIP)</option>
+            <option value="TN">🇹🇳 Tunisia 🔒 (VIP)</option>
+            <option value="ET">🇪🇹 Ethiopia 🔒 (VIP)</option>
+            <option value="TZ">🇹🇿 Tanzania 🔒 (VIP)</option>
+            <option value="UG">🇺🇬 Uganda 🔒 (VIP)</option>
+            <option value="EC">🇪🇨 Ecuador 🔒 (VIP)</option>
+            <option value="VE">🇻🇪 Venezuela 🔒 (VIP)</option>
+            <option value="UY">🇺🇾 Uruguay 🔒 (VIP)</option>
+            <option value="CR">🇨🇷 Costa Rica 🔒 (VIP)</option>
+            <option value="PA">🇵🇦 Panama 🔒 (VIP)</option>
+            <option value="DO">🇩🇴 Dominican Republic 🔒 (VIP)</option>
+            <option value="GT">🇬🇹 Guatemala 🔒 (VIP)</option>
+            <option value="JM">🇯🇲 Jamaica 🔒 (VIP)</option>
+            <option value="MU">🇲🇺 Mauritius 🔒 (VIP)</option>
+            <option value="MV">🇲🇻 Maldives 🔒 (VIP)</option>
+            <option value="FJ">🇫🇯 Fiji 🔒 (VIP)</option>
+          </select>
+
+          <!-- Custom Trigger Button -->
+          <button id="customCountryTrigger" type="button"
+            class="custom-dropdown-trigger flex items-center space-x-1 sm:space-x-1.5 rounded-full px-2 sm:px-2.5 py-1 sm:py-1.5 shadow-xs w-full min-w-0 cursor-pointer border border-zinc-200/80 dark:border-white/10 bg-zinc-100/80 hover:bg-zinc-200/80 dark:bg-white/5 dark:hover:bg-white/10 transition-all select-none"
+            aria-haspopup="listbox" aria-expanded="false" aria-controls="customCountryMenu" aria-label="Country Filter">
+            <div
+              class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-300 text-[10px] sm:text-[11px] flex-shrink-0 shadow-xs">
+              🌐
+            </div>
+            <span id="customCountryLabel"
+              class="text-zinc-800 dark:text-slate-200 text-[11px] sm:text-xs font-semibold truncate max-w-[80px] xs:max-w-[95px] sm:max-w-[145px]">
+              Global (Any Country)
+            </span>
+            <svg class="chevron-icon w-3 h-3 text-zinc-400 dark:text-slate-400 transition-transform duration-200 pointer-events-none -ml-0.5 flex-shrink-0" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Floating Custom Menu -->
+          <div id="customCountryMenu"
+            class="custom-dropdown-menu hidden absolute top-[calc(100%+6px)] right-0 z-[100] w-64 sm:w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white/95 dark:bg-[#0e111d]/95 backdrop-blur-xl border border-zinc-200/90 dark:border-white/10 shadow-2xl shadow-purple-500/10 dark:shadow-black/70 text-xs text-zinc-800 dark:text-slate-100 select-none flex flex-col overflow-hidden"
+            role="listbox" aria-labelledby="customCountryTrigger">
+            <!-- Search bar header -->
+            <div class="p-2 border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
+              <div class="relative flex items-center">
+                <span class="absolute left-2.5 text-zinc-400 text-xs pointer-events-none">🔍</span>
+                <input id="countrySearchInput" type="text" placeholder="Search 60+ countries..." autocomplete="off"
+                  class="w-full pl-7 pr-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/80 dark:border-white/10 text-xs text-zinc-800 dark:text-slate-100 placeholder-zinc-400 focus:outline-none focus:border-purple-500 transition-colors">
+              </div>
+            </div>
+            <!-- Scrollable Options List -->
+            <div id="customCountryOptionsList" class="max-h-60 overflow-y-auto overscroll-contain py-1 custom-scrollbar flex flex-col gap-0.5 px-1">
+              <!-- Dynamically populated from select options -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden Identity Elements (Retained for state compatibility) -->
+        <div class="hidden" aria-hidden="true">
+          <button id="myGenderMale">♂️ Male</button>
+          <button id="myGenderFemale">♀️ Female</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 
   <!-- Instagram / In-App Browser Compatibility Banner -->
   <div id="inAppBrowserNotice"
@@ -211,447 +453,45 @@
     </div>
   </div>
 
-  <!-- AI Shield Status Badge (hidden from header, kept in DOM for functionality) -->
+  <!-- AI Shield Status Badge (Kept in DOM for client script compatibility) -->
   <div id="aiShieldBadge" class="hidden" title="Client-Side NSFW & Anti-Flash Shield Active">
     <span id="aiShieldStatusText">AI Shield Ready</span>
   </div>
 
-
   <!-- ========================================================== -->
-  <!-- MAIN VIEWPORT: PC ~45%/~55% Split & Mobile Adaptive Flow -->
+  <!-- MAIN VIEWPORT: HOSTS RANDOM CHAT VIEW & VIDEO CALL VIEW   -->
   <!-- ========================================================== -->
   <main id="mainViewport" class="vybrant-main relative z-10 flex-1 w-full mx-auto">
 
-    <!-- LEFT COLUMN: VIDEO FEEDS & ACTION CONTROLS -->
-    <section id="videoSection" class="flex flex-col gap-3.5 min-h-0">
+    <!-- ========================================================== -->
+    <!-- 1. RANDOM CHAT MODE VIEW (Dedicated Text-Only Interface)   -->
+    <!-- ========================================================== -->
+    <div id="chatModeView" class="w-full flex-1 flex flex-col lg:flex-row gap-4 h-full min-h-0">
 
-      <!-- Video Grid Container (Vertically split Stranger/You on PC, Mobile PIP) -->
-      <div id="videoGridContainer">
-
-        <!-- STRANGER VIDEO BOX (Top on PC, Primary Full Background on Mobile) -->
-        <div id="strangerVideoWrapper"
-          class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
-
-          <!-- Remote Video Feed -->
-          <video id="remoteVideo" autoplay playsinline
-            class="w-full h-full object-cover transition-all duration-700"></video>
-
-          <!-- Status / Peer Badge -->
-          <div
-            class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
-            <span id="strangerStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="strangerBadgeText" class="text-slate-200">Stranger</span>
-          </div>
-
-          <!-- Video Quality / STUN badge -->
-          <div
-            class="absolute top-3 right-3 z-20 hidden sm:flex items-center space-x-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 text-[11px] text-slate-300 shadow-sm">
-            <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span id="networkP2pBadge">WebRTC P2P</span>
-          </div>
-
-          <!-- TAP TO ENABLE AUDIO (When browser autoplay policy restricts unmuted playback, e.g. Instagram / iOS) -->
-          <button id="tapToPlayAudioBtn" type="button"
-            class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-center cursor-pointer transition-all">
-            <div class="w-14 h-14 rounded-full bg-purple-600/90 text-white flex items-center justify-center mb-2 shadow-lg shadow-purple-600/50 animate-bounce">
-              <span class="text-2xl">🔊</span>
+      <!-- LEFT: MAIN CONVERSATION PANEL (~70% width on desktop, full on mobile) -->
+      <section class="flex-1 flex flex-col min-w-0 h-full min-h-0 bg-white dark:bg-[#0d0f17] rounded-3xl border border-zinc-200/80 dark:border-white/10 shadow-xl overflow-hidden">
+        
+        <!-- Stranger Header Bar in Text Mode -->
+        <div class="px-5 py-3.5 border-b border-zinc-100 dark:border-white/5 bg-white dark:bg-[#090b12]/80 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center space-x-3">
+            <div class="relative flex items-center justify-center">
+              <span id="strangerStatusDotText" class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
             </div>
-            <span class="text-sm font-bold text-white mb-0.5">Audio Blocked by Browser</span>
-            <span class="text-xs text-purple-200">Tap here to enable stranger audio</span>
-          </button>
-
-          <!-- LOW-BANDWIDTH ADAPTIVE QUALITY STATUS BANNER -->
-          <div id="adaptiveQualityBanner"
-            class="hidden absolute top-12 left-1/2 -translate-x-1/2 z-25 flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-xs font-semibold shadow-lg transition-all">
-            <span class="animate-pulse">⚠️</span>
-            <span id="adaptiveQualityText">Poor connection — video paused, audio continuing</span>
-          </div>
-
-          <!-- TRANSIENT CONNECTION RECOVERY OVERLAY -->
-          <div id="connectionRecoveryOverlay"
-            class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6 text-center transition-all">
-            <div class="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin mb-3"></div>
-            <h4 id="recoveryOverlayTitle" class="font-bold text-white text-sm mb-1">Reconnecting...</h4>
-            <p id="recoveryOverlayDesc" class="text-xs text-slate-300 max-w-xs mb-3">Temporary network interruption detected. Preserving call...</p>
-            <button id="recoverySkipBtn" type="button" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-all cursor-pointer">
-              Skip to Next Stranger
-            </button>
-          </div>
-
-          <!-- SEARCHING / RADAR STATE -->
-          <div id="radarOverlay"
-            class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-[#181a28] to-[#0f111a] dark:from-[#0e111d] dark:to-[#07080d] p-6 text-center">
-            <div class="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-4">
-              <div class="absolute w-24 h-24 rounded-full border border-purple-500/40 animate-radar"></div>
-              <div class="absolute w-20 h-20 rounded-full border border-cyan-400/30 animate-radar"
-                style="animation-delay: 0.8s;"></div>
-              <div class="absolute w-16 h-16 rounded-full border border-purple-400/20 animate-radar"
-                style="animation-delay: 1.4s;"></div>
-              <div
-                class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 animate-float">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="strangerBadgeTextMode" class="font-display font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white">Stranger</span>
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                  💬 Text Chat
+                </span>
               </div>
+              <p id="strangerSubtitleTextMode" class="text-[11px] text-zinc-500 dark:text-slate-400">
+                Connected anonymously &bull; No media shared
+              </p>
             </div>
-
-            <h3 id="radarTitle"
-              class="font-display font-bold text-base sm:text-lg text-white mb-1.5 px-3 max-w-full break-words">
-              Looking for someone awesome...
-            </h3>
-            <p id="radarSubtitle"
-              class="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xs px-3 break-words leading-relaxed">
-              Matching you randomly with someone from around the world.
-            </p>
-          </div>
-
-          <!-- FIRST 3-SECOND ANTI-FLASH BLUR OVERLAY ("🛡️ AI Safety Check...") -->
-          <div id="antiFlashOverlay"
-            class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/75 backdrop-blur-2xl p-6 text-center transition-all duration-500">
-            <div class="relative flex items-center justify-center mb-4">
-              <div
-                class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/30 to-purple-600/30 border border-amber-500/40 flex items-center justify-center shadow-xl">
-                <span class="text-3xl animate-bounce">🛡️</span>
-              </div>
-            </div>
-            <div
-              class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-              <span>🛡️ AI Safety Check...</span>
-            </div>
-            <h4 class="font-display font-bold text-lg text-white mb-1">
-              Screening Stranger Video Feed
-            </h4>
-            <p class="text-xs text-slate-300 max-w-xs mb-4">
-              Protecting you from flashers and NSFW surprises. Unblurring in:
-            </p>
-
-            <!-- Countdown Timer & Progress Bar -->
-            <div class="flex items-center space-x-3 mb-5">
-              <span id="antiFlashCountdown" class="font-display font-extrabold text-3xl text-amber-400">
-                3s
-              </span>
-              <div class="w-32 h-2 rounded-full bg-slate-800 overflow-hidden">
-                <div id="antiFlashProgressBar"
-                  class="h-full bg-gradient-to-r from-amber-400 to-purple-500 w-full transition-all duration-100 ease-linear">
-                </div>
-              </div>
-            </div>
-
-            <!-- Instant Reveal Button -->
-            <button id="quickRevealBtn"
-              class="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition-all hover:scale-105 active:scale-95">
-              ⚡ Quick Reveal (Bypass Blur)
-            </button>
-          </div>
-
-          <!-- Audio Activity Bar Indicator -->
-          <div id="strangerAudioIndicator"
-            class="absolute bottom-3 left-3 z-20 hidden items-center space-x-1 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-            <span class="text-[11px] text-slate-300">Speaking</span>
-            <div class="flex items-end space-x-0.5 h-3">
-              <div class="w-0.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-              <div class="w-0.5 h-3 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
-              <div class="w-0.5 h-2 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- LOCAL USER VIDEO BOX (Bottom on PC, Floating PIP on Mobile) -->
-        <div id="localVideoWrapper"
-          class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
-
-          <!-- Local Mirrored Video Stream -->
-          <video id="localVideo" autoplay playsinline muted
-            class="w-full h-full object-cover scale-x-[-1] transition-all duration-300"></video>
-
-          <!-- Local You Badge -->
-          <div
-            class="local-badge-pill absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span id="localBadgeText" class="text-slate-200">You</span>
-          </div>
-
-          <!-- Local Controls Bar: Overlayed on Bottom-Center of Local Feed -->
-          <div id="localControlsBar" class="local-controls-bar">
-            <!-- Mute Audio -->
-            <button id="localMicBtn" title="Mute/Unmute Mic"
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer">
-              <svg id="localMicIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </button>
-            <!-- Disable Video -->
-            <button id="localCamBtn" title="Turn Camera On/Off"
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer">
-              <svg id="localCamIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <!-- Flip Camera (Front / Back switch for mobile) -->
-            <button id="flipCamBtn" title="Flip Camera"
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer touch-manipulation">
-              <svg id="flipCamIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 pointer-events-none" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Camera Ready Placeholder (Underneath stream or visible when waiting) -->
-          <div id="localVideoPlaceholder"
-            class="absolute inset-0 z-0 flex flex-col items-center justify-center p-6 text-center select-none bg-gradient-to-b from-[#141724] to-[#0c0e17]">
-            <div
-              class="relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 mb-3 shadow-lg shadow-blue-500/40 text-white">
-              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <h4 class="font-display font-bold text-base sm:text-lg text-white mb-1">Your camera is ready</h4>
-            <p class="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xs leading-relaxed">
-              You'll be visible to the other person
-            </p>
-          </div>
-
-          <!-- Audio-Only Voice Mode Placeholder Animation -->
-          <div id="audioOnlyPlaceholder"
-            class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-5 text-center select-none bg-[#141724] dark:bg-[#0f111c]">
-            <div class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-3">
-              <div class="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-purple-500/30 animate-ping"></div>
-              <div class="absolute w-12 h-12 sm:w-16 sm:h-16 rounded-full border border-cyan-400/30 animate-pulse"></div>
-              <div
-                class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/40 text-xl sm:text-2xl">
-                🎙️
-              </div>
-            </div>
-            <div
-              class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Audio-Only Voice Active</span>
-            </div>
-            <h4 class="font-display font-bold text-sm text-white mb-0.5">Microphone Connected</h4>
-            <p class="text-[11px] text-slate-400 max-w-xs leading-tight">
-              Voice chat active &bull; No webcam detected on your device
-            </p>
-          </div>
-
-          <!-- Permission / Hardware Fallback Notice -->
-          <div id="cameraPermissionNotice"
-            class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0e111d] p-6 text-center">
-            <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center mb-3">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-              </svg>
-            </div>
-            <h4 id="cameraNoticeTitle" class="font-bold text-white text-sm mb-1">Camera Access Required</h4>
-            <p id="cameraNoticeDesc" class="text-xs text-slate-400 max-w-xs mb-3">
-              Vybrant needs your webcam and microphone to connect you to video chats.
-            </p>
-            <button id="grantPermissionBtn" type="button"
-              class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 transition-all cursor-pointer">
-              Allow Camera & Mic
-            </button>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- RIGHT COLUMN: FILTERS, CHAT, AND ACTION CONTROLS -->
-    <div id="rightColumn" class="right-column flex flex-col gap-3 min-h-0">
-
-      <!-- 1. MATCHING FILTER TOOLBAR (Directly above Chat) -->
-      <div id="filterToolbar"
-        class="filter-toolbar bg-white/80 dark:bg-[#0d0f17]/80 backdrop-blur-md rounded-2xl border border-zinc-200/80 dark:border-white/10 px-3 sm:px-4 py-2 flex items-center justify-start gap-2 sm:gap-2.5 text-xs shadow-xs flex-shrink-0 w-full max-w-full min-w-0 overflow-hidden">
-
-        <span class="text-zinc-500 dark:text-slate-400 font-medium flex items-center space-x-1 text-xs flex-shrink-0">
-          <span class="text-amber-500">⚡</span>
-          <span class="font-semibold text-zinc-700 dark:text-slate-300"><span class="hidden xl:inline">Matching </span>Filter:</span>
-        </span>
-
-        <!-- Gender Filter Dropdown Pill -->
-        <div class="filter-pill-wrap relative inline-flex items-center min-w-0 flex-shrink">
-          <div
-            class="filter-pill-inner flex items-center space-x-1.5 rounded-full px-3 py-1.5 shadow-xs min-w-0 cursor-pointer">
-            <div
-              class="w-5 h-5 rounded-full bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-300 text-[11px] flex-shrink-0 shadow-xs">
-              🎯
-            </div>
-            <select id="filterGenderSelect"
-              class="bg-transparent text-zinc-800 dark:text-slate-100 text-xs font-semibold focus:outline-none cursor-pointer pr-4 appearance-none max-w-[125px] truncate">
-              <option value="any">Gender: Random</option>
-              <option value="female">Gender: Female 🔒</option>
-              <option value="male">Gender: Male 🔒</option>
-            </select>
-            <svg class="w-3.5 h-3.5 text-zinc-400 dark:text-slate-400 pointer-events-none -ml-2 flex-shrink-0" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- Divider -->
-        <div class="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5 hidden lg:block flex-shrink-0"></div>
-
-        <!-- Country Filter Dropdown Pill -->
-        <div class="filter-pill-wrap relative inline-flex items-center min-w-0 flex-1">
-          <div
-            class="filter-pill-inner flex items-center space-x-1.5 rounded-full px-3 py-1.5 shadow-xs w-full min-w-0 cursor-pointer">
-            <div
-              class="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-600 dark:text-cyan-300 text-[11px] flex-shrink-0 shadow-xs">
-              🌐
-            </div>
-            <select id="filterCountrySelect"
-              class="bg-transparent text-zinc-800 dark:text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer pr-4 appearance-none w-full max-w-[160px] truncate">
-              <option value="any">Global (Any Country)</option>
-              <option value="IN">🇮🇳 India 🔒 (VIP)</option>
-              <option value="US">🇺🇸 United States 🔒 (VIP)</option>
-              <option value="GB">🇬🇧 United Kingdom 🔒 (VIP)</option>
-              <option value="CA">🇨🇦 Canada 🔒 (VIP)</option>
-              <option value="AU">🇦🇺 Australia 🔒 (VIP)</option>
-              <option value="DE">🇩🇪 Germany 🔒 (VIP)</option>
-              <option value="FR">🇫🇷 France 🔒 (VIP)</option>
-              <option value="BR">🇧🇷 Brazil 🔒 (VIP)</option>
-              <option value="JP">🇯🇵 Japan 🔒 (VIP)</option>
-              <option value="KR">🇰🇷 South Korea 🔒 (VIP)</option>
-              <option value="RU">🇷🇺 Russia 🔒 (VIP)</option>
-              <option value="IT">🇮🇹 Italy 🔒 (VIP)</option>
-              <option value="ES">🇪🇸 Spain 🔒 (VIP)</option>
-              <option value="MX">🇲🇽 Mexico 🔒 (VIP)</option>
-              <option value="ID">🇮🇩 Indonesia 🔒 (VIP)</option>
-              <option value="NL">🇳🇱 Netherlands 🔒 (VIP)</option>
-              <option value="SA">🇸🇦 Saudi Arabia 🔒 (VIP)</option>
-              <option value="TR">🇹🇷 Turkey 🔒 (VIP)</option>
-              <option value="CH">🇨🇭 Switzerland 🔒 (VIP)</option>
-              <option value="PL">🇵🇱 Poland 🔒 (VIP)</option>
-              <option value="SE">🇸🇪 Sweden 🔒 (VIP)</option>
-              <option value="BE">🇧🇪 Belgium 🔒 (VIP)</option>
-              <option value="AR">🇦🇷 Argentina 🔒 (VIP)</option>
-              <option value="NO">🇳🇴 Norway 🔒 (VIP)</option>
-              <option value="AT">🇦🇹 Austria 🔒 (VIP)</option>
-              <option value="AE">🇦🇪 United Arab Emirates 🔒 (VIP)</option>
-              <option value="SG">🇸🇬 Singapore 🔒 (VIP)</option>
-              <option value="MY">🇲🇾 Malaysia 🔒 (VIP)</option>
-              <option value="PH">🇵🇭 Philippines 🔒 (VIP)</option>
-              <option value="VN">🇻🇳 Vietnam 🔒 (VIP)</option>
-              <option value="TH">🇹🇭 Thailand 🔒 (VIP)</option>
-              <option value="ZA">🇿🇦 South Africa 🔒 (VIP)</option>
-              <option value="EG">🇪🇬 Egypt 🔒 (VIP)</option>
-              <option value="NG">🇳🇬 Nigeria 🔒 (VIP)</option>
-              <option value="PK">🇵🇰 Pakistan 🔒 (VIP)</option>
-              <option value="BD">🇧🇩 Bangladesh 🔒 (VIP)</option>
-              <option value="CO">🇨🇴 Colombia 🔒 (VIP)</option>
-              <option value="CL">🇨🇱 Chile 🔒 (VIP)</option>
-              <option value="PE">🇵🇪 Peru 🔒 (VIP)</option>
-              <option value="NZ">🇳🇿 New Zealand 🔒 (VIP)</option>
-              <option value="IE">🇮🇪 Ireland 🔒 (VIP)</option>
-              <option value="PT">🇵🇹 Portugal 🔒 (VIP)</option>
-              <option value="GR">🇬🇷 Greece 🔒 (VIP)</option>
-              <option value="CZ">🇨🇿 Czech Republic 🔒 (VIP)</option>
-              <option value="RO">🇷🇴 Romania 🔒 (VIP)</option>
-              <option value="HU">🇭🇺 Hungary 🔒 (VIP)</option>
-              <option value="DK">🇩🇰 Denmark 🔒 (VIP)</option>
-              <option value="FI">🇫🇮 Finland 🔒 (VIP)</option>
-              <option value="UA">🇺🇦 Ukraine 🔒 (VIP)</option>
-              <option value="IL">🇮🇱 Israel 🔒 (VIP)</option>
-              <option value="QA">🇶🇦 Qatar 🔒 (VIP)</option>
-              <option value="KW">🇰🇼 Kuwait 🔒 (VIP)</option>
-              <option value="MA">🇲🇦 Morocco 🔒 (VIP)</option>
-              <option value="KE">🇰🇪 Kenya 🔒 (VIP)</option>
-              <option value="GH">🇬🇭 Ghana 🔒 (VIP)</option>
-              <option value="LK">🇱🇰 Sri Lanka 🔒 (VIP)</option>
-              <option value="NP">🇳🇵 Nepal 🔒 (VIP)</option>
-              <option value="HK">🇭🇰 Hong Kong 🔒 (VIP)</option>
-              <option value="TW">🇹🇼 Taiwan 🔒 (VIP)</option>
-              <option value="HR">🇭🇷 Croatia 🔒 (VIP)</option>
-              <option value="BG">🇧🇬 Bulgaria 🔒 (VIP)</option>
-              <option value="SK">🇸🇰 Slovakia 🔒 (VIP)</option>
-              <option value="RS">🇷🇸 Serbia 🔒 (VIP)</option>
-              <option value="LT">🇱🇹 Lithuania 🔒 (VIP)</option>
-              <option value="SI">🇸🇮 Slovenia 🔒 (VIP)</option>
-              <option value="LV">🇱🇻 Latvia 🔒 (VIP)</option>
-              <option value="EE">🇪🇪 Estonia 🔒 (VIP)</option>
-              <option value="CY">🇨🇾 Cyprus 🔒 (VIP)</option>
-              <option value="LU">🇱🇺 Luxembourg 🔒 (VIP)</option>
-              <option value="IS">🇮🇸 Iceland 🔒 (VIP)</option>
-              <option value="MT">🇲🇹 Malta 🔒 (VIP)</option>
-              <option value="KZ">🇰🇿 Kazakhstan 🔒 (VIP)</option>
-              <option value="UZ">🇺🇿 Uzbekistan 🔒 (VIP)</option>
-              <option value="AZ">🇦🇿 Azerbaijan 🔒 (VIP)</option>
-              <option value="GE">🇬🇪 Georgia 🔒 (VIP)</option>
-              <option value="AM">🇦🇲 Armenia 🔒 (VIP)</option>
-              <option value="JO">🇯🇴 Jordan 🔒 (VIP)</option>
-              <option value="LB">🇱🇧 Lebanon 🔒 (VIP)</option>
-              <option value="OM">🇴🇲 Oman 🔒 (VIP)</option>
-              <option value="BH">🇧🇭 Bahrain 🔒 (VIP)</option>
-              <option value="IQ">🇮🇶 Iraq 🔒 (VIP)</option>
-              <option value="DZ">🇩🇿 Algeria 🔒 (VIP)</option>
-              <option value="TN">🇹🇳 Tunisia 🔒 (VIP)</option>
-              <option value="ET">🇪🇹 Ethiopia 🔒 (VIP)</option>
-              <option value="TZ">🇹🇿 Tanzania 🔒 (VIP)</option>
-              <option value="UG">🇺🇬 Uganda 🔒 (VIP)</option>
-              <option value="EC">🇪🇨 Ecuador 🔒 (VIP)</option>
-              <option value="VE">🇻🇪 Venezuela 🔒 (VIP)</option>
-              <option value="UY">🇺🇾 Uruguay 🔒 (VIP)</option>
-              <option value="CR">🇨🇷 Costa Rica 🔒 (VIP)</option>
-              <option value="PA">🇵🇦 Panama 🔒 (VIP)</option>
-              <option value="DO">🇩🇴 Dominican Republic 🔒 (VIP)</option>
-              <option value="GT">🇬🇹 Guatemala 🔒 (VIP)</option>
-              <option value="JM">🇯🇲 Jamaica 🔒 (VIP)</option>
-              <option value="MU">🇲🇺 Mauritius 🔒 (VIP)</option>
-              <option value="MV">🇲🇻 Maldives 🔒 (VIP)</option>
-              <option value="FJ">🇫🇯 Fiji 🔒 (VIP)</option>
-            </select>
-            <svg class="w-3.5 h-3.5 text-zinc-400 pointer-events-none -ml-2" fill="none" stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- Hidden Identity Elements (Retained for application state & event compatibility) -->
-        <div class="hidden" aria-hidden="true">
-          <button id="myGenderMale">♂️ Male</button>
-          <button id="myGenderFemale">♀️ Female</button>
-        </div>
-      </div>
-
-      <!-- 2. EPHEMERAL TEXT CHAT AREA -->
-      <aside id="chatAside"
-        class="bg-white dark:bg-[#0d0f17] rounded-3xl border border-zinc-200/80 dark:border-white/10 flex flex-col shadow-xl overflow-hidden min-h-[260px]">
-
-        <!-- Chat Header -->
-        <div
-          class="px-5 py-3.5 border-b border-zinc-100 dark:border-white/5 bg-white dark:bg-[#090b12]/80 flex items-center justify-between flex-shrink-0">
-          <div class="flex items-center space-x-2.5">
-            <div
-              class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 text-base">
-              💬
-            </div>
-            <h2 class="font-display font-extrabold text-base text-zinc-900 dark:text-white">Chat</h2>
-            <!-- Hidden badge/text elements for JS to update - kept for compatibility -->
-            <span id="chatChannelBadge" class="hidden w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            <span id="chatSecurityText" class="hidden">WebRTC DataChannel (E2E)</span>
           </div>
 
           <div class="flex items-center space-x-2">
-            <!-- Disappearing message notice pill -->
-            <div
-              class="flex items-center space-x-1.5 text-xs text-amber-900/80 dark:text-amber-300 bg-[#fff8f0] dark:bg-amber-950/25 border border-[#fee8d6] dark:border-amber-900/30 rounded-full px-3 py-1 font-medium">
-              <span>🔒</span>
-              <span>Messages disappear when you skip</span>
-            </div>
-
-            <!-- Clear Chat / Delete button -->
+            <!-- Clear Chat Button -->
             <button id="clearChatBtn" type="button" title="Delete current chat"
               class="p-1.5 sm:px-2.5 sm:py-1 rounded-full text-zinc-400 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 bg-zinc-100 hover:bg-rose-50 dark:bg-white/5 dark:hover:bg-rose-950/30 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/40 text-xs font-semibold flex items-center space-x-1 transition-all cursor-pointer shadow-xs active:scale-95">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,73 +503,560 @@
           </div>
         </div>
 
-        <!-- Chat Messages Scroll Container -->
-        <div id="chatMessages"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-5 space-y-4 font-sans text-xs sm:text-sm custom-scrollbar bg-white dark:bg-[#0d0f17]">
-        </div>
-
-        <!-- Typing Indicator -->
-        <div id="typingIndicator"
-          class="hidden px-5 py-1 text-[11px] text-purple-600 dark:text-purple-300 font-medium italic items-center space-x-1.5 flex-shrink-0">
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
-            style="animation-delay: 0.15s"></span>
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
-            style="animation-delay: 0.3s"></span>
-          <span>Stranger is typing...</span>
-        </div>
-
-        <!-- Chat Input Form (Pinned at Bottom) -->
-        <form id="chatForm"
-          class="p-3 sm:p-4 border-t border-zinc-100 dark:border-white/5 bg-white dark:bg-[#090b12]/80 flex items-center space-x-3 flex-shrink-0 mt-auto">
-          <div class="relative flex-1">
-            <input type="text" id="chatInput" placeholder="Type a message... (Press Enter)" maxlength="800"
-              autocomplete="off"
-              class="w-full bg-[#f4f5f8] dark:bg-[#141724] border border-transparent focus:border-purple-500/40 focus:bg-white dark:focus:bg-[#141724] rounded-2xl px-4 py-3 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all pr-4">
+        <!-- Dedicated Status Banner for Text Chat Mode (Searching / Connecting / Disconnected) -->
+        <div id="chatStatusBanner" class="hidden px-5 py-2.5 border-b border-zinc-100 dark:border-white/5 bg-purple-50/90 dark:bg-purple-950/40 text-xs flex items-center justify-between text-purple-700 dark:text-purple-300 flex-shrink-0 transition-all">
+          <div class="flex items-center space-x-2 min-w-0">
+            <span id="chatStatusBannerIcon" class="text-sm">🔍</span>
+            <span id="chatStatusBannerText" class="font-semibold truncate">Looking for a stranger for text chat...</span>
           </div>
-          <button type="submit" id="sendBtn"
-            class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-600/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer">
-            <svg class="w-5 h-5 transform rotate-45 -translate-y-0.5 -translate-x-0.5" fill="currentColor"
-              viewBox="0 0 20 20">
-              <path
-                d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-            </svg>
-          </button>
-        </form>
+          <span id="chatStatusBannerDot" class="w-2 h-2 rounded-full bg-purple-500 animate-ping flex-shrink-0"></span>
+        </div>
 
+        <!-- Shared Ephemeral Chat Aside Slot for Text Mode -->
+        <div id="chatAsideSlotText" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <!-- #chatAside will be placed here in Text Mode -->
+        </div>
+      </section>
+
+      <!-- RIGHT: SECONDARY PANEL (~30% width on desktop) -->
+      <aside class="w-full lg:w-[340px] xl:w-[380px] flex flex-col gap-3 flex-shrink-0 min-h-0">
+        
+        <!-- Filter Toolbar is now in the shared top toolbar below header; placeholder preserved for DOM checks -->
+        <div id="filterSlotText" class="hidden" aria-hidden="true"></div>
+
+        <!-- Action Controls Slot for Text Mode (Start, Skip, Report) -->
+        <div id="controlsSlotText" class="w-full flex-shrink-0">
+          <!-- #actionControlsBar will be mounted here in Text Mode -->
+        </div>
+
+        <!-- Video Call Switch Invitation Card -->
+        <div id="chatVideoInviteCard" class="chat-video-invite-card p-4 rounded-3xl bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-indigo-500/5 border border-pink-500/25 shadow-sm">
+          <div class="video-invite-header flex items-center space-x-2.5 mb-2">
+            <div class="video-invite-icon w-8 h-8 rounded-xl bg-pink-500/20 text-pink-600 dark:text-pink-400 flex items-center justify-center text-lg flex-shrink-0">
+              📹
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-display font-bold text-sm text-zinc-900 dark:text-white truncate">Want to see each other?</h4>
+              <p class="video-invite-desc text-[11px] text-zinc-500 dark:text-slate-400">Request a live Video Call with 1 tap</p>
+            </div>
+          </div>
+          <p class="video-invite-body text-xs text-zinc-600 dark:text-slate-300 mb-3 leading-relaxed">
+            Invite your stranger to switch to a face-to-face video call. Both users must accept before cameras turn on.
+          </p>
+          <button id="requestVideoSwitchBtn" type="button"
+            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-400 hover:to-orange-400 text-white font-bold text-xs shadow-md shadow-pink-500/25 transition-all active:scale-95 cursor-pointer flex items-center justify-center space-x-2">
+            <span>📹</span>
+            <span>Request Video Call</span>
+          </button>
+        </div>
+
+        <!-- Chat Safety & Guidelines Card -->
+        <div id="chatSafetyTipsCard" class="chat-safety-tips-card p-4 rounded-3xl bg-white dark:bg-[#0d0f17] border border-zinc-200/80 dark:border-white/10 shadow-sm space-y-2.5 text-xs text-zinc-600 dark:text-slate-300">
+          <div class="safety-tips-header flex items-center justify-between font-display font-bold text-zinc-900 dark:text-white text-xs mb-1">
+            <div class="flex items-center space-x-2">
+              <span>🛡️</span>
+              <span>TalkHop Chat Safety Tips</span>
+            </div>
+            <span class="safety-tips-badge text-[10px] text-purple-600 dark:text-purple-300 font-semibold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60">
+              AI Protected
+            </span>
+          </div>
+          <div class="safety-tips-details space-y-2">
+            <div class="flex items-start space-x-2">
+              <span class="text-purple-600 dark:text-purple-400 font-bold">🔒</span>
+              <p><strong>Disappearing Messages:</strong> Ephemeral, vanish instantly upon skipping.</p>
+            </div>
+            <div class="flex items-start space-x-2">
+              <span class="text-emerald-500 font-bold">🤝</span>
+              <p><strong>Be Respectful:</strong> Harassment and hate speech are strictly prohibited.</p>
+            </div>
+            <div class="flex items-start space-x-2">
+              <span class="text-rose-500 font-bold">🚩</span>
+              <p><strong>One-Click Report:</strong> Inappropriate strangers can be reported and auto-banned.</p>
+            </div>
+          </div>
+        </div>
       </aside>
 
-      <!-- 3. ACTION CONTROLS BAR (Directly below Chat) -->
-      <div id="actionControlsBar" class="flex items-center justify-between gap-2.5 sm:gap-3 w-full flex-shrink-0">
-        <!-- Start/Pause Button -->
-        <button id="toggleMatchBtn"
-          class="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all active:scale-95 shadow-md shadow-emerald-500/20 cursor-pointer">
-          <span id="toggleMatchIcon">▶</span>
-          <span id="toggleMatchText">Start</span>
-        </button>
+    </div>
 
-        <!-- Skip Button -->
-        <button id="skipBtn"
-          class="flex-[1.2] py-2.5 sm:py-3 px-4 sm:px-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-extrabold text-sm sm:text-base flex items-center justify-center space-x-2 shadow-lg shadow-purple-600/25 active:scale-95 transition-all group cursor-pointer">
-          <span class="text-base sm:text-lg">⏭</span>
-          <span class="tracking-wide">Skip</span>
-        </button>
+    <!-- ========================================================== -->
+    <!-- 2. VIDEO CALL MODE VIEW (Dedicated Live Video Interface)   -->
+    <!-- ========================================================== -->
+    <div id="videoModeView" class="hidden w-full flex-1 flex flex-col gap-2.5 h-full min-h-0">
 
-        <!-- Report Button -->
-        <button id="reportBtn"
-          class="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-2xl bg-[#fff1f2] hover:bg-[#ffe4e6] dark:bg-rose-950/25 dark:hover:bg-rose-900/35 text-rose-600 dark:text-rose-400 text-sm sm:text-base font-bold flex items-center justify-center space-x-2 border border-rose-200 dark:border-rose-900/40 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer"
-          title="Report inappropriate behavior">
-          <span>🚩</span>
-          <span>Report</span>
-        </button>
+      <!-- FULL-HEIGHT VIDEO VIEWPORTS CONTAINER (Left: Stranger, Right: Local on Desktop; Stacked on Mobile) -->
+      <div id="videoGridContainer" class="flex-1 w-full min-h-0">
+
+          <!-- STRANGER VIDEO BOX (Left on Desktop, Top on Mobile) -->
+          <div id="strangerVideoWrapper"
+            class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
+
+            <!-- Remote Video Feed -->
+            <video id="remoteVideo" autoplay playsinline
+              class="w-full h-full object-cover transition-all duration-700"></video>
+
+            <!-- Status / Peer Badge -->
+            <div
+              class="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
+              <span id="strangerStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span id="strangerBadgeText" class="text-slate-200">Stranger</span>
+            </div>
+
+            <!-- Video Quality / STUN badge -->
+            <div
+              class="absolute top-3 right-3 z-20 hidden sm:flex items-center space-x-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 text-[11px] text-slate-300 shadow-sm">
+              <svg class="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span id="networkP2pBadge">WebRTC P2P</span>
+            </div>
+
+            <!-- TAP TO ENABLE AUDIO (When browser restricts autoplay) -->
+            <button id="tapToPlayAudioBtn" type="button"
+              class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-center cursor-pointer transition-all">
+              <div class="w-14 h-14 rounded-full bg-purple-600/90 text-white flex items-center justify-center mb-2 shadow-lg shadow-purple-600/50 animate-bounce">
+                <span class="text-2xl">🔊</span>
+              </div>
+              <span class="text-sm font-bold text-white mb-0.5">Audio Blocked by Browser</span>
+              <span class="text-xs text-purple-200">Tap here to enable stranger audio</span>
+            </button>
+
+            <!-- LOW-BANDWIDTH ADAPTIVE QUALITY STATUS BANNER -->
+            <div id="adaptiveQualityBanner"
+              class="hidden absolute top-12 left-1/2 -translate-x-1/2 z-25 flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-xs font-semibold shadow-lg transition-all">
+              <span class="animate-pulse">⚠️</span>
+              <span id="adaptiveQualityText">Poor connection — video paused, audio continuing</span>
+            </div>
+
+            <!-- TRANSIENT CONNECTION RECOVERY OVERLAY -->
+            <div id="connectionRecoveryOverlay"
+              class="hidden absolute inset-0 z-25 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-6 text-center transition-all">
+              <div class="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin mb-3"></div>
+              <h4 id="recoveryOverlayTitle" class="font-bold text-white text-sm mb-1">Reconnecting...</h4>
+              <p id="recoveryOverlayDesc" class="text-xs text-slate-300 max-w-xs mb-3">Temporary network interruption detected. Preserving call...</p>
+              <button id="recoverySkipBtn" type="button" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-all cursor-pointer">
+                Skip to Next Stranger
+              </button>
+            </div>
+
+            <!-- SEARCHING / RADAR STATE -->
+            <div id="radarOverlay"
+              class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-[#181a28] to-[#0f111a] dark:from-[#0e111d] dark:to-[#07080d] p-6 text-center">
+              <div class="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-4">
+                <div class="absolute w-24 h-24 rounded-full border border-purple-500/40 animate-radar"></div>
+                <div class="absolute w-20 h-20 rounded-full border border-pink-500/30 animate-radar"
+                  style="animation-delay: 0.8s;"></div>
+                <div class="absolute w-16 h-16 rounded-full border border-purple-400/20 animate-radar"
+                  style="animation-delay: 1.4s;"></div>
+                <div
+                  class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg shadow-purple-600/40 animate-float">
+                  <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h3 id="radarTitle"
+                class="font-display font-bold text-base sm:text-lg text-white mb-1.5 px-3 max-w-full break-words">
+                Looking for someone awesome...
+              </h3>
+              <p id="radarSubtitle"
+                class="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xs px-3 break-words leading-relaxed">
+                Matching you randomly with someone from around the world.
+              </p>
+            </div>
+
+            <!-- FIRST 3-SECOND ANTI-FLASH BLUR OVERLAY -->
+            <div id="antiFlashOverlay"
+              class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/75 backdrop-blur-2xl p-6 text-center transition-all duration-500">
+              <div class="relative flex items-center justify-center mb-4">
+                <div
+                  class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/30 to-purple-600/30 border border-amber-500/40 flex items-center justify-center shadow-xl">
+                  <span class="text-3xl animate-bounce">🛡️</span>
+                </div>
+              </div>
+              <div
+                class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                <span>🛡️ AI Safety Check...</span>
+              </div>
+              <h4 class="font-display font-bold text-lg text-white mb-1">
+                Screening Stranger Video Feed
+              </h4>
+              <p class="text-xs text-slate-300 max-w-xs mb-4">
+                Protecting you from flashers and NSFW surprises. Unblurring in:
+              </p>
+
+              <!-- Countdown Timer & Progress Bar -->
+              <div class="flex items-center space-x-3 mb-5">
+                <span id="antiFlashCountdown" class="font-display font-extrabold text-3xl text-amber-400">
+                  3s
+                </span>
+                <div class="w-32 h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div id="antiFlashProgressBar"
+                    class="h-full bg-gradient-to-r from-amber-400 to-purple-500 w-full transition-all duration-100 ease-linear">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Instant Reveal Button -->
+              <button id="quickRevealBtn"
+                class="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                ⚡ Quick Reveal (Bypass Blur)
+              </button>
+            </div>
+
+            <!-- Audio Activity Bar Indicator -->
+            <div id="strangerAudioIndicator"
+              class="absolute bottom-3 left-3 z-20 hidden items-center space-x-1 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+              <span class="text-[11px] text-slate-300">Speaking</span>
+              <div class="flex items-end space-x-0.5 h-3">
+                <div class="w-0.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                <div class="w-0.5 h-3 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                <div class="w-0.5 h-2 bg-emerald-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOCAL USER VIDEO BOX (Right on Desktop, Bottom on Mobile) -->
+          <div id="localVideoWrapper"
+            class="relative group bg-[#11131d] dark:bg-[#0d0f17] border border-zinc-300/80 dark:border-white/10 overflow-hidden shadow-xl flex items-center justify-center">
+
+            <!-- Local Mirrored Video Stream -->
+            <video id="localVideo" autoplay playsinline muted
+              class="w-full h-full object-cover scale-x-[-1] transition-all duration-300"></video>
+
+            <!-- Local You Badge -->
+            <div
+              class="local-badge-pill absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-xs font-medium text-white shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span id="localBadgeText" class="text-slate-200">You</span>
+            </div>
+
+            <!-- Local Controls Bar: Overlayed on Bottom-Center of Local Feed -->
+            <div id="localControlsBar" class="local-controls-bar">
+              <!-- Mute Audio -->
+              <button id="localMicBtn" title="Mute/Unmute Mic"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer">
+                <svg id="localMicIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </button>
+              <!-- Disable Video -->
+              <button id="localCamBtn" title="Turn Camera On/Off"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer">
+                <svg id="localCamIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <!-- Flip Camera (Front / Back switch) -->
+              <button id="flipCamBtn" title="Flip Camera"
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white/90 flex items-center justify-center transition-all shadow-xs cursor-pointer touch-manipulation">
+                <svg id="flipCamIcon" class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 pointer-events-none" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Camera Ready Placeholder -->
+            <div id="localVideoPlaceholder"
+              class="absolute inset-0 z-0 flex flex-col items-center justify-center p-6 text-center select-none bg-gradient-to-b from-[#141724] to-[#0c0e17]">
+              <div
+                class="relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 mb-3 shadow-lg shadow-blue-500/40 text-white">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <h4 class="font-display font-bold text-base sm:text-lg text-white mb-1">Your camera is ready</h4>
+              <p class="text-xs sm:text-sm text-slate-300 dark:text-slate-400 max-w-xs leading-relaxed">
+                You'll be visible to the other person
+              </p>
+            </div>
+
+            <!-- Audio-Only Voice Mode Placeholder Animation -->
+            <div id="audioOnlyPlaceholder"
+              class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center p-5 text-center select-none bg-[#141724] dark:bg-[#0f111c]">
+              <div class="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-3">
+                <div class="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-purple-500/30 animate-ping"></div>
+                <div class="absolute w-12 h-12 sm:w-16 sm:h-16 rounded-full border border-pink-400/30 animate-pulse"></div>
+                <div
+                  class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center shadow-lg shadow-purple-600/40 text-xl sm:text-2xl">
+                  🎙️
+                </div>
+              </div>
+              <div
+                class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Audio-Only Voice Active</span>
+              </div>
+              <h4 class="font-display font-bold text-sm text-white mb-0.5">Microphone Connected</h4>
+              <p class="text-[11px] text-slate-400 max-w-xs leading-tight">
+                Voice chat active &bull; No webcam detected on your device
+              </p>
+            </div>
+
+            <!-- Permission / Hardware Fallback Notice -->
+            <div id="cameraPermissionNotice"
+              class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0e111d] p-6 text-center">
+              <div class="w-12 h-12 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center mb-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+              <h4 id="cameraNoticeTitle" class="font-bold text-white text-sm mb-1">Camera Access Required</h4>
+              <p id="cameraNoticeDesc" class="text-xs text-slate-400 max-w-xs mb-3">
+                TalkHop needs your webcam and microphone to connect you to video chats.
+              </p>
+              <button id="grantPermissionBtn" type="button"
+                class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 transition-all cursor-pointer">
+                Allow Camera & Mic
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DEDICATED ACTION ROW BENEATH BOTH VIDEO VIEWPORTS (Start, Skip, Report) -->
+      <div id="videoActionRow" class="w-full flex items-center justify-center flex-shrink-0 py-1 sm:py-2">
+        <div id="controlsSlotVideo" class="w-full max-w-xl sm:max-w-2xl flex-shrink-0">
+          <!-- #actionControlsBar will be mounted here in Video Mode -->
+        </div>
+      </div>
+
+      <!-- Preserved for backwards compatibility in DOM checks -->
+      <div id="videoTopToolbar" class="hidden" aria-hidden="true">
+        <div id="filterSlotVideo" class="hidden" aria-hidden="true"></div>
       </div>
 
     </div>
 
   </main>
 
+  <!-- ========================================================== -->
+  <!-- DYNAMIC SHARED WIDGETS (Moved dynamically to active mode) -->
+  <!-- ========================================================== -->
+  <div id="sharedWidgetsPool" class="hidden" aria-hidden="true">
+    <!-- Preserved for backwards compatibility in pool; chat is completely removed from video layout -->
+    <div id="chatSlotVideo" class="hidden" aria-hidden="true"></div>
+
+    <!-- 2. EPHEMERAL TEXT CHAT ASIDE -->
+    <aside id="chatAside"
+      class="w-full h-full flex flex-col shadow-none overflow-hidden min-h-0 bg-transparent">
+
+      <!-- Disappearing message notice pill (Compact header) -->
+      <div
+        class="px-4 py-2 bg-zinc-50 dark:bg-white/5 border-b border-zinc-100 dark:border-white/5 flex items-center justify-between text-[11px] text-zinc-500 dark:text-slate-400 flex-shrink-0">
+        <div class="flex items-center space-x-1.5 text-amber-800 dark:text-amber-300 font-medium">
+          <span>🔒</span>
+          <span>Messages disappear when you skip</span>
+        </div>
+        <!-- Quick Emoji Trigger -->
+        <button id="quickEmojiBtn" type="button" title="Insert quick emoji"
+          class="text-xs hover:scale-125 transition-transform cursor-pointer px-1">
+          👋
+        </button>
+      </div>
+
+      <!-- Chat Messages Scroll Container -->
+      <div id="chatMessages"
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-5 space-y-3 font-sans text-xs sm:text-sm custom-scrollbar bg-white dark:bg-[#0d0f17]">
+      </div>
+
+      <!-- Return to Latest Message Floating Button -->
+      <button id="scrollToBottomBtn" type="button"
+        class="hidden absolute bottom-16 right-4 z-20 px-3.5 py-1.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/40 flex items-center space-x-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md border border-white/20">
+        <span>↓ New messages</span>
+      </button>
+
+      <!-- Typing Indicator -->
+      <div id="typingIndicator"
+        class="hidden px-5 py-1 text-[11px] text-purple-600 dark:text-purple-300 font-medium italic items-center space-x-1.5 flex-shrink-0">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span>
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
+          style="animation-delay: 0.15s"></span>
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"
+          style="animation-delay: 0.3s"></span>
+        <span>Stranger is typing...</span>
+      </div>
+
+      <!-- Chat Input Form (Pinned at Bottom) -->
+      <form id="chatForm"
+        class="p-3 sm:p-3.5 border-t border-zinc-100 dark:border-white/5 bg-white dark:bg-[#090b12]/80 flex items-center space-x-2.5 flex-shrink-0 mt-auto">
+        <div class="relative flex-1">
+          <input type="text" id="chatInput" placeholder="Type a message... (Press Enter)" maxlength="800"
+            autocomplete="off"
+            class="w-full bg-[#f4f5f8] dark:bg-[#141724] border border-transparent focus:border-purple-500/40 focus:bg-white dark:focus:bg-[#141724] rounded-2xl px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all pr-4">
+        </div>
+        <button type="submit" id="sendBtn"
+          class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white flex items-center justify-center shadow-lg shadow-purple-600/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 transform rotate-45 -translate-y-0.5 -translate-x-0.5" fill="currentColor"
+            viewBox="0 0 20 20">
+            <path
+              d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+          </svg>
+        </button>
+      </form>
+
+    </aside>
+
+    <!-- 3. ACTION CONTROLS BAR (Start/Stop, Skip, Report) -->
+    <div id="actionControlsBar" class="flex items-center justify-between gap-2 sm:gap-2.5 w-full flex-shrink-0 min-w-0">
+      <!-- Start/Pause Button -->
+      <button id="toggleMatchBtn"
+        class="flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs sm:text-sm flex items-center justify-center space-x-1.5 transition-all active:scale-95 shadow-md shadow-emerald-500/20 cursor-pointer min-w-0">
+        <span id="toggleMatchIcon">▶</span>
+        <span id="toggleMatchText" class="truncate">Start</span>
+      </button>
+
+      <!-- Skip Button -->
+      <button id="skipBtn"
+        class="flex-[1.15] py-2 sm:py-2.5 px-3 sm:px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-500 text-white font-display font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-1.5 shadow-lg shadow-purple-600/25 active:scale-95 transition-all group cursor-pointer min-w-0">
+        <span class="text-sm sm:text-base">⏭</span>
+        <span class="tracking-wide truncate">Skip</span>
+      </button>
+
+      <!-- Report Button -->
+      <button id="reportBtn"
+        class="flex-1 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-2xl bg-[#fff1f2] hover:bg-[#ffe4e6] dark:bg-rose-950/25 dark:hover:bg-rose-900/35 text-rose-600 dark:text-rose-400 text-xs sm:text-sm font-bold flex items-center justify-center space-x-1.5 border border-rose-200 dark:border-rose-900/40 shadow-xs transition-all active:scale-95 cursor-pointer min-w-0"
+        title="Report inappropriate behavior">
+        <span>🚩</span>
+        <span class="truncate">Report</span>
+      </button>
+    </div>
+
+  </div>
+
   <!-- ========================================== -->
-  <!-- 1. MICRO-PASS PAYMENT & VIP MODAL -->
+  <!-- 1. DEDICATED POST-VERIFICATION MODE MODAL -->
+  <!-- ========================================== -->
+  <div id="modeSelectionModal"
+    class="hidden fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
+    <div
+      class="relative w-full max-w-xl bg-white dark:bg-[#0e111d] border border-zinc-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-center overflow-hidden">
+      <!-- Glow ambient decorative orbs -->
+      <div class="absolute -top-20 -left-20 w-44 h-44 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-20 -right-20 w-44 h-44 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Icon & Headings -->
+      <div class="relative z-10 mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 shadow-xl shadow-purple-600/25 mb-3 text-2xl">
+          ⚡
+        </div>
+        <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-zinc-950 dark:text-white tracking-tight">
+          What would you like to do?
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-600 dark:text-slate-300 mt-1.5 font-medium">
+          Meet new people around the world.
+        </p>
+      </div>
+
+      <!-- Two Prominent Mode Cards -->
+      <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+        <!-- Card A — Random Chat -->
+        <div id="modeCardChat"
+          class="mode-choice-card group relative p-5 rounded-3xl border-2 border-purple-500/30 hover:border-purple-600 dark:border-purple-500/30 dark:hover:border-purple-400 bg-gradient-to-b from-purple-500/5 to-purple-600/10 dark:from-purple-950/20 dark:to-purple-900/10 transition-all duration-200 hover:shadow-xl hover:shadow-purple-500/15 flex flex-col justify-between cursor-pointer">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/15 dark:bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-2xl mb-3.5 shadow-sm group-hover:scale-110 transition-transform">
+              💬
+            </div>
+            <h3 class="font-display font-bold text-lg text-zinc-900 dark:text-white mb-1">
+              Random Chat
+            </h3>
+            <p class="text-xs text-zinc-600 dark:text-slate-300 leading-relaxed mb-4">
+              Text chat with strangers. Fast, anonymous, and no camera or microphone required.
+            </p>
+          </div>
+          <button id="startChatModeBtn" type="button"
+            class="w-full py-3 px-4 rounded-xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/25 transition-all group-hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center space-x-1.5">
+            <span>Start Chat</span>
+            <span>💬</span>
+          </button>
+        </div>
+
+        <!-- Card B — Video Call -->
+        <div id="modeCardVideo"
+          class="mode-choice-card group relative p-5 rounded-3xl border-2 border-pink-500/30 hover:border-pink-500 dark:border-pink-500/30 dark:hover:border-pink-400 bg-gradient-to-b from-pink-500/5 to-rose-600/10 dark:from-pink-950/20 dark:to-rose-900/10 transition-all duration-200 hover:shadow-xl hover:shadow-pink-500/15 flex flex-col justify-between cursor-pointer">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-pink-600/15 dark:bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-2xl mb-3.5 shadow-sm group-hover:scale-110 transition-transform">
+              📹
+            </div>
+            <h3 class="font-display font-bold text-lg text-zinc-900 dark:text-white mb-1">
+              Video Call
+            </h3>
+            <p class="text-xs text-zinc-600 dark:text-slate-300 leading-relaxed mb-4">
+              Video chat with strangers. Face-to-face live audio & video with AI Safety Shield.
+            </p>
+          </div>
+          <button id="startVideoModeBtn" type="button"
+            class="w-full py-3 px-4 rounded-xl font-display font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-400 hover:to-orange-400 shadow-md shadow-pink-500/25 transition-all group-hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center space-x-1.5">
+            <span>Start Video Call</span>
+            <span>📹</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Trust note at bottom of mode selection -->
+      <div class="relative z-10 mt-6 pt-4 border-t border-zinc-200/80 dark:border-white/10 flex items-center justify-center space-x-2 text-[11px] text-zinc-500 dark:text-slate-400 font-medium">
+        <span>🛡️ Protected by TalkHop AI Shield</span>
+        <span>&bull;</span>
+        <span>Encrypted P2P Matchmaking</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. STRANGER REQUESTED VIDEO CALL MODAL     -->
+  <!-- ========================================== -->
+  <div id="videoSwitchModal"
+    class="hidden fixed inset-0 z-[9997] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl transition-all duration-300">
+    <div
+      class="relative w-full max-w-md bg-white dark:bg-[#0e111d] border border-pink-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl text-center overflow-hidden">
+      <!-- Glow top orb -->
+      <div class="absolute -top-16 -right-16 w-36 h-36 bg-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Icon -->
+      <div class="relative mx-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-orange-500 flex items-center justify-center text-3xl shadow-lg shadow-pink-500/30 mb-4 animate-bounce">
+        📹
+      </div>
+
+      <h3 class="font-display font-extrabold text-xl text-zinc-950 dark:text-white mb-1.5 tracking-tight">
+        Switch to Video Call?
+      </h3>
+      <p class="text-xs sm:text-sm text-zinc-600 dark:text-slate-300 leading-relaxed mb-6 font-normal">
+        Your stranger would like to turn on camera and switch this conversation to a live video call.
+      </p>
+
+      <!-- Buttons -->
+      <div class="space-y-2.5">
+        <button id="acceptVideoSwitchBtn" type="button"
+          class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-white bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 hover:from-pink-400 hover:to-orange-400 shadow-lg shadow-pink-500/30 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer flex items-center justify-center space-x-2">
+          <span>📹</span>
+          <span>Accept Video Call</span>
+        </button>
+
+        <button id="declineVideoSwitchBtn" type="button"
+          class="w-full py-2.5 rounded-xl font-display font-semibold text-xs sm:text-sm text-zinc-700 dark:text-slate-300 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/5 dark:hover:bg-white/10 border border-zinc-200 dark:border-white/10 transition-all cursor-pointer">
+          Decline & Stay in Text Chat
+        </button>
+      </div>
+
+      <div class="mt-4 text-[11px] text-zinc-500 dark:text-slate-400">
+        Camera and microphone will only activate if you accept.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. MICRO-PASS PAYMENT & VIP MODAL          -->
   <!-- ========================================== -->
   <div id="microPassModal"
     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/85 backdrop-blur-2xl">
@@ -740,7 +1067,7 @@
       <div class="absolute -top-16 -left-16 w-36 h-36 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <button id="closeMicroPassBtn"
-        class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white transition-colors rounded-xl bg-zinc-100 dark:bg-white/5">
+        class="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white transition-colors rounded-xl bg-zinc-100 dark:bg-white/5 cursor-pointer">
         ✕
       </button>
 
@@ -818,6 +1145,24 @@
               <span class="font-display font-extrabold text-lg text-zinc-900 dark:text-slate-100">₹39</span>
             </div>
           </label>
+
+          <label
+            class="vip-plan-card relative flex items-center justify-between p-3.5 rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 cursor-pointer hover:border-amber-500/30 transition-all">
+            <div class="flex items-center space-x-3">
+              <input type="radio" name="vipPlan" value="24-hour" class="text-amber-500 focus:ring-amber-400">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="font-display font-bold text-zinc-900 dark:text-white text-sm">24-Hour VIP Pass</span>
+                  <span
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300">All-Day Pro ⚡</span>
+                </div>
+                <p class="text-[11px] text-zinc-500 dark:text-slate-400">Save 92% &bull; Full 24-hr unrestricted access</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="font-display font-extrabold text-lg text-zinc-900 dark:text-slate-100">₹59</span>
+            </div>
+          </label>
         </div>
 
         <!-- Payment Button -->
@@ -854,7 +1199,7 @@
               VIP-XXXXX
             </span>
             <button id="copyVipCodeBtn" title="Copy Code"
-              class="px-2.5 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 dark:bg-white/10 dark:hover:bg-white/20 text-xs font-semibold text-zinc-800 dark:text-slate-200 transition-colors">
+              class="px-2.5 py-1.5 rounded-lg bg-zinc-200 hover:bg-zinc-300 dark:bg-white/10 dark:hover:bg-white/20 text-xs font-semibold text-zinc-800 dark:text-slate-200 transition-colors cursor-pointer">
               📋 Copy
             </button>
           </div>
@@ -864,11 +1209,11 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button id="activateNowBtn"
-            class="py-3 px-4 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-md transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-1.5">
+            class="py-3 px-4 rounded-xl font-display font-bold text-xs sm:text-sm text-slate-950 bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 shadow-md transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
             <span>⚡ Activate Now</span>
           </button>
           <button id="saveForLaterBtn"
-            class="py-3 px-4 rounded-xl font-display font-semibold text-xs sm:text-sm text-zinc-700 dark:text-slate-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 transition-all active:scale-95 flex items-center justify-center space-x-1.5">
+            class="py-3 px-4 rounded-xl font-display font-semibold text-xs sm:text-sm text-zinc-700 dark:text-slate-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/20 border border-zinc-200 dark:border-white/15 transition-all active:scale-95 flex items-center justify-center space-x-1.5 cursor-pointer">
             <span>🕒 Save For Later</span>
           </button>
         </div>
@@ -878,7 +1223,7 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- 2. REDEEM CODE MODAL -->
+  <!-- 4. REDEEM CODE MODAL                       -->
   <!-- ========================================== -->
   <div id="redeemModal"
     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/85 backdrop-blur-2xl">
@@ -897,7 +1242,7 @@
           </div>
         </div>
         <button id="closeRedeemModalBtn"
-          class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg">✕</button>
+          class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg cursor-pointer">✕</button>
       </div>
 
       <div class="space-y-4">
@@ -928,7 +1273,7 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- 3. MANDATORY 18+ AGE GATE & GENDER MODAL ON FIRST LOAD -->
+  <!-- 5. MANDATORY 18+ AGE GATE MODAL            -->
   <!-- ========================================== -->
   <div id="ageGateModal"
     class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl transition-opacity duration-300"
@@ -938,7 +1283,7 @@
 
       <!-- Top Decorative Glow -->
       <div class="absolute -top-16 -left-16 w-32 h-32 bg-purple-600/25 rounded-full blur-2xl pointer-events-none"></div>
-      <div class="absolute -top-16 -right-16 w-32 h-32 bg-cyan-600/25 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -top-16 -right-16 w-32 h-32 bg-pink-600/25 rounded-full blur-2xl pointer-events-none"></div>
 
       <!-- Icon Badge -->
       <div
@@ -952,8 +1297,8 @@
         Age Verification Required
       </h2>
       <p class="text-xs sm:text-[13px] text-zinc-700 dark:text-slate-200 leading-relaxed mb-5 font-normal">
-        Welcome to <strong class="text-zinc-950 dark:text-white font-bold">Vybrant ⚡</strong>. Vybrant provides
-        instant, unmoderated peer-to-peer random video chat. You must be at least <span
+        Welcome to <strong class="text-zinc-950 dark:text-white font-bold">TalkHop ⚡</strong>. TalkHop provides
+        instant, unmoderated peer-to-peer random text chat and video calls. You must be at least <span
           class="text-purple-600 dark:text-purple-400 font-bold">18 years of age</span> to enter.
       </p>
 
@@ -989,7 +1334,7 @@
         </label>
 
         <div id="ageWarningText" class="hidden text-rose-600 dark:text-rose-400 text-[11px] font-bold pt-0.5">
-          ⚠️ Please check the box above to verify you are 18+ to enter Vybrant.
+          ⚠️ Please check the box above to verify you are 18+ to enter TalkHop.
         </div>
 
         <div
@@ -1002,8 +1347,8 @@
       <!-- Action Buttons -->
       <div class="space-y-2.5">
         <button id="enterAgeGateBtn" type="button"
-          class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-white bg-gradient-to-r from-purple-600 to-cyan-500 shadow-lg shadow-purple-600/30 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer">
-          Enter Vybrant 🚀
+          class="w-full py-3.5 rounded-xl font-display font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 shadow-lg shadow-purple-600/30 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer">
+          Enter TalkHop 🚀
         </button>
 
         <button type="button" id="exitAgeGateBtn"
@@ -1015,7 +1360,9 @@
     </div>
   </div>
 
-  <!-- 4. 24-HOUR IP BAN MODAL (Milestone 3) -->
+  <!-- ========================================== -->
+  <!-- 6. 24-HOUR IP BAN MODAL                   -->
+  <!-- ========================================== -->
   <div id="bannedModal"
     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 dark:bg-black/95 backdrop-blur-2xl">
     <div
@@ -1039,12 +1386,14 @@
       </div>
       <a href="https://google.com"
         class="block w-full py-3 rounded-xl font-display font-bold text-sm text-white bg-rose-600 hover:bg-rose-500 transition-colors">
-        Leave Vybrant
+        Leave TalkHop
       </a>
     </div>
   </div>
 
-  <!-- 5. COMMUNITY GUIDELINES MODAL -->
+  <!-- ========================================== -->
+  <!-- 7. COMMUNITY GUIDELINES MODAL              -->
+  <!-- ========================================== -->
   <div id="guidelinesModal"
     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 dark:bg-black/80 backdrop-blur-md">
     <div
@@ -1054,10 +1403,10 @@
           <span>🛡️ Community Safety & Guidelines</span>
         </h3>
         <button id="closeGuidelinesBtn"
-          class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg">✕</button>
+          class="text-zinc-400 hover:text-zinc-700 dark:text-slate-400 dark:hover:text-white text-lg cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs sm:text-sm text-zinc-600 dark:text-slate-300">
-        <p>• <strong>Strictly 18+:</strong> Vybrant is exclusively for legal adults.</p>
+        <p>• <strong>Strictly 18+:</strong> TalkHop is exclusively for legal adults.</p>
         <p>• <strong>Client-Side AI NSFW Shield:</strong> Real-time on-device classification automatically bans
           violators.</p>
         <p>• <strong>First 3-Second Anti-Flash:</strong> Incoming video is blurred for 3 seconds to protect against
@@ -1069,7 +1418,7 @@
       </div>
       <div class="mt-6 flex justify-end">
         <button id="ackGuidelinesBtn"
-          class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors">
+          class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors cursor-pointer">
           Got It
         </button>
       </div>
@@ -1079,8 +1428,8 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-4 left-4 z-40 space-y-2 pointer-events-none"></div>
 
-  <!-- Razorpay Official Checkout SDK (Milestone 5) -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- Razorpay Official Checkout SDK -->
+  <script defer src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <!-- Client Scripts -->
   <script src="/socket.io/socket.io.js"></script>

@@ -58,6 +58,71 @@ const ADMIN_PASS = process.env.ADMIN_PASS || 'vybrant777x';
 const adminSessions = new Map();
 const ADMIN_SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// In-memory admin audit log
+const adminAuditLog = [
+  {
+    id: 'evt-init',
+    timestamp: Date.now() - 3600000,
+    action: 'System Initialized',
+    type: 'system',
+    admin: 'system',
+    details: 'TalkHop WebRTC Engine active with dynamic ICE configuration'
+  }
+];
+
+function logAdminActivity(action, type, details, admin = 'admin') {
+  adminAuditLog.unshift({
+    id: 'evt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+    timestamp: Date.now(),
+    action,
+    type,
+    admin: admin || 'admin',
+    details
+  });
+  if (adminAuditLog.length > 100) adminAuditLog.pop();
+}
+
+// Rolling traffic history snapshots for Traffic & Sessions chart
+const trafficHistory = [];
+const MAX_TRAFFIC_SNAPSHOTS = 24;
+
+function recordTrafficSnapshot() {
+  const now = new Date();
+  const hourLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const totalOnline = typeof getUniqueOnlineCount === 'function' ? getUniqueOnlineCount() : 0;
+  const inCall = typeof activePairs !== 'undefined' ? Math.floor(activePairs.size / 2) : 0;
+  const inQueue = typeof waitingQueue !== 'undefined' ? waitingQueue.length : 0;
+
+  trafficHistory.push({
+    timestamp: Date.now(),
+    hourLabel,
+    onlineUsers: totalOnline,
+    activeCalls: inCall,
+    inQueue
+  });
+
+  if (trafficHistory.length > MAX_TRAFFIC_SNAPSHOTS) {
+    trafficHistory.shift();
+  }
+}
+
+// Seed initial traffic history snapshots (spaced 1h apart)
+(function seedInitialTrafficHistory() {
+  const now = Date.now();
+  for (let i = 8; i >= 0; i--) {
+    const time = new Date(now - i * 60 * 60 * 1000);
+    trafficHistory.push({
+      timestamp: time.getTime(),
+      hourLabel: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      onlineUsers: Math.max(0, i === 0 ? 1 : 0),
+      activeCalls: 0,
+      inQueue: 0
+    });
+  }
+})();
+
+setInterval(recordTrafficSnapshot, 5 * 60 * 1000);
+
 // Live Sponsor & Monetization State (Dynamic Broadcast)
 let liveSponsorConfig = {
   tag: '🎮 Verified Partner',
@@ -422,12 +487,13 @@ function isFilterMatch(userA, userB) {
 }
 
 /**
- * Pair two active sockets together with unique session identifier
+ * Pair two active sockets together with unique session identifier and mode
  */
-function pairSockets(socketA, socketB, matchedWithFilters = true) {
+function pairSockets(socketA, socketB, matchedWithFilters = true, mode = 'video') {
   const idA = socketA.id;
   const idB = socketB.id;
   const sessionId = 'sess_' + crypto.randomBytes(8).toString('hex');
+  const sessionMode = (mode === 'text') ? 'text' : 'video';
 
   activePairs.set(idA, idB);
   activePairs.set(idB, idA);
@@ -437,6 +503,7 @@ function pairSockets(socketA, socketB, matchedWithFilters = true) {
     userA: idA,
     userB: idB,
     initiator: idA,
+    mode: sessionMode,
     createdAt: Date.now(),
     state: 'active',
     timer: null,
@@ -449,21 +516,23 @@ function pairSockets(socketA, socketB, matchedWithFilters = true) {
   if (userStates.has(idA)) userStates.get(idA).state = 'in_call';
   if (userStates.has(idB)) userStates.get(idB).state = 'in_call';
 
-  console.log(`[Match] Paired: ${idA} <---> ${idB} (Session: ${sessionId}, FilterMatched: ${matchedWithFilters})`);
+  console.log(`[Match] Paired: ${idA} <---> ${idB} (Session: ${sessionId}, Mode: ${sessionMode}, FilterMatched: ${matchedWithFilters})`);
 
   // Designate socketA as initiator and socketB as receiver
   socketA.emit('match-found', {
     sessionId,
     initiator: true,
     partnerId: idB,
-    filterMatched: matchedWithFilters
+    filterMatched: matchedWithFilters,
+    mode: sessionMode
   });
 
   socketB.emit('match-found', {
     sessionId,
     initiator: false,
     partnerId: idA,
-    filterMatched: matchedWithFilters
+    filterMatched: matchedWithFilters,
+    mode: sessionMode
   });
 }
 
@@ -481,11 +550,12 @@ function handleVipFallback(socketId) {
     return;
   }
 
-  console.log(`[Fallback] 5s elapsed for VIP user ${socketId}. Finding best available match.`);
+  const desiredMode = queueEntry.mode || 'video';
+  console.log(`[Fallback] 5s elapsed for VIP user ${socketId}. Finding best available ${desiredMode} match.`);
 
   let candidateIndex = -1;
   for (let i = 0; i < waitingQueue.length; i++) {
-    if (waitingQueue[i].socketId !== socketId) {
+    if (waitingQueue[i].socketId !== socketId && (waitingQueue[i].mode || 'video') === desiredMode) {
       const cSocket = io.sockets.sockets.get(waitingQueue[i].socketId);
       if (cSocket && cSocket.connected) {
         candidateIndex = i;
@@ -507,7 +577,7 @@ function handleVipFallback(socketId) {
       socket.emit('match-notice', {
         message: 'No exact filter match in queue. Connected to best available stranger.'
       });
-      pairSockets(socket, candidateSocket, false);
+      pairSockets(socket, candidateSocket, false, desiredMode);
     }
   } else {
     socket.emit('match-notice', {
@@ -517,10 +587,11 @@ function handleVipFallback(socketId) {
 }
 
 /**
- * Match a user with waiting peers taking preferences and VIP priority into account
+ * Match a user with waiting peers taking preferences, mode, and VIP priority into account
  */
-function matchUser(socket, incomingPreferences = null) {
+function matchUser(socket, incomingPreferences = null, mode = 'video') {
   const socketId = socket.id;
+  const desiredMode = (mode === 'text') ? 'text' : 'video';
 
   // 1. Clean previous state
   removeFromQueue(socketId);
@@ -557,23 +628,25 @@ function matchUser(socket, incomingPreferences = null) {
 
   currentUserState.preferences = preferences;
   currentUserState.isVip = isVip;
+  currentUserState.mode = desiredMode;
   userStates.set(socketId, currentUserState);
 
   const userEntry = {
     socketId,
     preferences,
     isVip,
+    mode: desiredMode,
     queuedAt: Date.now(),
     fallbackTimeout: null
   };
 
-  // 3. Search waitingQueue for a matching partner
+  // 3. Search waitingQueue for a matching partner with IDENTICAL MODE
   let matchIndex = -1;
 
-  // Priority pass: exact filter match
+  // Priority pass: exact filter match and identical mode
   for (let i = 0; i < waitingQueue.length; i++) {
     const candidate = waitingQueue[i];
-    if (candidate.socketId !== socketId) {
+    if (candidate.socketId !== socketId && (candidate.mode || 'video') === desiredMode) {
       const candidateSocket = io.sockets.sockets.get(candidate.socketId);
       if (candidateSocket && candidateSocket.connected) {
         if (isFilterMatch(userEntry, candidate)) {
@@ -584,11 +657,11 @@ function matchUser(socket, incomingPreferences = null) {
     }
   }
 
-  // Secondary pass: if user has no filter requirements and candidate has no filter requirements, pair them
+  // Secondary pass: if user has no filter requirements and candidate has no filter requirements, pair them (same mode!)
   if (matchIndex === -1 && preferences.genderFilter === 'any' && preferences.countryFilter === 'any') {
     for (let i = 0; i < waitingQueue.length; i++) {
       const candidate = waitingQueue[i];
-      if (candidate.socketId !== socketId) {
+      if (candidate.socketId !== socketId && (candidate.mode || 'video') === desiredMode) {
         const candidateSocket = io.sockets.sockets.get(candidate.socketId);
         if (candidateSocket && candidateSocket.connected) {
           if (isFilterMatch(userEntry, candidate)) {
@@ -609,7 +682,7 @@ function matchUser(socket, incomingPreferences = null) {
 
     const partnerSocket = io.sockets.sockets.get(candidateEntry.socketId);
     if (partnerSocket && partnerSocket.connected) {
-      pairSockets(socket, partnerSocket, true);
+      pairSockets(socket, partnerSocket, true, desiredMode);
       return;
     }
   }
@@ -627,10 +700,12 @@ function matchUser(socket, incomingPreferences = null) {
   currentUserState.state = 'waiting';
   userStates.set(socketId, currentUserState);
 
+  const modeLabel = (desiredMode === 'text') ? 'text chat' : 'video call';
   socket.emit('waiting', {
+    mode: desiredMode,
     message: hasSpecificFilter
-      ? `Priority queue active: searching for ${preferences.genderFilter !== 'any' ? (preferences.genderFilter === 'female' ? 'Female' : 'Male') : ''} ${preferences.countryFilter !== 'any' ? preferences.countryFilter : ''} stranger...`
-      : 'Looking for a stranger...'
+      ? `Priority queue active: searching for ${preferences.genderFilter !== 'any' ? (preferences.genderFilter === 'female' ? 'Female' : 'Male') : ''} ${preferences.countryFilter !== 'any' ? preferences.countryFilter : ''} stranger for ${modeLabel}...`
+      : `Looking for a stranger for ${modeLabel}...`
   });
 }
 
@@ -642,8 +717,15 @@ function matchUser(socket, incomingPreferences = null) {
 app.post('/api/payment/create-order', async (req, res) => {
   try {
     const { plan = '1-hour' } = req.body;
-    const amountInPaise = plan === '12-hour' ? 3900 : 1900; // ₹39 or ₹19
-    const priceInRupees = plan === '12-hour' ? 39 : 19;
+    let amountInPaise = 1900;
+    let priceInRupees = 19;
+    if (plan === '12-hour') {
+      amountInPaise = 3900;
+      priceInRupees = 39;
+    } else if (plan === '24-hour') {
+      amountInPaise = 5900;
+      priceInRupees = 59;
+    }
 
     if (razorpayClient) {
       const options = {
@@ -713,8 +795,15 @@ app.post('/api/payment/verify', (req, res) => {
     }
 
     // Payment signature verified - generate genuine 6-digit VIP pass
-    const durationMs = plan === '12-hour' ? 43200000 : 3600000;
-    const price = plan === '12-hour' ? 39 : 19;
+    let durationMs = 3600000;
+    let price = 19;
+    if (plan === '12-hour') {
+      durationMs = 43200000;
+      price = 39;
+    } else if (plan === '24-hour') {
+      durationMs = 86400000; // 24 Hours
+      price = 59;
+    }
     const code = generateVipCode();
 
     const newPass = {
@@ -961,13 +1050,15 @@ io.on('connection', (socket) => {
 
   // User starts searching
   socket.on('start-search', (data) => {
-    matchUser(socket, data && data.preferences);
+    const mode = (data && data.mode === 'text') ? 'text' : 'video';
+    matchUser(socket, data && data.preferences, mode);
   });
 
   // User hits SKIP
   socket.on('skip', (data) => {
     console.log(`[Skip] Socket ${socket.id} requested skip`);
-    matchUser(socket, data && data.preferences);
+    const mode = (data && data.mode === 'text') ? 'text' : 'video';
+    matchUser(socket, data && data.preferences, mode);
   });
 
   // User updates preferences
@@ -1266,6 +1357,73 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Mode Transition: Request switch from text chat to live video call
+  socket.on('request-video-switch', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    const sessionId = socketSessions.get(socket.id);
+    if (partnerId) {
+      console.log(`[Mode Switch] Socket ${socket.id} requested video switch to partner ${partnerId}`);
+      io.to(partnerId).emit('partner-requested-video-switch', {
+        from: socket.id,
+        sessionId
+      });
+    }
+  });
+
+  // Mode Transition: Accept video switch request
+  socket.on('accept-video-switch', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    const sessionId = socketSessions.get(socket.id);
+    if (partnerId) {
+      const partnerSocket = io.sockets.sockets.get(partnerId);
+      if (partnerSocket && partnerSocket.connected) {
+        if (sessionId && activeSessions.has(sessionId)) {
+          const session = activeSessions.get(sessionId);
+          session.mode = 'video';
+        }
+        console.log(`[Mode Switch] Video switch accepted between ${socket.id} and ${partnerId}`);
+        // Partner who requested is initiator, accepting user is receiver
+        partnerSocket.emit('video-switch-accepted', {
+          sessionId,
+          partnerId: socket.id,
+          initiator: true
+        });
+        socket.emit('video-switch-accepted', {
+          sessionId,
+          partnerId,
+          initiator: false
+        });
+      }
+    }
+  });
+
+  // Mode Transition: Decline video switch request
+  socket.on('decline-video-switch', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    if (partnerId) {
+      console.log(`[Mode Switch] Socket ${socket.id} declined video switch from partner ${partnerId}`);
+      io.to(partnerId).emit('video-switch-declined', {
+        from: socket.id,
+        message: 'Stranger declined to switch to video.'
+      });
+    }
+  });
+
+  // Mode Transition: Switch from video back to text chat
+  socket.on('switch-to-text', (data) => {
+    const partnerId = activePairs.get(socket.id);
+    const sessionId = socketSessions.get(socket.id);
+    if (sessionId && activeSessions.has(sessionId)) {
+      const session = activeSessions.get(sessionId);
+      session.mode = 'text';
+    }
+    if (partnerId) {
+      console.log(`[Mode Switch] Switched to text chat between ${socket.id} and ${partnerId}`);
+      io.to(partnerId).emit('switched-to-text', { sessionId });
+    }
+    socket.emit('switched-to-text', { sessionId });
+  });
+
   // Disconnection handler with session recovery grace period & authoritative presence
   socket.on('disconnect', (reason) => {
     console.log(`[Disconnect] Socket ${socket.id} disconnected (${reason})`);
@@ -1408,7 +1566,7 @@ app.get('/ping', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Vybrant WebRTC Engine',
+    service: 'TalkHop WebRTC Engine',
     host: 'vybrant.vybronx.online',
     online: getUniqueOnlineCount(),
     waitingQueueLength: waitingQueue.length,
@@ -1435,6 +1593,7 @@ app.post('/api/admin/login', (req, res) => {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = Date.now() + ADMIN_SESSION_DURATION_MS;
     adminSessions.set(token, { user: username, createdAt: Date.now(), expiresAt });
+    logAdminActivity('Admin Login', 'auth', `Admin '${username}' authenticated successfully`, username);
     console.log(`[ADMIN AUTH] Admin '${username}' authenticated successfully.`);
     return res.json({
       success: true,
@@ -1457,6 +1616,7 @@ app.post('/api/admin/logout', adminAuthMiddleware, (req, res) => {
   const token = authHeader.replace(/^Bearer\s+/i, '').trim() || req.headers['x-admin-token'];
   if (token) {
     adminSessions.delete(token);
+    logAdminActivity('Admin Logout', 'auth', 'Admin session terminated safely', req.adminUser || 'admin');
   }
   return res.json({ success: true, message: 'Admin logged out successfully.' });
 });
@@ -1530,9 +1690,62 @@ app.get('/api/admin/stats', adminAuthMiddleware, (req, res) => {
     if (validReports.length > 0) {
       reportedList.push({
         ip,
-        reportCount: validReports.length
+        reportCount: validReports.length,
+        lastReportTime: Math.max(...validReports)
       });
     }
+  }
+
+  // Detailed Sessions Lists for admin navigation views
+  const detailedUsers = [];
+  for (const [sid, user] of userStates.entries()) {
+    detailedUsers.push({
+      socketId: sid,
+      maskedId: sid.slice(0, 8) + '...',
+      ip: user.ip || '127.0.0.1',
+      country: (user.preferences && user.preferences.myCountry) || user.country || 'Global',
+      gender: (user.preferences && user.preferences.myGender) || 'male',
+      mode: user.mode || 'chat',
+      state: activePairs.has(sid) ? 'In Call' : (waitingQueue.some(q => q.socketId === sid) ? 'In Queue' : 'Idle'),
+      isVip: !!user.isVip,
+      connectedAt: user.connectedAt || now
+    });
+  }
+
+  const detailedCalls = [];
+  const seenPairs = new Set();
+  for (const [s1, s2] of activePairs.entries()) {
+    const pairKey = [s1, s2].sort().join(':');
+    if (!seenPairs.has(pairKey)) {
+      seenPairs.add(pairKey);
+      const u1 = userStates.get(s1) || {};
+      const u2 = userStates.get(s2) || {};
+      detailedCalls.push({
+        pairId: pairKey,
+        user1: { socketId: s1.slice(0, 8) + '...', country: u1.country || 'Global', mode: u1.mode || 'chat' },
+        user2: { socketId: s2.slice(0, 8) + '...', country: u2.country || 'Global', mode: u2.mode || 'chat' },
+        mode: u1.mode || u2.mode || 'chat',
+        startedAt: now - 45000
+      });
+    }
+  }
+
+  const detailedQueue = waitingQueue.map((item, idx) => ({
+    position: idx + 1,
+    socketId: item.socketId ? item.socketId.slice(0, 8) + '...' : 'unknown',
+    country: (item.preferences && item.preferences.myCountry) || 'Global',
+    targetGender: (item.preferences && item.preferences.genderFilter) || 'any',
+    targetCountry: (item.preferences && item.preferences.countryFilter) || 'any',
+    mode: item.mode || 'chat',
+    queuedAt: item.queuedAt || now
+  }));
+
+  // Update current snapshot into traffic history
+  if (trafficHistory.length > 0) {
+    const lastSnap = trafficHistory[trafficHistory.length - 1];
+    lastSnap.onlineUsers = totalOnline;
+    lastSnap.activeCalls = inCall;
+    lastSnap.inQueue = inQueue;
   }
 
   return res.json({
@@ -1551,7 +1764,20 @@ app.get('/api/admin/stats', adminAuthMiddleware, (req, res) => {
       reportedIPs: reportedList,
       sponsorConfig: liveSponsorConfig,
       uptimeSeconds: Math.floor(process.uptime()),
-      serverTime: new Date().toISOString()
+      serverTime: new Date().toISOString(),
+      auditLog: adminAuditLog.slice(0, 30),
+      trafficHistory: trafficHistory.slice(-12),
+      detailedUsers: detailedUsers.slice(0, 50),
+      detailedCalls: detailedCalls.slice(0, 20),
+      detailedQueue: detailedQueue.slice(0, 20),
+      diagnostics: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        memoryUsageMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+        heapUsedMb: Math.round(process.memoryUsage().heapUsed / (1024 * 1024)),
+        activeSockets: io.sockets.sockets.size,
+        systemHealth: 'operational'
+      }
     }
   });
 });
@@ -1596,6 +1822,7 @@ app.post('/api/admin/generate-code', adminAuthMiddleware, (req, res) => {
   };
 
   vipPasses.set(code, newPass);
+  logAdminActivity('VIP Generated', 'vip', `Code ${code} issued (${durationMin}m, ${uses} max uses)`, req.adminUser || 'admin');
   console.log(`[ADMIN VIP] Created VIP code ${code} (${durationMin}m, ${uses} max uses, note: ${newPass.note})`);
 
   return res.json({
@@ -1636,6 +1863,7 @@ app.post('/api/admin/revoke-code', adminAuthMiddleware, (req, res) => {
   }
 
   vipPasses.delete(upperCode);
+  logAdminActivity('VIP Revoked', 'vip', `Code ${upperCode} revoked and deleted`, req.adminUser || 'admin');
   console.log(`[ADMIN VIP] Revoked pass: ${upperCode}`);
 
   return res.json({
@@ -1656,6 +1884,7 @@ app.post('/api/admin/unban-ip', adminAuthMiddleware, (req, res) => {
 
   bannedIPs.delete(cleanIp);
   reportedIPs.delete(cleanIp);
+  logAdminActivity('IP Unbanned', 'moderation', `IP ${cleanIp} unbanned by administrator`, req.adminUser || 'admin');
   console.log(`[ADMIN MODERATION] Unbanned IP: ${cleanIp}`);
 
   return res.json({
@@ -1684,6 +1913,7 @@ app.post('/api/admin/ban-ip', adminAuthMiddleware, (req, res) => {
     }
   }
 
+  logAdminActivity('IP Banned', 'moderation', `IP ${cleanIp} banned for ${banHours}h: ${banReason}`, req.adminUser || 'admin');
   console.log(`[ADMIN MODERATION] Manually banned IP ${cleanIp} for ${banHours}h: ${banReason}`);
 
   return res.json({
@@ -1709,6 +1939,7 @@ app.post('/api/admin/update-sponsor', adminAuthMiddleware, (req, res) => {
 
   // Broadcast to all active connected chat clients
   io.emit('sponsor-update', liveSponsorConfig);
+  logAdminActivity('Sponsor Updated', 'sponsor', `Sponsor card updated: "${liveSponsorConfig.tag}"`, req.adminUser || 'admin');
   console.log(`[ADMIN SPONSOR] Updated and broadcasted sponsor config:`, liveSponsorConfig);
 
   return res.json({
@@ -1716,6 +1947,30 @@ app.post('/api/admin/update-sponsor', adminAuthMiddleware, (req, res) => {
     sponsor: liveSponsorConfig,
     message: 'Live sponsor configuration broadcasted to all connected clients!'
   });
+});
+
+// 9. Dismiss Peer Report Route
+app.post('/api/admin/dismiss-report', adminAuthMiddleware, (req, res) => {
+  const { ip } = req.body || {};
+  if (!ip) return res.status(400).json({ success: false, error: 'IP is required.' });
+  const cleanIp = String(ip).trim();
+  reportedIPs.delete(cleanIp);
+  logAdminActivity('Report Dismissed', 'moderation', `Community reports cleared for IP ${cleanIp}`, req.adminUser || 'admin');
+  return res.json({ success: true, message: `Reports for IP ${cleanIp} cleared successfully.` });
+});
+
+// 10. Kick Connected User Route
+app.post('/api/admin/kick-user', adminAuthMiddleware, (req, res) => {
+  const { socketId } = req.body || {};
+  if (!socketId) return res.status(400).json({ success: false, error: 'Socket ID is required.' });
+  const targetSocket = io.sockets.sockets.get(socketId);
+  if (targetSocket) {
+    targetSocket.emit('error-notice', { message: 'You have been disconnected by an administrator.' });
+    targetSocket.disconnect(true);
+    logAdminActivity('User Kicked', 'moderation', `Socket ${socketId.slice(0, 8)} disconnected by admin`, req.adminUser || 'admin');
+    return res.json({ success: true, message: 'User socket disconnected.' });
+  }
+  return res.status(404).json({ success: false, error: 'User socket not found or already disconnected.' });
 });
 
 // Fallback for SPA routing
@@ -1727,7 +1982,7 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`===============================================`);
-  console.log(`⚡ Vybrant ⚡ P2P Video Chat Engine (by VybronX Studios)`);
+  console.log(`⚡ TalkHop ⚡ Instant Random Chat & Video Call Engine (by VybronX Studios)`);
   console.log(`⚡ AI Safety Shield & IP Auto-Ban Active`);
   console.log(`⚡ Hosted at: https://vybrant.vybronx.online`);
   console.log(`⚡ Local Server running at: http://localhost:${PORT}`);

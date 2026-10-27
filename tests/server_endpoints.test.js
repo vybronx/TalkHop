@@ -41,7 +41,7 @@ async function runTests() {
   const healthRes = await get('/health');
   assert.strictEqual(healthRes.status, 200);
   assert.strictEqual(healthRes.data.status, 'ok');
-  assert.strictEqual(healthRes.data.service, 'Vybrant WebRTC Engine');
+  assert.strictEqual(healthRes.data.service, 'TalkHop WebRTC Engine');
   console.log('✓ /health endpoint returns 200 OK');
 
   // 3. Test /api/rtc-config endpoint
